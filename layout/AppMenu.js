@@ -13,7 +13,7 @@ const AppMenu = () => {
             label: 'Home',
             items: [
                 { label: 'Dashboard', icon: 'pi pi-fw pi-home', to: '/' },
-                { label: 'Ingredientes', icon: 'pi pi-fw pi-home', to: '/Ingredientes' },
+                { label: 'Ingredientes', icon: 'pi pi-fw pi-home', to: '/pages/Ingredientes' },
 
             ]
         },

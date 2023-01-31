@@ -8,24 +8,17 @@ import { InputNumber } from 'primereact/inputnumber';
 import { InputText } from 'primereact/inputtext';
 import { InputTextarea } from 'primereact/inputtextarea';
 import { RadioButton } from 'primereact/radiobutton';
-import { Rating } from 'primereact/rating';
 import { Toast } from 'primereact/toast';
 import { Toolbar } from 'primereact/toolbar';
 import { classNames } from 'primereact/utils';
 import React, { useEffect, useRef, useState } from 'react';
-import { ProductService } from '../../demo/service/ProductService';
+import { IngredienteService } from '../../../demo/service/IngredienteService';
 
 const Crud = () => {
     let emptyProduct = {
         id: null,
-        name: '',
-        image: null,
-        description: '',
-        category: null,
-        price: 0,
-        quantity: 0,
-        rating: 0,
-        inventoryStatus: 'INSTOCK'
+        nombre: '',
+        unidad: '',
     };
 
     const [products, setProducts] = useState(null);
@@ -41,13 +34,10 @@ const Crud = () => {
     const contextPath = getConfig().publicRuntimeConfig.contextPath;
 
     useEffect(() => {
-        const productService = new ProductService();
-        productService.getProducts().then((data) => setProducts(data));
-    }, []);
-
-    const formatCurrency = (value) => {
-        return value.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
-    };
+        const ingredienteService = new IngredienteService();
+        ingredienteService.getIngredientes().then((data) => setProducts(data));
+        
+    }, []);ull
 
     const openNew = () => {
         setProduct(emptyProduct);
@@ -71,9 +61,10 @@ const Crud = () => {
     const saveProduct = () => {
         setSubmitted(true);
 
-        if (product.name.trim()) {
+        if (product.nombre.trim()) {
             let _products = [...products];
             let _product = { ...product };
+            console.log('Entre Baby');
             if (product.id) {
                 const index = findIndexById(product.id);
 
@@ -147,13 +138,13 @@ const Crud = () => {
         setSelectedProducts(null);
         toast.current.show({ severity: 'success', summary: 'Successful', detail: 'Products Deleted', life: 3000 });
     };
-
+/*
     const onCategoryChange = (e) => {
         let _product = { ...product };
         _product['category'] = e.value;
         setProduct(_product);
     };
-
+*/
     const onInputChange = (e, name) => {
         const val = (e.target && e.target.value) || '';
         let _product = { ...product };
@@ -190,65 +181,29 @@ const Crud = () => {
         );
     };
 
-    const codeBodyTemplate = (rowData) => {
+    const idBodyTemplate = (rowData) => {
         return (
             <>
-                <span className="p-column-title">Code</span>
-                {rowData.code}
+                <span className="p-column-title">id</span>
+                {rowData.id}
             </>
         );
     };
 
-    const nameBodyTemplate = (rowData) => {
+    const nombreBodyTemplate = (rowData) => {
         return (
             <>
-                <span className="p-column-title">Name</span>
-                {rowData.name}
+                <span className="p-column-title">Nombre</span>
+                {rowData.nombre}
             </>
         );
     };
 
-    const imageBodyTemplate = (rowData) => {
+    const unidadBodyTemplate = (rowData) => {
         return (
             <>
-                <span className="p-column-title">Image</span>
-                <img src={`${contextPath}/demo/images/product/${rowData.image}`} alt={rowData.image} className="shadow-2" width="100" />
-            </>
-        );
-    };
-
-    const priceBodyTemplate = (rowData) => {
-        return (
-            <>
-                <span className="p-column-title">Price</span>
-                {formatCurrency(rowData.price)}
-            </>
-        );
-    };
-
-    const categoryBodyTemplate = (rowData) => {
-        return (
-            <>
-                <span className="p-column-title">Category</span>
-                {rowData.category}
-            </>
-        );
-    };
-
-    const ratingBodyTemplate = (rowData) => {
-        return (
-            <>
-                <span className="p-column-title">Reviews</span>
-                <Rating value={rowData.rating} readOnly cancel={false} />
-            </>
-        );
-    };
-
-    const statusBodyTemplate = (rowData) => {
-        return (
-            <>
-                <span className="p-column-title">Status</span>
-                <span className={`product-badge status-${rowData.inventoryStatus.toLowerCase()}`}>{rowData.inventoryStatus}</span>
+                <span className="p-column-title">Unidad</span>
+                {rowData.unidad}
             </>
         );
     };
@@ -316,59 +271,23 @@ const Crud = () => {
                         responsiveLayout="scroll"
                     >
                         <Column selectionMode="multiple" headerStyle={{ width: '4rem' }}></Column>
-                        <Column field="code" header="Code" sortable body={codeBodyTemplate} headerStyle={{ minWidth: '15rem' }}></Column>
-                        <Column field="name" header="Name" sortable body={nameBodyTemplate} headerStyle={{ minWidth: '15rem' }}></Column>
-                        <Column header="Image" body={imageBodyTemplate}></Column>
-                        <Column field="price" header="Price" body={priceBodyTemplate} sortable></Column>
-                        <Column field="category" header="Category" sortable body={categoryBodyTemplate} headerStyle={{ minWidth: '10rem' }}></Column>
-                        <Column field="rating" header="Reviews" body={ratingBodyTemplate} sortable></Column>
-                        <Column field="inventoryStatus" header="Status" body={statusBodyTemplate} sortable headerStyle={{ minWidth: '10rem' }}></Column>
+                        <Column field="id" header="Id" sortable body={idBodyTemplate} headerStyle={{ minWidth: '15rem' }}></Column>
+                        <Column field="nombre" header="Nombre" sortable body={nombreBodyTemplate} headerStyle={{ minWidth: '15rem' }}></Column>
+                        <Column field="unidad" header="Unidad" sortable body={unidadBodyTemplate} headerStyle={{ minWidth: '15rem' }}></Column>
                         <Column body={actionBodyTemplate} headerStyle={{ minWidth: '10rem' }}></Column>
                     </DataTable>
 
                     <Dialog visible={productDialog} style={{ width: '450px' }} header="Product Details" modal className="p-fluid" footer={productDialogFooter} onHide={hideDialog}>
                         {product.image && <img src={`${contextPath}/demo/images/product/${product.image}`} alt={product.image} width="150" className="mt-0 mx-auto mb-5 block shadow-2" />}
                         <div className="field">
-                            <label htmlFor="name">Name</label>
-                            <InputText id="name" value={product.name} onChange={(e) => onInputChange(e, 'name')} required autoFocus className={classNames({ 'p-invalid': submitted && !product.name })} />
-                            {submitted && !product.name && <small className="p-invalid">Name is required.</small>}
+                            <label htmlFor="nombre">Nombre</label>
+                            <InputText id="nombre" value={product.nombre} onChange={(e) => onInputChange(e, 'nombre')} required autoFocus className={classNames({ 'p-invalid': submitted && !product.nombre })} />
+                            {submitted && !product.nombre && <small className="p-invalid">Name is required.</small>}
                         </div>
                         <div className="field">
-                            <label htmlFor="description">Description</label>
-                            <InputTextarea id="description" value={product.description} onChange={(e) => onInputChange(e, 'description')} required rows={3} cols={20} />
-                        </div>
-
-                        <div className="field">
-                            <label className="mb-3">Category</label>
-                            <div className="formgrid grid">
-                                <div className="field-radiobutton col-6">
-                                    <RadioButton inputId="category1" name="category" value="Accessories" onChange={onCategoryChange} checked={product.category === 'Accessories'} />
-                                    <label htmlFor="category1">Accessories</label>
-                                </div>
-                                <div className="field-radiobutton col-6">
-                                    <RadioButton inputId="category2" name="category" value="Clothing" onChange={onCategoryChange} checked={product.category === 'Clothing'} />
-                                    <label htmlFor="category2">Clothing</label>
-                                </div>
-                                <div className="field-radiobutton col-6">
-                                    <RadioButton inputId="category3" name="category" value="Electronics" onChange={onCategoryChange} checked={product.category === 'Electronics'} />
-                                    <label htmlFor="category3">Electronics</label>
-                                </div>
-                                <div className="field-radiobutton col-6">
-                                    <RadioButton inputId="category4" name="category" value="Fitness" onChange={onCategoryChange} checked={product.category === 'Fitness'} />
-                                    <label htmlFor="category4">Fitness</label>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="formgrid grid">
-                            <div className="field col">
-                                <label htmlFor="price">Price</label>
-                                <InputNumber id="price" value={product.price} onValueChange={(e) => onInputNumberChange(e, 'price')} mode="currency" currency="USD" locale="en-US" />
-                            </div>
-                            <div className="field col">
-                                <label htmlFor="quantity">Quantity</label>
-                                <InputNumber id="quantity" value={product.quantity} onValueChange={(e) => onInputNumberChange(e, 'quantity')} integeronly />
-                            </div>
+                            <label htmlFor="">Unidad</label>
+                            <InputText id="unidad" value={product.unidad} onChange={(e) => onInputChange(e, 'unidad')} required autoFocus className={classNames({ 'p-invalid': submitted && !product.unidad })} />
+                            {submitted && !product.unidad && <small className="p-invalid">Name is required.</small>}
                         </div>
                     </Dialog>
 
@@ -377,7 +296,7 @@ const Crud = () => {
                             <i className="pi pi-exclamation-triangle mr-3" style={{ fontSize: '2rem' }} />
                             {product && (
                                 <span>
-                                    Are you sure you want to delete <b>{product.name}</b>?
+                                    Are you sure you want to delete <b>{product.nombre}</b>?
                                 </span>
                             )}
                         </div>
