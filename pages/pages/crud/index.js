@@ -42,7 +42,8 @@ const Crud = () => {
 
     useEffect(() => {
         const productService = new ProductService();
-        productService.getProducts().then((data) => setProducts(data));
+        productService.getProducts()
+        
     }, []);
 
     const formatCurrency = (value) => {
@@ -290,7 +291,7 @@ const Crud = () => {
             <Button label="Yes" icon="pi pi-check" className="p-button-text" onClick={deleteSelectedProducts} />
         </>
     );
-
+console.log('Llego pero:',products);
     return (
         <div className="grid crud-demo">
             <div className="col-12">

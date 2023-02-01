@@ -18,7 +18,7 @@ const Crud = () => {
     let emptyProduct = {
         id: null,
         nombre: '',
-        unidad: '',
+        unidad: ''
     };
 
     const [products, setProducts] = useState(null);
@@ -31,13 +31,12 @@ const Crud = () => {
     const [globalFilter, setGlobalFilter] = useState(null);
     const toast = useRef(null);
     const dt = useRef(null);
-    const contextPath = getConfig().publicRuntimeConfig.contextPath;
+    //const contextPath = getConfig().publicRuntimeConfig.contextPath;
 
     useEffect(() => {
         const ingredienteService = new IngredienteService();
         ingredienteService.getIngredientes().then((data) => setProducts(data));
-        
-    }, []);ull
+    }, []);
 
     const openNew = () => {
         setProduct(emptyProduct);
@@ -61,22 +60,17 @@ const Crud = () => {
     const saveProduct = () => {
         setSubmitted(true);
 
-        if (product.nombre.trim()) {
+        if (product.nombre.trim() && product.unidad.trim()) {
             let _products = [...products];
-            let _product = { ...product };
-            console.log('Entre Baby');
-            if (product.id) {
-                const index = findIndexById(product.id);
-
-                _products[index] = _product;
-                toast.current.show({ severity: 'success', summary: 'Successful', detail: 'Product Updated', life: 3000 });
-            } else {
-                _product.id = createId();
-                _product.code = createId();
-                _product.image = 'product-placeholder.svg';
-                _products.push(_product);
-                toast.current.show({ severity: 'success', summary: 'Successful', detail: 'Product Created', life: 3000 });
-            }
+            let _product = {
+                nombre: '',
+                unidad: ''
+            };
+            _product = { nombre: product.nombre, unidad: product.unidad };
+            const ingredienteService = new IngredienteService();
+            ingredienteService.postIngredientes(_product);
+            console.log(_product);
+            toast.current.show({ severity: 'success', summary: 'Successful', detail: 'Product Created', life: 3000 });
 
             setProducts(_products);
             setProductDialog(false);
@@ -99,6 +93,9 @@ const Crud = () => {
         setProducts(_products);
         setDeleteProductDialog(false);
         setProduct(emptyProduct);
+        /*console.log(products)
+        const ingredienteService = new IngredienteService();
+        ingredienteService.DeleteIngredientes(products.id);*/
         toast.current.show({ severity: 'success', summary: 'Successful', detail: 'Product Deleted', life: 3000 });
     };
 
@@ -134,11 +131,14 @@ const Crud = () => {
     const deleteSelectedProducts = () => {
         let _products = products.filter((val) => !selectedProducts.includes(val));
         setProducts(_products);
+        console.log(_products.id);
         setDeleteProductsDialog(false);
         setSelectedProducts(null);
+        const ingredienteService = new IngredienteService();
+        ingredienteService.DeleteIngredientes(products.id);
         toast.current.show({ severity: 'success', summary: 'Successful', detail: 'Products Deleted', life: 3000 });
     };
-/*
+    /*
     const onCategoryChange = (e) => {
         let _product = { ...product };
         _product['category'] = e.value;
@@ -181,14 +181,14 @@ const Crud = () => {
         );
     };
 
-    const idBodyTemplate = (rowData) => {
+    /*  const idBodyTemplate = (rowData) => {
         return (
             <>
                 <span className="p-column-title">id</span>
                 {rowData.id}
             </>
         );
-    };
+    };*/
 
     const nombreBodyTemplate = (rowData) => {
         return (
@@ -219,7 +219,7 @@ const Crud = () => {
 
     const header = (
         <div className="flex flex-column md:flex-row md:justify-content-between md:align-items-center">
-            <h5 className="m-0">Manage Products</h5>
+            <h5 className="m-0">Manejo de ingredientes</h5>
             <span className="block mt-2 md:mt-0 p-input-icon-left">
                 <i className="pi pi-search" />
                 <InputText type="search" onInput={(e) => setGlobalFilter(e.target.value)} placeholder="Search..." />
@@ -245,7 +245,7 @@ const Crud = () => {
             <Button label="Yes" icon="pi pi-check" className="p-button-text" onClick={deleteSelectedProducts} />
         </>
     );
-
+console.log(products);
     return (
         <div className="grid crud-demo">
             <div className="col-12">
@@ -271,14 +271,12 @@ const Crud = () => {
                         responsiveLayout="scroll"
                     >
                         <Column selectionMode="multiple" headerStyle={{ width: '4rem' }}></Column>
-                        <Column field="id" header="Id" sortable body={idBodyTemplate} headerStyle={{ minWidth: '15rem' }}></Column>
                         <Column field="nombre" header="Nombre" sortable body={nombreBodyTemplate} headerStyle={{ minWidth: '15rem' }}></Column>
                         <Column field="unidad" header="Unidad" sortable body={unidadBodyTemplate} headerStyle={{ minWidth: '15rem' }}></Column>
                         <Column body={actionBodyTemplate} headerStyle={{ minWidth: '10rem' }}></Column>
                     </DataTable>
 
                     <Dialog visible={productDialog} style={{ width: '450px' }} header="Product Details" modal className="p-fluid" footer={productDialogFooter} onHide={hideDialog}>
-                        {product.image && <img src={`${contextPath}/demo/images/product/${product.image}`} alt={product.image} width="150" className="mt-0 mx-auto mb-5 block shadow-2" />}
                         <div className="field">
                             <label htmlFor="nombre">Nombre</label>
                             <InputText id="nombre" value={product.nombre} onChange={(e) => onInputChange(e, 'nombre')} required autoFocus className={classNames({ 'p-invalid': submitted && !product.nombre })} />
@@ -287,7 +285,7 @@ const Crud = () => {
                         <div className="field">
                             <label htmlFor="">Unidad</label>
                             <InputText id="unidad" value={product.unidad} onChange={(e) => onInputChange(e, 'unidad')} required autoFocus className={classNames({ 'p-invalid': submitted && !product.unidad })} />
-                            {submitted && !product.unidad && <small className="p-invalid">Name is required.</small>}
+                            {submitted && !product.unidad && <small className="p-invalid">Unidad is required.</small>}
                         </div>
                     </Dialog>
 
