@@ -42,7 +42,7 @@ const Crud = () => {
 
     useEffect(() => {
         const productService = new ProductService();
-        productService.getProducts()
+        productService.getProducts().then((data) => setProducts(data));
         
     }, []);
 
@@ -142,6 +142,7 @@ const Crud = () => {
     };
 
     const deleteSelectedProducts = () => {
+        console.log('Seleccion de producto',selectedProducts);
         let _products = products.filter((val) => !selectedProducts.includes(val));
         setProducts(_products);
         setDeleteProductsDialog(false);

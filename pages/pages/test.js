@@ -8,21 +8,20 @@ import { InputNumber } from 'primereact/inputnumber';
 import { InputText } from 'primereact/inputtext';
 import { InputTextarea } from 'primereact/inputtextarea';
 import { RadioButton } from 'primereact/radiobutton';
-import { Rating } from 'primereact/rating';
 import { Toast } from 'primereact/toast';
 import { Toolbar } from 'primereact/toolbar';
 import { classNames } from 'primereact/utils';
 import React, { useEffect, useRef, useState } from 'react';
 import { IngredienteService } from '../../../demo/service/IngredienteService';
+
 const Crud = () => {
     let emptyProduct = {
         id: null,
         nombre: '',
-        unidad: '',
+        unidad: ''
     };
 
     const [products, setProducts] = useState(null);
-    const [test, setTest] = useState(null);
     const [productDialog, setProductDialog] = useState(false);
     const [deleteProductDialog, setDeleteProductDialog] = useState(false);
     const [deleteProductsDialog, setDeleteProductsDialog] = useState(false);
@@ -32,16 +31,12 @@ const Crud = () => {
     const [globalFilter, setGlobalFilter] = useState(null);
     const toast = useRef(null);
     const dt = useRef(null);
-    const contextPath = getConfig().publicRuntimeConfig.contextPath;
+    //const contextPath = getConfig().publicRuntimeConfig.contextPath;
 
     useEffect(() => {
         const ingredienteService = new IngredienteService();
         ingredienteService.getIngredientes().then((data) => setProducts(data));
     }, []);
-
-    const formatCurrency = (value) => {
-        return value.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
-    };
 
     const openNew = () => {
         setProduct(emptyProduct);
@@ -65,19 +60,18 @@ const Crud = () => {
     const saveProduct = () => {
         setSubmitted(true);
 
-        if (product.nombre.trim()) {
+        if (product.nombre.trim() && product.unidad.trim()) {
             let _products = [...products];
-            let _product = { ...product };
-            if (product.id) {
-                const ingredienteService = new IngredienteService();
-                ingredienteService.updateIngredientes(_product);
-                toast.current.show({ severity: 'success', summary: 'Successful', detail: 'Product Updated', life: 3000 });
-            } else {
-                 const ingredienteService = new IngredienteService();
-                 ingredienteService.postIngredientes(_product);
-                _products.push(_product);
-                toast.current.show({ severity: 'success', summary: 'Successful', detail: 'Product Created', life: 3000 });
-            }
+            let _product = {
+                nombre: '',
+                unidad: ''
+            };
+            _product = { nombre: product.nombre, unidad: product.unidad };
+            const ingredienteService = new IngredienteService();
+            ingredienteService.postIngredientes(_product);
+            console.log(_product);
+            toast.current.show({ severity: 'success', summary: 'Successful', detail: 'Product Created', life: 3000 });
+
             setProducts(_products);
             setProductDialog(false);
             setProduct(emptyProduct);
@@ -95,13 +89,14 @@ const Crud = () => {
     };
 
     const deleteProduct = () => {
-        console.log('DeleteProduct', product);
-        let _products = products.filter((val) => val.id !== product.id);
+        let _products = [...products];
+        /*let _products = products.filter((val) => val.id !== product.id);*/
         setProducts(_products);
         setDeleteProductDialog(false);
         setProduct(emptyProduct);
-        const ingredienteService = new IngredienteService();
-        ingredienteService.DeleteIngredientes(product.id);
+        console.log("Delete product",_products)
+        /*const ingredienteService = new IngredienteService();
+        ingredienteService.DeleteIngredientes(products.id);*/
         toast.current.show({ severity: 'success', summary: 'Successful', detail: 'Product Deleted', life: 3000 });
     };
 
@@ -135,23 +130,22 @@ const Crud = () => {
     };
 
     const deleteSelectedProducts = () => {
-        console.log('Delete Select Product',selectedProducts);
+        console.log(selectedProducts);
         let _products = products.filter((val) => !selectedProducts.includes(val));
         setProducts(_products);
         setDeleteProductsDialog(false);
         setSelectedProducts(null);
-        console.log('Que es?',selectedProducts.id);
-        /*const ingredienteService = new IngredienteService();
-        ingredienteService.DeleteIngredientes(selectedProducts.id);*/
+        const ingredienteService = new IngredienteService();
+        ingredienteService.DeleteIngredientes(products.id);
         toast.current.show({ severity: 'success', summary: 'Successful', detail: 'Products Deleted', life: 3000 });
     };
-
+    /*
     const onCategoryChange = (e) => {
         let _product = { ...product };
         _product['category'] = e.value;
         setProduct(_product);
     };
-
+*/
     const onInputChange = (e, name) => {
         const val = (e.target && e.target.value) || '';
         let _product = { ...product };
@@ -188,6 +182,15 @@ const Crud = () => {
         );
     };
 
+    /*  const idBodyTemplate = (rowData) => {
+        return (
+            <>
+                <span className="p-column-title">id</span>
+                {rowData.id}
+            </>
+        );
+    };*/
+
     const nombreBodyTemplate = (rowData) => {
         return (
             <>
@@ -217,7 +220,7 @@ const Crud = () => {
 
     const header = (
         <div className="flex flex-column md:flex-row md:justify-content-between md:align-items-center">
-            <h5 className="m-0">Manage Products</h5>
+            <h5 className="m-0">Manejo de ingredientes</h5>
             <span className="block mt-2 md:mt-0 p-input-icon-left">
                 <i className="pi pi-search" />
                 <InputText type="search" onInput={(e) => setGlobalFilter(e.target.value)} placeholder="Search..." />
@@ -243,7 +246,7 @@ const Crud = () => {
             <Button label="Yes" icon="pi pi-check" className="p-button-text" onClick={deleteSelectedProducts} />
         </>
     );
-
+console.log(products);
     return (
         <div className="grid crud-demo">
             <div className="col-12">
@@ -274,17 +277,16 @@ const Crud = () => {
                         <Column body={actionBodyTemplate} headerStyle={{ minWidth: '10rem' }}></Column>
                     </DataTable>
 
-                    <Dialog visible={productDialog} style={{ width: '450px' }} header="Detalle de Ingredientes" modal className="p-fluid" footer={productDialogFooter} onHide={hideDialog}>
-                        {product.image && <img src={`${contextPath}/demo/images/product/${product.image}`} alt={product.image} width="150" className="mt-0 mx-auto mb-5 block shadow-2" />}
+                    <Dialog visible={productDialog} style={{ width: '450px' }} header="Product Details" modal className="p-fluid" footer={productDialogFooter} onHide={hideDialog}>
                         <div className="field">
                             <label htmlFor="nombre">Nombre</label>
                             <InputText id="nombre" value={product.nombre} onChange={(e) => onInputChange(e, 'nombre')} required autoFocus className={classNames({ 'p-invalid': submitted && !product.nombre })} />
                             {submitted && !product.nombre && <small className="p-invalid">Name is required.</small>}
                         </div>
                         <div className="field">
-                            <label htmlFor="unidad">Unidad</label>
+                            <label htmlFor="">Unidad</label>
                             <InputText id="unidad" value={product.unidad} onChange={(e) => onInputChange(e, 'unidad')} required autoFocus className={classNames({ 'p-invalid': submitted && !product.unidad })} />
-                            {submitted && !product.unidad && <small className="p-invalid">Name is required.</small>}
+                            {submitted && !product.unidad && <small className="p-invalid">Unidad is required.</small>}
                         </div>
                     </Dialog>
 
