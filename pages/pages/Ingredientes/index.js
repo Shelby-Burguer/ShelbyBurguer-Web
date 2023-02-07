@@ -14,6 +14,8 @@ import { Toolbar } from 'primereact/toolbar';
 import { classNames } from 'primereact/utils';
 import React, { useEffect, useRef, useState } from 'react';
 import { IngredienteService } from '../../../demo/service/IngredienteService';
+import Router from 'next/router';
+
 const Crud = () => {
     let emptyProduct = {
         id: null,
@@ -22,7 +24,7 @@ const Crud = () => {
     };
 
     const [products, setProducts] = useState(null);
-    const [test, setTest] = useState(null);
+    const [resProduct, setResProduct] = React.useState(emptyProduct);
     const [productDialog, setProductDialog] = useState(false);
     const [deleteProductDialog, setDeleteProductDialog] = useState(false);
     const [deleteProductsDialog, setDeleteProductsDialog] = useState(false);
@@ -62,20 +64,46 @@ const Crud = () => {
         setDeleteProductsDialog(false);
     };
 
-    const saveProduct = () => {
-        setSubmitted(true);
+    const awaitTimeout = delay => new Promise(resolve => setTimeout(resolve, delay));
+    
+    async function postest(data) {
+        let bayProduct = {
+        id: null,
+        nombre: '',
+        unidad: '',
+    };
 
+        const res = await fetch('http://localhost:10000/ingrediente/create',{
+            headers: { 'content-type': 'application/json'},
+            method: 'POST',
+            body: JSON.stringify({
+                nombre: data.nombre,
+                unidad: data.unidad
+            }),
+        })
+    await res.json().then((dat) => {bayProduct.id = dat.id, bayProduct.nombre = dat.nombre, bayProduct.unidad = dat.unidad});
+    return bayProduct;
+    }
+
+    const saveProduct = async() => {
+        setSubmitted(true);
+        setResProduct(emptyProduct)
         if (product.nombre.trim()) {
             let _products = [...products];
             let _product = { ...product };
+
             if (product.id) {
+                const index = findIndexById(product.id);
+                _products[index] = _product;
                 const ingredienteService = new IngredienteService();
                 ingredienteService.updateIngredientes(_product);
                 toast.current.show({ severity: 'success', summary: 'Successful', detail: 'Product Updated', life: 3000 });
             } else {
-                 const ingredienteService = new IngredienteService();
-                 ingredienteService.postIngredientes(_product);
-                _products.push(_product);
+                const ingredienteService = new IngredienteService();
+                const response = await ingredienteService.postIngredientes(_product);
+                 //const response = await postest(_product);
+                 _product = { ...response }
+                 _products.push(_product);
                 toast.current.show({ severity: 'success', summary: 'Successful', detail: 'Product Created', life: 3000 });
             }
             setProducts(_products);
@@ -94,8 +122,8 @@ const Crud = () => {
         setDeleteProductDialog(true);
     };
 
+    /*Para eliminar solo el que tiene el boton*/ 
     const deleteProduct = () => {
-        console.log('DeleteProduct', product);
         let _products = products.filter((val) => val.id !== product.id);
         setProducts(_products);
         setDeleteProductDialog(false);
@@ -111,7 +139,7 @@ const Crud = () => {
             if (products[i].id === id) {
                 index = i;
                 break;
-            }
+            }   
         }
 
         return index;
@@ -133,16 +161,15 @@ const Crud = () => {
     const confirmDeleteSelected = () => {
         setDeleteProductsDialog(true);
     };
-
+    /*Para eliminar todos los seleccionados en checkbox*/ 
     const deleteSelectedProducts = () => {
         console.log('Delete Select Product',selectedProducts);
         let _products = products.filter((val) => !selectedProducts.includes(val));
+        const ingredienteService = new IngredienteService();
+        ingredienteService.DeleteIngredientes(selectedProducts[0].id);
         setProducts(_products);
         setDeleteProductsDialog(false);
-        setSelectedProducts(null);
-        console.log('Que es?',selectedProducts.id);
-        /*const ingredienteService = new IngredienteService();
-        ingredienteService.DeleteIngredientes(selectedProducts.id);*/
+        setSelectedProducts(null);    
         toast.current.show({ severity: 'success', summary: 'Successful', detail: 'Products Deleted', life: 3000 });
     };
 
@@ -172,8 +199,10 @@ const Crud = () => {
         return (
             <React.Fragment>
                 <div className="my-2">
-                    <Button label="New" icon="pi pi-plus" className="p-button-success mr-2" onClick={openNew} />
-                    <Button label="Delete" icon="pi pi-trash" className="p-button-danger" onClick={confirmDeleteSelected} disabled={!selectedProducts || !selectedProducts.length} />
+                 <span className="block mt-2 md:mt-0 p-input-icon-left">
+                        <i className="pi pi-search" />
+                        <InputText type="search" onInput={(e) => setGlobalFilter(e.target.value)} placeholder="Buscar..." />
+                 </span>
                 </div>
             </React.Fragment>
         );
@@ -182,8 +211,8 @@ const Crud = () => {
     const rightToolbarTemplate = () => {
         return (
             <React.Fragment>
-                <FileUpload mode="basic" accept="image/*" maxFileSize={1000000} label="Import" chooseLabel="Import" className="mr-2 inline-block" />
-                <Button label="Export" icon="pi pi-upload" className="p-button-help" onClick={exportCSV} />
+                <Button label="Nuevo" icon="pi pi-plus" className="p-button-success mr-2" onClick={openNew} />
+                <Button label="Exportar" icon="pi pi-upload" className="p-button-help" onClick={exportCSV} />
             </React.Fragment>
         );
     };
@@ -217,13 +246,10 @@ const Crud = () => {
 
     const header = (
         <div className="flex flex-column md:flex-row md:justify-content-between md:align-items-center">
-            <h5 className="m-0">Manage Products</h5>
-            <span className="block mt-2 md:mt-0 p-input-icon-left">
-                <i className="pi pi-search" />
-                <InputText type="search" onInput={(e) => setGlobalFilter(e.target.value)} placeholder="Search..." />
-            </span>
+            <h5 className="m-0">Manejo de ingredientes</h5>
         </div>
     );
+
 
     const productDialogFooter = (
         <>
@@ -262,15 +288,15 @@ const Crud = () => {
                         rowsPerPageOptions={[5, 10, 25]}
                         className="datatable-responsive"
                         paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
-                        currentPageReportTemplate="Showing {first} to {last} of {totalRecords} products"
+                        currentPageReportTemplate="Mostrar {first} a {last} de {totalRecords} producto"
                         globalFilter={globalFilter}
                         emptyMessage="No products found."
                         header={header}
                         responsiveLayout="scroll"
                     >
                         <Column selectionMode="multiple" headerStyle={{ width: '4rem' }}></Column>
-                        <Column field="nombre" header="Nombre" sortable body={nombreBodyTemplate} headerStyle={{ minWidth: '15rem' }}></Column>
-                        <Column field="unidad" header="Unidad" sortable body={unidadBodyTemplate} headerStyle={{ minWidth: '15rem' }}></Column>
+                        <Column field="nombre" header="Nombre" sortable body={nombreBodyTemplate} headerStyle={{ minWidth: '10rem' }}></Column>
+                        <Column field="unidad" header="Unidad" sortable body={unidadBodyTemplate} headerStyle={{ minWidth: '10rem' }}></Column>
                         <Column body={actionBodyTemplate} headerStyle={{ minWidth: '10rem' }}></Column>
                     </DataTable>
 

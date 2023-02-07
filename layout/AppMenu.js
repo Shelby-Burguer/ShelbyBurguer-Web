@@ -149,22 +149,7 @@ const AppMenu = () => {
                 }
             ]
         },
-        {
-            label: 'Get Started',
-            items: [
-                {
-                    label: 'Documentation',
-                    icon: 'pi pi-fw pi-question',
-                    to: '/documentation'
-                },
-                {
-                    label: 'View Source',
-                    icon: 'pi pi-fw pi-search',
-                    url: 'https://github.com/primefaces/sakai-react',
-                    target: '_blank'
-                }
-            ]
-        }
+
     ];
 
     return (
@@ -173,12 +158,6 @@ const AppMenu = () => {
                 {model.map((item, i) => {
                     return !item.seperator ? <AppMenuitem item={item} root={true} index={i} key={item.label} /> : <li className="menu-separator"></li>;
                 })}
-
-                <Link href="https://www.primefaces.org/primeblocks-react">
-                    <a target="_blank" style={{ cursor: 'pointer' }}>
-                        <img alt="Prime Blocks" className="w-full mt-3" src={`${contextPath}/layout/images/banner-primeblocks${layoutConfig.colorScheme === 'light' ? '' : '-dark'}.png`} />
-                    </a>
-                </Link>
             </ul>
         </MenuProvider>
     );
