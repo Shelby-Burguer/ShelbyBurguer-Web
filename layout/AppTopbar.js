@@ -17,14 +17,13 @@ const AppTopbar = forwardRef((props, ref) => {
         topbarmenu: topbarmenuRef.current,
         topbarmenubutton: topbarmenubuttonRef.current
     }));
-/*Colocar logo de shelby Burguer */
+
     return (
         <div className="layout-topbar">
             <Link href="/">
                 <a className="layout-topbar-logo">
                     <>
-                        <img src={`${contextPath}/layout/images/logo-${layoutConfig.colorScheme !== 'light' ? 'white' : 'dark'}.svg`} width="47.22px" height={'35px'} widt={'true'} alt="logo" />
-                        <span>SAKAI</span>
+                        <img src={`${contextPath}/layout/images/SHELBY LOGO -ai.svg`} width="120px" height={'45px'} widt={'true'} alt="logo" />
                     </>
                 </a>
             </Link>

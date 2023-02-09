@@ -11,10 +11,6 @@ import { LayoutContext } from './context/layoutcontext';
 const AppConfig = (props) => {
     const [scales] = useState([12, 13, 14, 15, 16]);
     const { layoutConfig, setLayoutConfig, layoutState, setLayoutState } = useContext(LayoutContext);
-    console.log('Llega layoutConfig:', layoutConfig);
-    console.log('Llega setLayoutConfig:', setLayoutConfig);
-    console.log('Llega setLayoutState:', layoutState);
-    console.log('Llega setLayoutState:', setLayoutState);
     
     const contextPath = getConfig().publicRuntimeConfig.contextPath;
     
@@ -95,9 +91,9 @@ const AppConfig = (props) => {
     return (
         <>
         
-            { <button className="layout-config-button p-link" type="button" onClick={onConfigButtonClick}>
+            {/* <button className="layout-config-button p-link" type="button" onClick={onConfigButtonClick}>
                 <i className="pi pi-cog"></i>
-            </button> }
+            </button>*/ }
          
             <Sidebar visible={layoutState.configSidebarVisible} onHide={onConfigSidebarHide} position="right" className="layout-config-sidebar w-20rem">
                 <h5>Scale</h5>

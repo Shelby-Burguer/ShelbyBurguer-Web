@@ -15,6 +15,9 @@ import { classNames } from 'primereact/utils';
 import React, { useEffect, useRef, useState } from 'react';
 import { IngredienteService } from '../../../demo/service/IngredienteService';
 import Router from 'next/router';
+import { Tooltip } from 'primereact/tooltip';
+import { ProgressBar } from 'primereact/progressbar';
+import { Tag } from 'primereact/tag';
 
 const Crud = () => {
     let emptyProduct = {
@@ -24,7 +27,7 @@ const Crud = () => {
     };
 
     const [products, setProducts] = useState(null);
-    const [resProduct, setResProduct] = React.useState(emptyProduct);
+    const [file, setfile] = useState(null); 
     const [productDialog, setProductDialog] = useState(false);
     const [deleteProductDialog, setDeleteProductDialog] = useState(false);
     const [deleteProductsDialog, setDeleteProductsDialog] = useState(false);
@@ -35,7 +38,9 @@ const Crud = () => {
     const toast = useRef(null);
     const dt = useRef(null);
     const contextPath = getConfig().publicRuntimeConfig.contextPath;
-
+    const [totalSize, setTotalSize] = useState(0);
+    const fileUploadRef = useRef(null);
+    
     useEffect(() => {
         const ingredienteService = new IngredienteService();
         ingredienteService.getIngredientes().then((data) => setProducts(data));
@@ -65,29 +70,9 @@ const Crud = () => {
     };
 
     const awaitTimeout = delay => new Promise(resolve => setTimeout(resolve, delay));
-    
-    async function postest(data) {
-        let bayProduct = {
-        id: null,
-        nombre: '',
-        unidad: '',
-    };
-
-        const res = await fetch('http://localhost:10000/ingrediente/create',{
-            headers: { 'content-type': 'application/json'},
-            method: 'POST',
-            body: JSON.stringify({
-                nombre: data.nombre,
-                unidad: data.unidad
-            }),
-        })
-    await res.json().then((dat) => {bayProduct.id = dat.id, bayProduct.nombre = dat.nombre, bayProduct.unidad = dat.unidad});
-    return bayProduct;
-    }
 
     const saveProduct = async() => {
         setSubmitted(true);
-        setResProduct(emptyProduct)
         if (product.nombre.trim()) {
             let _products = [...products];
             let _product = { ...product };
@@ -99,9 +84,9 @@ const Crud = () => {
                 ingredienteService.updateIngredientes(_product);
                 toast.current.show({ severity: 'success', summary: 'Successful', detail: 'Product Updated', life: 3000 });
             } else {
+                console.log('File', file)
                 const ingredienteService = new IngredienteService();
                 const response = await ingredienteService.postIngredientes(_product);
-                 //const response = await postest(_product);
                  _product = { ...response }
                  _products.push(_product);
                 toast.current.show({ severity: 'success', summary: 'Successful', detail: 'Product Created', life: 3000 });
@@ -195,6 +180,117 @@ const Crud = () => {
         setProduct(_product);
     };
 
+    const onUpload = () => {
+        toast.current.show({severity: 'info', summary: 'Success', detail: 'File Uploaded'});
+    }
+
+    const onTemplateSelect = (e) => {
+        let _totalSize = totalSize;
+        e.files.forEach(file => {
+            _totalSize += file.size;
+        });
+
+        setTotalSize(_totalSize);
+    }
+
+    const onTemplateUpload = (e) => {
+        let _totalSize = 0;
+        e.files.forEach(file => {
+            _totalSize += (file.size || 0);
+        });
+
+        setTotalSize(_totalSize);
+        toast.current.show({severity: 'info', summary: 'Success', detail: 'File Uploaded'});
+    }
+
+    const onTemplateClear = () => {
+        setTotalSize(0);
+    }
+
+    const onBasicUpload = () => {
+        toast.current.show({severity: 'info', summary: 'Success', detail: 'File Uploaded with Basic Mode'});
+    }
+
+    const onBasicUploadAuto = () => {
+        toast.current.show({severity: 'info', summary: 'Success', detail: 'File Uploaded with Auto Mode'});
+    }
+
+     const headerTemplate = (options) => {
+        const { className, chooseButton, uploadButton, cancelButton } = options;
+        const value = totalSize/10000;
+        const formatedValue = fileUploadRef && fileUploadRef.current ? fileUploadRef.current.formatSize(totalSize) : '0 B';
+
+        return (
+            <div className={className} style={{backgroundColor: 'transparent', display: 'flex', alignItems: 'center'}}>
+                {chooseButton}
+                {uploadButton}
+                {cancelButton}
+                <ProgressBar value={value} displayValueTemplate={() => `${formatedValue} / 1 MB`} style={{width: '300px', height: '20px', marginLeft: 'auto'}}></ProgressBar>
+            </div>
+        );
+    }
+
+    const itemTemplate = (file, props) => {
+        return (
+            <div className="flex align-items-center flex-wrap">
+                <div className="flex align-items-center" style={{width: '40%'}}>
+                    <img alt={file.name} role="presentation" src={file.objectURL} width={100} />
+                    <span className="flex flex-column text-left ml-3">
+                        {file.name}
+                        <small>{new Date().toLocaleDateString()}</small>
+                    </span>
+                </div>
+                <Tag value={props.formatSize} severity="warning" className="px-3 py-2" />
+                <Button type="button" icon="pi pi-times" className="p-button-outlined p-button-rounded p-button-danger ml-auto" onClick={() => onTemplateRemove(file, props.onRemove)} />
+            </div>
+        )
+    }
+
+    const emptyTemplate = () => {
+        return (
+            <div className="flex align-items-center flex-column">
+                <i className="pi pi-image mt-3 p-5" style={{'fontSize': '5em', borderRadius: '50%', backgroundColor: 'var(--surface-b)', color: 'var(--surface-d)'}}></i>
+                <span style={{'fontSize': '1.2em', color: 'var(--text-color-secondary)'}} className="my-5">Drag and Drop Image Here</span>
+            </div>
+        )
+    }
+
+    const customBase64Uploader = async (event) => {
+        // convert file to base64 encoded
+        const file = event.files[0];
+        const reader = new FileReader();
+        let blob = await fetch(file.objectURL).then(r => r.blob()); //blob:url
+        reader.readAsDataURL(blob);
+        reader.onloadend = function () {
+            const base64data = reader.result;
+            console.log(base64data);
+        }
+    }
+
+    const myUploader = (event) => {
+        const file = event.files[0];
+        setfile(file);
+        console.log('Llego la imagen', file);
+    }
+    const chooseOptions = {
+        label: 'Archivo', 
+        icon: 'pi pi-fw pi-plus'
+    };
+
+    const uploadOptions = {
+        label: 'Guardar', 
+        icon: 'pi pi-upload', 
+        className: 'p-button-success',
+        disabled: true
+    };
+    
+    const cancelOptions = {
+        label: 'Cancelar', 
+        icon: 'pi pi-times', 
+        className: 'p-button-danger'
+    };
+    
+
     const leftToolbarTemplate = () => {
         return (
             <React.Fragment>
@@ -235,6 +331,15 @@ const Crud = () => {
         );
     };
 
+    const imageBodyTemplate = (rowData) => {
+        return (
+            <>
+                <span className="p-column-title">Image</span>
+                <img src={`${contextPath}/demo/images/product/${rowData.image}`} alt={rowData.image} className="shadow-2" width="100" />
+            </>
+        );
+    };
+
     const actionBodyTemplate = (rowData) => {
         return (
             <>
@@ -249,7 +354,6 @@ const Crud = () => {
             <h5 className="m-0">Manejo de ingredientes</h5>
         </div>
     );
-
 
     const productDialogFooter = (
         <>
@@ -297,20 +401,38 @@ const Crud = () => {
                         <Column selectionMode="multiple" headerStyle={{ width: '4rem' }}></Column>
                         <Column field="nombre" header="Nombre" sortable body={nombreBodyTemplate} headerStyle={{ minWidth: '10rem' }}></Column>
                         <Column field="unidad" header="Unidad" sortable body={unidadBodyTemplate} headerStyle={{ minWidth: '10rem' }}></Column>
+                        <Column header="Image" body={imageBodyTemplate}></Column>
                         <Column body={actionBodyTemplate} headerStyle={{ minWidth: '10rem' }}></Column>
                     </DataTable>
 
-                    <Dialog visible={productDialog} style={{ width: '450px' }} header="Detalle de Ingredientes" modal className="p-fluid" footer={productDialogFooter} onHide={hideDialog}>
+                    <Dialog visible={productDialog} style={{ width: '550px' }} header="Detalle de Ingredientes" modal className="p-fluid" footer={productDialogFooter} onHide={hideDialog}>
                         {product.image && <img src={`${contextPath}/demo/images/product/${product.image}`} alt={product.image} width="150" className="mt-0 mx-auto mb-5 block shadow-2" />}
                         <div className="field">
-                            <label htmlFor="nombre">Nombre</label>
+                            <h6 htmlFor="nombre">Nombre</h6>
                             <InputText id="nombre" value={product.nombre} onChange={(e) => onInputChange(e, 'nombre')} required autoFocus className={classNames({ 'p-invalid': submitted && !product.nombre })} />
                             {submitted && !product.nombre && <small className="p-invalid">Name is required.</small>}
                         </div>
                         <div className="field">
-                            <label htmlFor="unidad">Unidad</label>
+                            <h6 htmlFor="unidad">Unidad</h6>
                             <InputText id="unidad" value={product.unidad} onChange={(e) => onInputChange(e, 'unidad')} required autoFocus className={classNames({ 'p-invalid': submitted && !product.unidad })} />
                             {submitted && !product.unidad && <small className="p-invalid">Name is required.</small>}
+                        </div>
+                        <div>
+                            <Toast ref={toast}></Toast>
+
+                            <Tooltip target=".custom-choose-btn" content="Choose" position="bottom" />
+                            <Tooltip target=".custom-upload-btn" content="Upload" position="bottom" />
+                            <Tooltip target=".custom-cancel-btn" content="Clear" position="bottom" />
+
+                            <div className="card">
+
+                                <h6>Agregar imagen</h6>
+                                <FileUpload ref={fileUploadRef} name="demo[]" url="https://primefaces.org/primereact/showcase/upload.php" multiple accept="image/*" maxFileSize={1000000}
+                                    onUpload={onTemplateUpload} onSelect={onTemplateSelect} onError={onTemplateClear} onClear={onTemplateClear}
+                                    headerTemplate={headerTemplate} itemTemplate={itemTemplate} emptyTemplate={emptyTemplate}
+                                    chooseOptions={chooseOptions} uploadOptions={uploadOptions} cancelOptions={cancelOptions} />
+
+                            </div>
                         </div>
                     </Dialog>
 
