@@ -24,6 +24,8 @@ const Crud = () => {
         id: null,
         nombre: '',
         unidad: '',
+        image: null,
+
     };
 
     const [products, setProducts] = useState(null);
@@ -84,10 +86,21 @@ const Crud = () => {
                 ingredienteService.updateIngredientes(_product);
                 toast.current.show({ severity: 'success', summary: 'Successful', detail: 'Product Updated', life: 3000 });
             } else {
-                console.log('File', file)
+                
                 const ingredienteService = new IngredienteService();
-                const response = await ingredienteService.postIngredientes(_product);
+                const response = await ingredienteService.postIngredientes(_product, file);
                  _product = { ...response }
+                 
+                 //console.log('test',_product.image.objectURL)
+                 /*const test  = new FileReader();
+                 test.readAsDataURL(response.image);
+                 test.addEventListener('load', () => {
+                    const res = test.result;
+                    _product.image = res.toString();
+                    console.log('resultado',_product.image);
+                 })
+                 */
+                 
                  _products.push(_product);
                 toast.current.show({ severity: 'success', summary: 'Successful', detail: 'Product Created', life: 3000 });
             }
@@ -186,7 +199,7 @@ const Crud = () => {
 
     const onTemplateSelect = (e) => {
         let _totalSize = totalSize;
-        e.files.forEach(file => {
+        Object.keys(e.files).forEach(file => {
             _totalSize += file.size;
         });
 
@@ -207,30 +220,24 @@ const Crud = () => {
         setTotalSize(0);
     }
 
-    const onBasicUpload = () => {
-        toast.current.show({severity: 'info', summary: 'Success', detail: 'File Uploaded with Basic Mode'});
-    }
-
-    const onBasicUploadAuto = () => {
-        toast.current.show({severity: 'info', summary: 'Success', detail: 'File Uploaded with Auto Mode'});
+    const onTemplateRemove = (file, callback) => {
+        setTotalSize(totalSize - file.size);
+        callback();
     }
 
      const headerTemplate = (options) => {
-        const { className, chooseButton, uploadButton, cancelButton } = options;
-        const value = totalSize/10000;
-        const formatedValue = fileUploadRef && fileUploadRef.current ? fileUploadRef.current.formatSize(totalSize) : '0 B';
-
+        const { className, chooseButton, cancelButton } = options;
         return (
             <div className={className} style={{backgroundColor: 'transparent', display: 'flex', alignItems: 'center'}}>
-                {chooseButton}
-                {uploadButton}
+                {chooseButton}       
                 {cancelButton}
-                <ProgressBar value={value} displayValueTemplate={() => `${formatedValue} / 1 MB`} style={{width: '300px', height: '20px', marginLeft: 'auto'}}></ProgressBar>
             </div>
         );
     }
 
     const itemTemplate = (file, props) => {
+    console.log('Original File', file)
+    setfile(file);
         return (
             <div className="flex align-items-center flex-wrap">
                 <div className="flex align-items-center" style={{width: '40%'}}>
@@ -240,8 +247,8 @@ const Crud = () => {
                         <small>{new Date().toLocaleDateString()}</small>
                     </span>
                 </div>
-                <Tag value={props.formatSize} severity="warning" className="px-3 py-2" />
-                <Button type="button" icon="pi pi-times" className="p-button-outlined p-button-rounded p-button-danger ml-auto" onClick={() => onTemplateRemove(file, props.onRemove)} />
+                <Tag value={props.formatSize} severity="warning" className="px-3 py-2 ml-auto" />
+                
             </div>
         )
     }
@@ -249,41 +256,18 @@ const Crud = () => {
     const emptyTemplate = () => {
         return (
             <div className="flex align-items-center flex-column">
-                <i className="pi pi-image mt-3 p-5" style={{'fontSize': '5em', borderRadius: '50%', backgroundColor: 'var(--surface-b)', color: 'var(--surface-d)'}}></i>
-                <span style={{'fontSize': '1.2em', color: 'var(--text-color-secondary)'}} className="my-5">Drag and Drop Image Here</span>
+                <i className="pi pi-image mt-1 p-5" style={{'fontSize': '4em', borderRadius: '50%', backgroundColor: 'var(--surface-b)', color: 'var(--surface-d)'}}></i>
+                <span style={{'fontSize': '1.2em', color: 'var(--text-color-secondary)'}} className="my-4">Arrastre y suelte la imagen aqui</span>
             </div>
         )
     }
 
-    const customBase64Uploader = async (event) => {
-        // convert file to base64 encoded
-        const file = event.files[0];
-        const reader = new FileReader();
-        let blob = await fetch(file.objectURL).then(r => r.blob()); //blob:url
-        reader.readAsDataURL(blob);
-        reader.onloadend = function () {
-            const base64data = reader.result;
-            console.log(base64data);
-        }
-    }
-
-    const myUploader = (event) => {
-        const file = event.files[0];
-        setfile(file);
-        console.log('Llego la imagen', file);
-    }
     const chooseOptions = {
         label: 'Archivo', 
         icon: 'pi pi-fw pi-plus'
     };
 
-    const uploadOptions = {
-        label: 'Guardar', 
-        icon: 'pi pi-upload', 
-        className: 'p-button-success',
-        disabled: true
-    };
-    
+
     const cancelOptions = {
         label: 'Cancelar', 
         icon: 'pi pi-times', 
@@ -335,7 +319,7 @@ const Crud = () => {
         return (
             <>
                 <span className="p-column-title">Image</span>
-                <img src={`${contextPath}/demo/images/product/${rowData.image}`} alt={rowData.image} className="shadow-2" width="100" />
+                <img src={rowData.image} alt={rowData.image} className="shadow-2" width="100" />
             </>
         );
     };
@@ -418,8 +402,6 @@ const Crud = () => {
                             {submitted && !product.unidad && <small className="p-invalid">Name is required.</small>}
                         </div>
                         <div>
-                            <Toast ref={toast}></Toast>
-
                             <Tooltip target=".custom-choose-btn" content="Choose" position="bottom" />
                             <Tooltip target=".custom-upload-btn" content="Upload" position="bottom" />
                             <Tooltip target=".custom-cancel-btn" content="Clear" position="bottom" />
@@ -427,11 +409,10 @@ const Crud = () => {
                             <div className="card">
 
                                 <h6>Agregar imagen</h6>
-                                <FileUpload ref={fileUploadRef} name="demo[]" url="https://primefaces.org/primereact/showcase/upload.php" multiple accept="image/*" maxFileSize={1000000}
-                                    onUpload={onTemplateUpload} onSelect={onTemplateSelect} onError={onTemplateClear} onClear={onTemplateClear}
-                                    headerTemplate={headerTemplate} itemTemplate={itemTemplate} emptyTemplate={emptyTemplate}
-                                    chooseOptions={chooseOptions} uploadOptions={uploadOptions} cancelOptions={cancelOptions} />
-
+                                <FileUpload ref={fileUploadRef} name="demo[]" url="https://primefaces.org/primereact/showcase/upload.php" accept="image/*" maxFileeSize={1000000}
+                                    onUpload={onTemplateUpload} onSelect={onTemplateSelect} onError={onTemplateClear} onClear={onTemplateClear} onTemplateRemove= {onTemplateRemove}
+                                    headerTemplate={headerTemplate} itemTemplate={itemTemplate} emptyTemplate={emptyTemplate} footer={productDialogFooter}
+                                    chooseOptions={chooseOptions} cancelOptions={cancelOptions}/>
                             </div>
                         </div>
                     </Dialog>
@@ -446,7 +427,6 @@ const Crud = () => {
                             )}
                         </div>
                     </Dialog>
-
                     <Dialog visible={deleteProductsDialog} style={{ width: '450px' }} header="Confirm" modal footer={deleteProductsDialogFooter} onHide={hideDeleteProductsDialog}>
                         <div className="flex align-items-center justify-content-center">
                             <i className="pi pi-exclamation-triangle mr-3" style={{ fontSize: '2rem' }} />

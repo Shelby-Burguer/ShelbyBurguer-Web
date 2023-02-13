@@ -31,21 +31,49 @@ export class IngredienteService {
         })
     }
         
-    async postIngredientes(data) {
+    async postIngredientes(data, file) {
         let resProduct = {
             id: null,
             nombre: '',
             unidad: '',
+            image: null,
         };
-        const response = fetch('http://localhost:10000/ingrediente/create', {
+
+        let resImg;
+        
+        const responseBody = fetch('http://localhost:10000/ingrediente/create', {
             headers: { 'content-type': 'application/json'},
             method: 'POST',
             body: JSON.stringify({
                 nombre: data.nombre,
-                unidad: data.unidad
+                unidad: data.unidad,
             }),
+          
         })
-        await response.then((dat) => dat.json().then((res) => {resProduct.id = res.id, resProduct.nombre = res.nombre, resProduct.unidad = res.unidad}));
+
+        await responseBody.then((dat) => dat.json().then((res) =>  {resProduct.id = res.id, resProduct.nombre = res.nombre, resProduct.unidad = res.unidad }));
+
+        const fileReq = new FormData();
+        fileReq.append('file', file);
+   
+        const responseFile = fetch('http://localhost:10000/ingrediente/create/upload/'+ resProduct.id, {
+            method: 'PUT',
+            body: fileReq
+ 
+        })
+
+         await responseFile.then((file) => file.json().then((img) => resImg = { ...img }));
+        
+        let blobtest = new Blob([resImg.datosImagen.data], {type: 'image/png'});
+
+        const blobURL = URL.createObjectURL(blobtest);
+
+        let test = new File([blobtest], resImg.nombreImagen, {type: blobtest.type})
+
+        test.objectURL = blobURL;
+        console.log('Soy la respuesta file', test);
+        resProduct.image = test
+        
         return resProduct;
     }
 }
