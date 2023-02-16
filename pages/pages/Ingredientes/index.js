@@ -426,7 +426,6 @@ const Crud = () => {
                     </DataTable>
 
                     <Dialog visible={productDialog} style={{ width: '550px' }} header="Detalle de Ingredientes" modal className="p-fluid" footer={productDialogFooter} onHide={hideDialog}>
-                        {product.fileImage && <img src={`${contextPath}/demo/images/product/${product.fileImage}`} alt={product.fileImage} width="150" className="mt-0 mx-auto mb-5 block shadow-2" />}
                         <div className="field">
                             <h6 htmlFor="nombre">Nombre</h6>
                             <InputText id="nombre" value={product.nombre} onChange={(e) => onInputChange(e, 'nombre')} required autoFocus className={classNames({ 'p-invalid': submitted && !product.nombre })} />

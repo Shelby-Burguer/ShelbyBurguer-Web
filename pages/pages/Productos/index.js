@@ -1,10 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { DataView, DataViewLayoutOptions } from 'primereact/dataview';
 import { Button } from 'primereact/button';
 import { Dropdown } from 'primereact/dropdown';
 import { Rating } from 'primereact/rating';
 import { PickList } from 'primereact/picklist';
 import { OrderList } from 'primereact/orderlist';
+import { classNames } from 'primereact/utils';
+import { Tooltip } from 'primereact/tooltip';
+import { FileUpload } from 'primereact/fileupload';
 import { ProductService } from '../../../demo/service/ProductosServiceShelbyBurguer';
 import { InputText } from 'primereact/inputtext';
 import { Toolbar } from 'primereact/toolbar';
@@ -22,10 +25,21 @@ const ListDemo = () => {
         { name: 'Barcelona', code: 'BRC' },
         { name: 'Rome', code: 'RM' }
     ];
+
+    let emptyProduct = {
+        id: null,
+        nombre: '',
+        unidad: '',
+        nombreImage: '',
+        urlImage: '',
+        fileImage: '',
+    };
+
     const [products, setProducts] = useState(null);
-    const [product, setProduct] = useState(null);
+    const [product, setProduct] = useState(emptyProduct);
     const [picklistSourceValue, setPicklistSourceValue] = useState(listValue);
     const [picklistTargetValue, setPicklistTargetValue] = useState([]);
+    const [submitted, setSubmitted] = useState(false);
     const [productDialog, setProductDialog] = useState(false);
     const [orderlistValue, setOrderlistValue] = useState(listValue);
     const [dataViewValue, setDataViewValue] = useState(null);
@@ -36,6 +50,7 @@ const ListDemo = () => {
     const [sortOrder, setSortOrder] = useState(null);
     const [sortField, setSortField] = useState(null);
     const contextPath = getConfig().publicRuntimeConfig.contextPath;
+    const fileUploadRef = useRef(null);
 
     const sortOptions = [
         { label: 'Price High to Low', value: '!price' },
@@ -62,21 +77,28 @@ const ListDemo = () => {
         }
     };
 
+    const onTemplateUpload = (e) => {
+        let _totalSize = 0;
+        e.files.forEach(file => {
+            _totalSize += (file.size || 0);
+        });
+    }
+
         const saveProduct = async() => {
         setSubmitted(true);
-        if (product.nombre.trim()) {
+        if (dataViewValue.name.trim()) {
             let _products = [...products];
             let _product = { ...product };
 
-            if (product.id) {
-                const index = findIndexById(product.id);
+            if (dataViewValue.id) {
+                const index = findIndexById(dataViewValue.id);
                 _products[index] = _product;
-                const ingredienteService = new IngredienteService();
-                ingredienteService.updateIngredientes(_product);
+                /*const ingredienteService = new IngredienteService();
+                ingredienteService.updateIngredientes(_product);*/
                 toast.current.show({ severity: 'success', summary: 'Successful', detail: 'Product Updated', life: 3000 });
             } else {
                 
-                const ingredienteService = new IngredienteService();
+                /*const ingredienteService = new IngredienteService();
                 const response = await ingredienteService.postIngredientes(_product, file);
                  _product = { ...response };
                  //console.log('test',_product.image.objectURL)
@@ -139,6 +161,14 @@ const ListDemo = () => {
         setProductDialog(true);
     };
 
+    const onInputChange = (e, name) => {
+        const val = (e.target && e.target.value) || '';
+        let _product = { ...product };
+        _product[`${name}`] = val;
+
+        setProduct(_product);
+    };
+
     const onSortChange = (event) => {
         const value = event.value;
 
@@ -197,64 +227,31 @@ const ListDemo = () => {
                     <DataView value={filteredValue || dataViewValue} layout={layout} paginator rows={9} sortOrder={sortOrder} sortField={sortField} itemTemplate={itemTemplate} header={dataViewHeader}></DataView>
                 </div>
             </div>
-
-            <div className="col-12 xl:col-8">
-                <div className="card">
-                    <h5>PickList</h5>
-                    <PickList
-                        source={picklistSourceValue}
-                        target={picklistTargetValue}
-                        sourceHeader="From"
-                        targetHeader="To"
-                        itemTemplate={(item) => <div>{item.name}</div>}
-                        onChange={(e) => {
-                            setPicklistSourceValue(e.source);
-                            setPicklistTargetValue(e.target);
-                        }}
-                        sourceStyle={{ height: '200px' }}
-                        targetStyle={{ height: '200px' }}
-                    ></PickList>
-                </div>
-            </div>
-
-            <div className="col-12 xl:col-4">
-                <div className="card">
-                    <h5>OrderList</h5>
-                    <OrderList
-                        value={orderlistValue}
-                        listStyle={{ height: '200px' }}
-                        className="p-orderlist-responsive"
-                        rows={10}
-                        header="Cities"
-                        itemTemplate={(item) => <div>{item.name}</div>}
-                        onChange={(e) => setOrderlistValue(e.value)}
-                    ></OrderList>
-                </div>
-            </div>
-                <Dialog visible={productDialog} style={{ width: '550px' }} header="Detalle de Ingredientes" modal className="p-fluid" footer={productDialogFooter} onHide={hideDialog}>
+                <Dialog visible={productDialog} style={{ width: '750px' }} header="Ingrese producto" modal className="p-fluid" footer={productDialogFooter} onHide={hideDialog}>
                     {product.fileImage && <img src={`${contextPath}/demo/images/product/${product.fileImage}`} alt={product.fileImage} width="150" className="mt-0 mx-auto mb-5 block shadow-2" />}
                     <div className="field">
                         <h6 htmlFor="nombre">Nombre</h6>
                         <InputText id="nombre" value={product.nombre} onChange={(e) => onInputChange(e, 'nombre')} required autoFocus className={classNames({ 'p-invalid': submitted && !product.nombre })} />
                         {submitted && !product.nombre && <small className="p-invalid">Name is required.</small>}
                     </div>
-                    <div className="field">
-                        <h6 htmlFor="unidad">Unidad</h6>
-                        <InputText id="unidad" value={product.unidad} onChange={(e) => onInputChange(e, 'unidad')} required autoFocus className={classNames({ 'p-invalid': submitted && !product.unidad })} />
-                        {submitted && !product.unidad && <small className="p-invalid">Name is required.</small>}
-                    </div>
-                    <div>
-                        <Tooltip target=".custom-choose-btn" content="Choose" position="bottom" />
-                        <Tooltip target=".custom-upload-btn" content="Upload" position="bottom" />
-                        <Tooltip target=".custom-cancel-btn" content="Clear" position="bottom" />
+                    <div className="col-12 xl:col-13">
                         <div className="card">
-                            <h6>Agregar imagen</h6>
-                            <FileUpload ref={fileUploadRef} name="demo[]" url="https://primefaces.org/primereact/showcase/upload.php" accept="image/*" maxFileeSize={1000000}
-                                onUpload={onTemplateUpload} onSelect={onTemplateSelect} onError={onTemplateClear} onClear={onTemplateClear} onTemplateRemove= {onTemplateRemove}
-                                headerTemplate={headerTemplate} itemTemplate={itemTemplate} emptyTemplate={emptyTemplate} footer={productDialogFooter}
-                                chooseOptions={chooseOptions} cancelOptions={cancelOptions}/>f
+                            <h5>Seleccione el ingrediente</h5>
+                            <PickList
+                                source={picklistSourceValue}
+                                target={picklistTargetValue}
+                                sourceHeader="Ingredientes"
+                                targetHeader="Ingrediente seleccionado"
+                                itemTemplate={(item) => <div>{item.name}</div>}
+                                onChange={(e) => {
+                                    setPicklistSourceValue(e.source);
+                                    setPicklistTargetValue(e.target);
+                                }}
+                                sourceStyle={{ height: '200px' }}
+                                targetStyle={{ height: '200px' }}
+                            ></PickList>
                         </div>
-                    </div>
+                    </div>      
                 </Dialog>
         </div>
 
