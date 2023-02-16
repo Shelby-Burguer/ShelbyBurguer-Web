@@ -42,7 +42,8 @@ const Crud = () => {
 
     useEffect(() => {
         const productService = new ProductService();
-        productService.getProducts().then((data) => setProducts(data));
+        productService.getProducts().then((data) => console.log(data));
+        
     }, []);
 
     const formatCurrency = (value) => {
@@ -141,6 +142,7 @@ const Crud = () => {
     };
 
     const deleteSelectedProducts = () => {
+        console.log('Seleccion de producto',selectedProducts);
         let _products = products.filter((val) => !selectedProducts.includes(val));
         setProducts(_products);
         setDeleteProductsDialog(false);
@@ -212,7 +214,7 @@ const Crud = () => {
         return (
             <>
                 <span className="p-column-title">Image</span>
-                <img src={`${contextPath}/demo/images/product/${rowData.image}`} alt={rowData.image} className="shadow-2" width="100" />
+                <img src={`${contextPath}${rowData.image}`} alt={rowData.image} className="shadow-2" width="100" />
             </>
         );
     };
@@ -290,7 +292,7 @@ const Crud = () => {
             <Button label="Yes" icon="pi pi-check" className="p-button-text" onClick={deleteSelectedProducts} />
         </>
     );
-
+console.log('Llego pero:',products);
     return (
         <div className="grid crud-demo">
             <div className="col-12">
