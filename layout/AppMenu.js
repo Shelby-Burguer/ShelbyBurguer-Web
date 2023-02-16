@@ -5,7 +5,6 @@ import { LayoutContext } from './context/layoutcontext';
 import { MenuProvider } from './context/menucontext';
 import Link from 'next/link';
 
-
 const AppMenu = () => {
     const { layoutConfig } = useContext(LayoutContext);
     const contextPath = getConfig().publicRuntimeConfig.contextPath;
@@ -15,9 +14,12 @@ const AppMenu = () => {
             items: [
                 { label: 'Dashboard', icon: 'pi pi-fw pi-home', to: '/' },
                 { label: 'Ingredientes', icon: 'pi pi-fw pi-home', to: '/pages/Ingredientes' },
-                { label: 'Productos', icon: 'pi pi-fw pi-home', to: '/pages/Productos' },
-
+                { label: 'Productos', icon: 'pi pi-fw pi-home', to: '/pages/Productos' }
             ]
+        },
+        {
+            label: 'Administrador',
+            items: [{ label: 'Clientes', icon: 'pi pi-fw pi-user-edit', to: '/pages/admin/clientes' }]
         },
         {
             label: 'UI Components',
@@ -120,7 +122,7 @@ const AppMenu = () => {
                             items: [
                                 { label: 'Submenu 1.1.1', icon: 'pi pi-fw pi-bookmark' },
                                 { label: 'Submenu 1.1.2', icon: 'pi pi-fw pi-bookmark' },
-                                { label: 'Submenu 1.1.3', icon: 'pi pi-fw pi-bookmark' },
+                                { label: 'Submenu 1.1.3', icon: 'pi pi-fw pi-bookmark' }
                             ]
                         },
                         {
@@ -150,8 +152,7 @@ const AppMenu = () => {
                     ]
                 }
             ]
-        },
-
+        }
     ];
 
     return (
