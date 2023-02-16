@@ -24,7 +24,10 @@ const Crud = () => {
         id: null,
         nombre: '',
         unidad: '',
-        image: null,
+        nombreImage: '',
+        urlImage: '',
+        fileImage: '',
+        
 
     };
 
@@ -43,9 +46,11 @@ const Crud = () => {
     const [totalSize, setTotalSize] = useState(0);
     const fileUploadRef = useRef(null);
     
-    useEffect(() => {
+    useEffect(async() => {
         const ingredienteService = new IngredienteService();
-        ingredienteService.getIngredientes().then((data) => setProducts(data));
+        const result = await ingredienteService.getIngredientes();
+        console.log('test', result);
+        setProducts(result);
     }, []);
 
     const formatCurrency = (value) => {
@@ -89,8 +94,10 @@ const Crud = () => {
                 
                 const ingredienteService = new IngredienteService();
                 const response = await ingredienteService.postIngredientes(_product, file);
-                 _product = { ...response }
-                 
+                 _product = { ...response };
+                 console.log('Imagen file', _product.fileImage);
+                 console.log('ImagenURL', _product.urlImage);
+                 console.log('ImagenName', _product.nombreImage);
                  //console.log('test',_product.image.objectURL)
                  /*const test  = new FileReader();
                  test.readAsDataURL(response.image);
@@ -235,8 +242,39 @@ const Crud = () => {
         );
     }
 
+    /*var saveBlob = (function () {
+    var a = document.createElement("a");
+    document.body.appendChild(a);
+    a.style = "display: none";
+    return function (blob, fileName) {
+        var url = window.URL.createObjectURL(blob);
+        a.href = url;
+        a.download = fileName;
+        a.click();
+        window.URL.revokeObjectURL(url);
+    };
+    }());*/
+
+    function saveBlob(blob, fileName) {
+    var a = document.createElement("a");
+    document.body.appendChild(a);
+    a.style = "display: none";
+
+    var url = window.URL.createObjectURL(blob);
+    a.href = url;
+    a.download = fileName;
+    a.click();
+    window.URL.revokeObjectURL(url);
+    };
+
+
+
     const itemTemplate = (file, props) => {
-    console.log('Original File', file)
+    console.log('Original File', file);
+
+
+
+    //saveBlob(file, 'test.png');
     setfile(file);
         return (
             <div className="flex align-items-center flex-wrap">
@@ -319,7 +357,7 @@ const Crud = () => {
         return (
             <>
                 <span className="p-column-title">Image</span>
-                <img src={rowData.image} alt={rowData.image} className="shadow-2" width="100" />
+                <img src={''} alt={rowData.nombreImage} className="shadow-2" width="100" />
             </>
         );
     };
@@ -390,7 +428,7 @@ const Crud = () => {
                     </DataTable>
 
                     <Dialog visible={productDialog} style={{ width: '550px' }} header="Detalle de Ingredientes" modal className="p-fluid" footer={productDialogFooter} onHide={hideDialog}>
-                        {product.image && <img src={`${contextPath}/demo/images/product/${product.image}`} alt={product.image} width="150" className="mt-0 mx-auto mb-5 block shadow-2" />}
+                        {product.fileImage && <img src={`${contextPath}/demo/images/product/${product.fileImage}`} alt={product.fileImage} width="150" className="mt-0 mx-auto mb-5 block shadow-2" />}
                         <div className="field">
                             <h6 htmlFor="nombre">Nombre</h6>
                             <InputText id="nombre" value={product.nombre} onChange={(e) => onInputChange(e, 'nombre')} required autoFocus className={classNames({ 'p-invalid': submitted && !product.nombre })} />

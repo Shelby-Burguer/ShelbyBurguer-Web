@@ -42,7 +42,7 @@ const Crud = () => {
 
     useEffect(() => {
         const productService = new ProductService();
-        productService.getProducts().then((data) => setProducts(data));
+        productService.getProducts().then((data) => console.log(data));
         
     }, []);
 

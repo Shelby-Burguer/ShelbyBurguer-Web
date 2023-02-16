@@ -7,8 +7,52 @@ export class IngredienteService {
     }
     
     
-    getIngredientes() {
-        return fetch('http://localhost:10000/ingrediente/all', { headers: { 'Cache-Control': 'no-cache' } }).then((res) => res.json());
+    async getIngredientes() {
+
+        let resProduct = {
+            id: null,
+            nombre: '',
+            unidad: '',
+            nombreImagen: '',
+            datosImagen: null,
+        };
+
+
+        const responseBody = fetch('http://localhost:10000/ingrediente/all', { 
+        headers: { 'Cache-Control': 'no-cache' },
+        method: 'GET',
+        }).then((res) => res.json())
+  
+
+        await responseBody.then((dat) => resProduct = {...dat});
+        let testresProduct = [];
+        let claves = Object.keys(resProduct); 
+        for(let i=0; i< claves.length; i++){
+            let clave = claves[i];
+            
+            const blobtest = new Blob([resProduct[clave].datosImagen], {type: 'image/png'});
+
+            let test = new File([blobtest], resProduct[clave].nombreImagen, {type: blobtest.type});
+
+            const blobURL = window.URL.createObjectURL(blobtest);
+
+            test.objectURL = blobURL;
+
+            delete resProduct[clave].nombreImagen;
+            delete resProduct[clave].datosImagen;
+            resProduct[clave].fileImage = test;
+            resProduct[clave].nombreImage = test.name;
+            resProduct[clave].urlImage= test.objectURL;
+
+            window.URL.revokeObjectURL(blobURL);
+
+            testresProduct.push(resProduct[clave]);
+
+        }
+        
+        
+        return testresProduct;
+
     }
 
     DeleteIngredientes(id) {
@@ -36,10 +80,15 @@ export class IngredienteService {
             id: null,
             nombre: '',
             unidad: '',
-            image: null,
+            nombreImage: '',
+            urlImage: '',
+            fileImage: '',
         };
 
-        let resImg;
+        let resImg = {
+        nombreImagen: '',
+        datosImagen: null,
+        }
         
         const responseBody = fetch('http://localhost:10000/ingrediente/create', {
             headers: { 'content-type': 'application/json'},
@@ -62,18 +111,22 @@ export class IngredienteService {
  
         })
 
-         await responseFile.then((file) => file.json().then((img) => resImg = { ...img }));
+        await responseFile.then((file) => file.json().then((img) => resImg = { ...img }));
         
-        let blobtest = new Blob([resImg.datosImagen.data], {type: 'image/png'});
+        const blobtest = new Blob([resImg.datosImagen.data], {type: 'image/png'});
+
+        const test = new File([blobtest], resImg.nombreImagen, {type: blobtest.type})
 
         const blobURL = URL.createObjectURL(blobtest);
 
-        let test = new File([blobtest], resImg.nombreImagen, {type: blobtest.type})
+        
 
         test.objectURL = blobURL;
         console.log('Soy la respuesta file', test);
-        resProduct.image = test
-        
+        resProduct.fileImage = test
+        resProduct.nombreImage = test.name
+        resProduct.urlImage = test.objectURL
+
         return resProduct;
     }
 }
