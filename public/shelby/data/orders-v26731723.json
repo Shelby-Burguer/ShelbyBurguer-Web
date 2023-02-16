@@ -1,0 +1,9 @@
+
+{
+    "data": [
+        {"id": 1, "numero_orden": 1, "fecha_orden": "02-16-2023","total_orden": 20},
+        {"id": 2, "numero_orden": 1, "fecha_orden": "02-17-2023","total_orden": 15},
+        {"id": 3, "numero_orden": 1, "fecha_orden": "02-18-2023","total_orden": 15},
+        {"id": 4, "numero_orden": 2, "fecha_orden": "03-1-2023","total_orden": 10}
+    ]
+}
