@@ -7,7 +7,10 @@ import { PickList } from 'primereact/picklist';
 import { OrderList } from 'primereact/orderlist';
 import { ProductService } from '../../../demo/service/ProductosServiceShelbyBurguer';
 import { InputText } from 'primereact/inputtext';
+import { Toolbar } from 'primereact/toolbar';
+import { Dialog } from 'primereact/dialog';
 import getConfig from 'next/config';
+
 
 const ListDemo = () => {
     const listValue = [
@@ -19,9 +22,11 @@ const ListDemo = () => {
         { name: 'Barcelona', code: 'BRC' },
         { name: 'Rome', code: 'RM' }
     ];
-
+    const [products, setProducts] = useState(null);
+    const [product, setProduct] = useState(null);
     const [picklistSourceValue, setPicklistSourceValue] = useState(listValue);
     const [picklistTargetValue, setPicklistTargetValue] = useState([]);
+    const [productDialog, setProductDialog] = useState(false);
     const [orderlistValue, setOrderlistValue] = useState(listValue);
     const [dataViewValue, setDataViewValue] = useState(null);
     const [globalFilterValue, setGlobalFilterValue] = useState('');
@@ -57,6 +62,83 @@ const ListDemo = () => {
         }
     };
 
+        const saveProduct = async() => {
+        setSubmitted(true);
+        if (product.nombre.trim()) {
+            let _products = [...products];
+            let _product = { ...product };
+
+            if (product.id) {
+                const index = findIndexById(product.id);
+                _products[index] = _product;
+                const ingredienteService = new IngredienteService();
+                ingredienteService.updateIngredientes(_product);
+                toast.current.show({ severity: 'success', summary: 'Successful', detail: 'Product Updated', life: 3000 });
+            } else {
+                
+                const ingredienteService = new IngredienteService();
+                const response = await ingredienteService.postIngredientes(_product, file);
+                 _product = { ...response };
+                 //console.log('test',_product.image.objectURL)
+                 /*const test  = new FileReader();
+                 test.readAsDataURL(response.image);
+                 test.addEventListener('load', () => {
+                    const res = test.result;
+                    _product.image = res.toString();
+                    console.log('resultado',_product.image);
+                 })
+                 */
+                 
+                 _products.push(_product);
+                toast.current.show({ severity: 'success', summary: 'Successful', detail: 'Product Created', life: 3000 });
+            }
+            setProducts(_products);
+            setProductDialog(false);
+            setProduct(emptyProduct);
+        }
+    };
+
+    const leftToolbarTemplate = () => {
+        return (
+            <React.Fragment>
+                <div className="my-1">
+                 <span className="block mt-1 md:mt-2 p-input-icon-left">
+                        <i className="pi pi-search" />
+                        <InputText value={globalFilterValue} onChange={onFilter} placeholder="Search by Name" />
+                 </span>
+                </div>
+            </React.Fragment>
+        );
+    };
+
+
+        const rightToolbarTemplate = () => {
+        return (
+            <React.Fragment>
+                <Button label="Nuevo" icon="pi pi-plus" className="p-button-success mr-2" onClick={openNew} />
+            </React.Fragment>
+        );
+    };
+    
+    const productDialogFooter = (
+        <>
+            <Button label="Cancel" icon="pi pi-times" className="p-button-text" onClick={hideDialog} />
+            <Button label="Save" icon="pi pi-check" className="p-button-text" onClick={saveProduct} />
+        </>
+    );
+
+    const hideDialog = () => {
+        setSubmitted(false);
+        setProductDialog(false);
+    };
+
+
+    const openNew = () => {
+        setProduct(emptyProduct);
+        setSubmitted(false);
+        setProductDialog(true);
+    };
+
     const onSortChange = (event) => {
         const value = event.value;
 
@@ -72,39 +154,9 @@ const ListDemo = () => {
     };
 
     const dataViewHeader = (
-        <div className="flex flex-column md:flex-row md:justify-content-between gap-2">
-            
-            <span className="p-input-icon-left">
-                <i className="pi pi-search" />
-                <InputText value={globalFilterValue} onChange={onFilter} placeholder="Search by Name" />
-            </span>
-
-        </div>
+            <Toolbar className="mb-4" left={leftToolbarTemplate} right={rightToolbarTemplate}></Toolbar>
     );
 
-    const dataviewListItem = (data) => {
-        return (
-            <div className="col-12">
-                <div className="flex flex-column md:flex-row align-items-center p-3 w-full">
-                    <img src={`${contextPath}/demo/images/Producto-ShaelbyBurguer/${data.image}`} alt={data.name} className="my-4 md:my-0 w-9 md:w-10rem shadow-2 mr-5" />
-                    <div className="flex-1 flex flex-column align-items-center text-center md:text-left">
-                        <div className="font-bold text-2xl">{data.name}</div>
-                        <div className="mb-2">{data.description}</div>
-                        
-                        <div className="flex align-items-center">
-                            <i className="pi pi-tag mr-2"></i>
-                            <span className="font-semibold">{data.category}</span>
-                        </div>
-                    </div>
-                    <div className="flex flex-row md:flex-column justify-content-between w-full md:w-auto align-items-center md:align-items-end mt-5 md:mt-0">
-                        <span className="text-2xl font-semibold mb-2 align-self-center md:align-self-end">${data.price}</span>
-                        <Button icon="pi pi-shopping-cart" label="Add to Cart" disabled={data.inventoryStatus === 'OUTOFSTOCK'} className="mb-2 p-button-sm"></Button>
-                        <span className={`product-badge status-${data.inventoryStatus.toLowerCase()}`}>{data.inventoryStatus}</span>
-                    </div>
-                </div>
-            </div>
-        );
-    };
 /*Este es el que muestra como recuadros*/
     const dataviewGridItem = (data) => {
         return (
@@ -141,7 +193,7 @@ const ListDemo = () => {
         <div className="grid list-demo">
             <div className="col-12">
                 <div className="card">
-                    <h5>DataView</h5>
+                    <h5>Productos</h5>
                     <DataView value={filteredValue || dataViewValue} layout={layout} paginator rows={9} sortOrder={sortOrder} sortField={sortField} itemTemplate={itemTemplate} header={dataViewHeader}></DataView>
                 </div>
             </div>
@@ -179,7 +231,34 @@ const ListDemo = () => {
                     ></OrderList>
                 </div>
             </div>
+                <Dialog visible={productDialog} style={{ width: '550px' }} header="Detalle de Ingredientes" modal className="p-fluid" footer={productDialogFooter} onHide={hideDialog}>
+                    {product.fileImage && <img src={`${contextPath}/demo/images/product/${product.fileImage}`} alt={product.fileImage} width="150" className="mt-0 mx-auto mb-5 block shadow-2" />}
+                    <div className="field">
+                        <h6 htmlFor="nombre">Nombre</h6>
+                        <InputText id="nombre" value={product.nombre} onChange={(e) => onInputChange(e, 'nombre')} required autoFocus className={classNames({ 'p-invalid': submitted && !product.nombre })} />
+                        {submitted && !product.nombre && <small className="p-invalid">Name is required.</small>}
+                    </div>
+                    <div className="field">
+                        <h6 htmlFor="unidad">Unidad</h6>
+                        <InputText id="unidad" value={product.unidad} onChange={(e) => onInputChange(e, 'unidad')} required autoFocus className={classNames({ 'p-invalid': submitted && !product.unidad })} />
+                        {submitted && !product.unidad && <small className="p-invalid">Name is required.</small>}
+                    </div>
+                    <div>
+                        <Tooltip target=".custom-choose-btn" content="Choose" position="bottom" />
+                        <Tooltip target=".custom-upload-btn" content="Upload" position="bottom" />
+                        <Tooltip target=".custom-cancel-btn" content="Clear" position="bottom" />
+                        <div className="card">
+                            <h6>Agregar imagen</h6>
+                            <FileUpload ref={fileUploadRef} name="demo[]" url="https://primefaces.org/primereact/showcase/upload.php" accept="image/*" maxFileeSize={1000000}
+                                onUpload={onTemplateUpload} onSelect={onTemplateSelect} onError={onTemplateClear} onClear={onTemplateClear} onTemplateRemove= {onTemplateRemove}
+                                headerTemplate={headerTemplate} itemTemplate={itemTemplate} emptyTemplate={emptyTemplate} footer={productDialogFooter}
+                                chooseOptions={chooseOptions} cancelOptions={cancelOptions}/>f
+                        </div>
+                    </div>
+                </Dialog>
         </div>
+
+        
     );
 };
 

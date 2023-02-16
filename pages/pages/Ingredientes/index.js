@@ -27,8 +27,6 @@ const Crud = () => {
         nombreImage: '',
         urlImage: '',
         fileImage: '',
-        
-
     };
 
     const [products, setProducts] = useState(null);
