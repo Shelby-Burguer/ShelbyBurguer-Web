@@ -73,12 +73,12 @@ const ListDemo = () => {
 
     const dataViewHeader = (
         <div className="flex flex-column md:flex-row md:justify-content-between gap-2">
-            <Dropdown value={sortKey} options={sortOptions} optionLabel="label" placeholder="Sort By Price" onChange={onSortChange} />
+            
             <span className="p-input-icon-left">
                 <i className="pi pi-search" />
                 <InputText value={globalFilterValue} onChange={onFilter} placeholder="Search by Name" />
             </span>
-            <DataViewLayoutOptions layout={layout} onChange={(e) => setLayout(e.value)} />
+
         </div>
     );
 
@@ -90,7 +90,7 @@ const ListDemo = () => {
                     <div className="flex-1 flex flex-column align-items-center text-center md:text-left">
                         <div className="font-bold text-2xl">{data.name}</div>
                         <div className="mb-2">{data.description}</div>
-                        <Rating value={data.rating} readOnly cancel={false} className="mb-2"></Rating>
+                        
                         <div className="flex align-items-center">
                             <i className="pi pi-tag mr-2"></i>
                             <span className="font-semibold">{data.category}</span>
@@ -105,23 +105,16 @@ const ListDemo = () => {
             </div>
         );
     };
-
+/*Este es el que muestra como recuadros*/
     const dataviewGridItem = (data) => {
         return (
             <div className="col-12 lg:col-4">
-                <div className="card m-3 border-1 surface-border">
-                    <div className="flex flex-wrap gap-2 align-items-center justify-content-between mb-2">
-                        <div className="flex align-items-center">
-                            <i className="pi pi-tag mr-2" />
-                            <span className="font-semibold">{data.category}</span>
-                        </div>
-                        <span className={`product-badge status-${data.inventoryStatus.toLowerCase()}`}>{data.inventoryStatus}</span>
-                    </div>
+                <div className="card m-3 border-1 surface-borders">
                     <div className="flex flex-column align-items-center text-center mb-3">
                         <img src={`${contextPath}/demo/images/product/${data.image}`} alt={data.name} className="w-9 shadow-2 my-3 mx-0" />
                         <div className="text-2xl font-bold">{data.name}</div>
                         <div className="mb-3">{data.description}</div>
-                        <Rating value={data.rating} readOnly cancel={false} />
+                        <div className="mb-3">{data.description}</div>
                     </div>
                     <div className="flex align-items-center justify-content-between">
                         <span className="text-2xl font-semibold">${data.price}</span>
