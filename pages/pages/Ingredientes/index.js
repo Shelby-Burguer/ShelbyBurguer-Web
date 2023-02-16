@@ -357,7 +357,7 @@ const Crud = () => {
         return (
             <>
                 <span className="p-column-title">Image</span>
-                <img src={''} alt={rowData.nombreImage} className="shadow-2" width="100" />
+                <img src={contextPath + rowData.urlImage} alt={rowData.nombreImage} className="shadow-2" width="100" />
             </>
         );
     };
