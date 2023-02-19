@@ -12,18 +12,23 @@ import { ProductService } from '../../../demo/service/ProductosServiceShelbyBurg
 import { InputText } from 'primereact/inputtext';
 import { Toolbar } from 'primereact/toolbar';
 import { Dialog } from 'primereact/dialog';
+import { Toast } from 'primereact/toast';
+import { DataTable } from 'primereact/datatable';
+import { Column } from 'primereact/column';
+import { InputTextarea } from 'primereact/inputtextarea';
+import { RadioButton } from 'primereact/radiobutton';
 import getConfig from 'next/config';
 
 
 const ListDemo = () => {
     const listValue = [
-        { name: 'San Francisco', code: 'SF' },
-        { name: 'London', code: 'LDN' },
-        { name: 'Paris', code: 'PRS' },
-        { name: 'Istanbul', code: 'IST' },
-        { name: 'Berlin', code: 'BRL' },
-        { name: 'Barcelona', code: 'BRC' },
-        { name: 'Rome', code: 'RM' }
+        { name: 'Tomate', code: 'SF' },
+        { name: 'Cebolla', code: 'LDN' },
+        { name: 'Lechuga', code: 'PRS' },
+        { name: 'Huevo', code: 'IST' },
+        { name: 'Tomate', code: 'BRL' },
+        { name: 'Queso', code: 'BRC' },
+        { name: 'Jamon', code: 'RM' }
     ];
 
     let emptyProduct = {
@@ -41,10 +46,12 @@ const ListDemo = () => {
     const [picklistTargetValue, setPicklistTargetValue] = useState([]);
     const [submitted, setSubmitted] = useState(false);
     const [productDialog, setProductDialog] = useState(false);
+    const [tableDialog, settableDialog] = useState(false);
     const [carritoDialog, setcarritoDialog] = useState(false);
     const [orderlistValue, setOrderlistValue] = useState(listValue);
     const [dataViewValue, setDataViewValue] = useState(null);
     const [globalFilterValue, setGlobalFilterValue] = useState('');
+    const [globalFilter, setGlobalFilter] = useState(null);
     const [filteredValue, setFilteredValue] = useState(null);
     const [layout, setLayout] = useState('grid');
     const [sortKey, setSortKey] = useState(null);
@@ -54,6 +61,11 @@ const ListDemo = () => {
     const fileUploadRef = useRef(null);
     const [dropdownValue, setDropdownValue] = useState(null);
     const [deleteProductDialog, setDeleteProductDialog] = useState(false);
+    const toast = useRef(null);
+    const dt = useRef(null);
+    const [selectedProducts, setSelectedProducts] = useState(null);
+    const [source, setSource] = useState([]);
+    const [target, setTarget] = useState([]);
 
     const sortOptions = [
         { label: 'Price High to Low', value: '!price' },
@@ -66,9 +78,12 @@ const ListDemo = () => {
         { name: 'Pepito', code: 'LDN' },
         { name: 'Bebida', code: 'IST' },
     ];
+
     useEffect(() => {
         const productService = new ProductService();
         productService.getProducts().then((data) => setDataViewValue(data));
+        productService.getProducts().then((data) => setProducts(data));
+        productService.getProducts().then((data) => setSource(data));
         setGlobalFilterValue('');
     }, []);
 
@@ -151,6 +166,16 @@ const ListDemo = () => {
             </React.Fragment>
         );
     };
+
+    const header = (
+        <div className="flex flex-column md:flex-row md:justify-content-between md:align-items-center">
+            <h5 className="m-0">Productos del combo</h5>
+            <span className="block mt-2 md:mt-0 p-input-icon-left">
+                <i className="pi pi-search" />
+                <InputText type="search" onInput={(e) => setGlobalFilter(e.target.value)} placeholder="Search..." />
+            </span>
+        </div>
+    );
     
     const productDialogFooter = (
         <>
@@ -190,6 +215,110 @@ const ListDemo = () => {
         setTotalSize(_totalSize);
         toast.current.show({severity: 'info', summary: 'Success', detail: 'File Uploaded'});
     }
+
+    
+    const codeBodyTemplate = (rowData) => {
+        return (
+            <>
+                <span className="p-column-title">Code</span>
+                {rowData.code}
+            </>
+        );
+    };
+
+    const nameBodyTemplate = (rowData) => {
+        return (
+            <>
+                <span className="p-column-title">Name</span>
+                {rowData.name}
+            </>
+        );
+    };
+
+    const proteinaBodyTemplate = (rowData) => {
+        return (
+            <>
+                <span className="p-column-title">Proteina a elegir</span>
+                {rowData.Proteina}
+            </>
+        );
+    };
+
+    const ingredientesBodyTemplate = (rowData) => {
+        return (
+            <>
+                <span className="p-column-title">Ingredientes</span>
+                {rowData.Ingrediente}
+            </>
+        );
+    };
+    const imageBodyTemplate = (rowData) => {
+        return (
+            <>
+                <span className="p-column-title">Image</span>
+                <img src={`${contextPath}/demo/images/product/${rowData.image}`} alt={rowData.image} className="shadow-2" width="100" />
+            </>
+        );
+    };
+
+    const priceBodyTemplate = (rowData) => {
+        return (
+            <>
+                <span className="p-column-title">Price</span>
+                {formatCurrency(rowData.price)}
+            </>
+        );
+    };
+
+    const categoryBodyTemplate = (rowData) => {
+        return (
+            <>
+                <span className="p-column-title">Category</span>
+                {rowData.category}
+            </>
+        );
+    };
+
+    const ratingBodyTemplate = (rowData) => {
+        return (
+            <>
+                <span className="p-column-title">Reviews</span>
+                <Rating value={rowData.rating} readOnly cancel={false} />
+            </>
+        );
+    };
+
+    const statusBodyTemplate = (rowData) => {
+        return (
+            <>
+                <span className="p-column-title">Status</span>
+                <span className={`product-badge status-${rowData.inventoryStatus.toLowerCase()}`}>{rowData.inventoryStatus}</span>
+            </>
+        );
+    };
+
+    const actionBodyTemplate = (rowData) => {
+        return (
+            <>
+                <Button icon="pi pi-pencil" className="p-button-rounded p-button-success mr-2" onClick={() => editProduct(rowData)} />
+            </>
+        );
+    };
+
+    const editProduct = (product) => {
+        setProduct({ ...product });
+        settableDialog(true);
+    };
+
+    const onCategoryChange = (e) => {
+        let _product = { ...product };
+        _product['category'] = e.value;
+        setProduct(_product);
+    };
+
+    const formatCurrency = (value) => {
+        return value.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
+    };
 
     const emptyTemplate = () => {
         return (
@@ -231,6 +360,11 @@ const ListDemo = () => {
         setProductDialog(true);
     };
 
+
+    const tablehideDialog = () => {
+        setSubmitted(false);
+        settableDialog(false);
+    };
     
     const carritoHideDialog = () => {
         setSubmitted(false);
@@ -269,6 +403,43 @@ const ListDemo = () => {
             setSortField(value);
             setSortKey(value);
         }
+    };
+
+    const onChange = (event) => {
+        setSource(event.source);
+        setTarget(event.target);
+    };
+
+    const itemTemplatePickList1 = (item) => {
+        return (
+            <div className="flex flex-wrap p-2 align-items-center gap-3">
+                <img className="w-4rem shadow-2 flex-shrink-0 border-round" src={`${contextPath}/demo/images/product/${item.image}`} alt={item.name}/>
+                <div className="flex-1 flex flex-column gap-2">
+                    <span className="font-bold">{item.name}</span>
+                    <div className="flex align-items-center gap-2">
+                        <i className="pi pi-tag text-sm"></i>
+                        <span>{item.category}</span>
+                    </div>
+                </div>
+                <span className="font-bold text-900">${item.price}</span>
+            </div>
+        );
+    };
+
+    const itemTemplatePickList2 = (item) => {
+        return (
+            <div className="flex flex-wrap p-2 align-items-center gap-3">
+                <img className="w-4rem shadow-2 flex-shrink-0 border-round" src={`${contextPath}/demo/images/product/${item.image}`} alt={item.name}/>
+                <div className="flex-1 flex flex-column gap-2">
+                    <span className="font-bold">{item.name}</span>
+                    <div className="flex align-items-center gap-2">
+                        <i className="pi pi-tag text-sm"></i>
+                        <span>{item.category}</span>
+                    </div>
+                </div>
+                <span className="font-bold text-900">${item.price}</span>
+            </div>
+        );
     };
 
     const dataViewHeader = (
@@ -340,7 +511,7 @@ const ListDemo = () => {
                     <DataView value={filteredValue || dataViewValue} layout={layout} paginator rows={9} sortOrder={sortOrder} sortField={sortField} itemTemplate={itemTemplate} header={dataViewHeader}></DataView>
                 </div>
             </div>
-                <Dialog visible={productDialog} style={{ width: '750px' }} header="Ingrese producto" modal className="p-fluid" footer={productDialogFooter} onHide={hideDialog}>
+                <Dialog visible={productDialog} style={{ width: '900px' }} header="Ingrese Combo" modal className="p-fluid" footer={productDialogFooter} onHide={hideDialog}>
                     {product.fileImage && <img src={`${contextPath}/demo/images/product/${product.fileImage}`} alt={product.fileImage} width="150" className="mt-0 mx-auto mb-5 block shadow-2" />}
                         <div className="field">
                             <h6 htmlFor="nombre">Nombre</h6>
@@ -368,20 +539,9 @@ const ListDemo = () => {
 
                     <div className="col-12 xl:col-13">
                         <div className="card">
-                            <h6>Seleccione el ingrediente</h6>
-                            <PickList
-                                source={picklistSourceValue}
-                                target={picklistTargetValue}
-                                sourceHeader="Ingredientes"
-                                targetHeader="Ingrediente seleccionado"
-                                itemTemplate={(item) => <div>{item.name}</div>}
-                                onChange={(e) => {
-                                    setPicklistSourceValue(e.source);
-                                    setPicklistTargetValue(e.target);
-                                }}
-                                sourceStyle={{ height: '200px' }}
-                                targetStyle={{ height: '200px' }}
-                            ></PickList>
+                            <h6>Seleccione el Producto</h6>
+                            <PickList source={source} target={target} onChange={onChange} itemTemplate={itemTemplatePickList1} breakpoint="1400px"
+                            sourceHeader="Available" targetHeader="Selected" sourceStyle={{ height: '30rem' }} targetStyle={{ height: '30rem' }} filter filterBy="name" />
                         </div>
                     </div>      
                 </Dialog>
@@ -397,8 +557,8 @@ const ListDemo = () => {
                         </div>
                 </Dialog>
 
-                <Dialog visible={carritoDialog} style={{ width: '750px' }} header="Ingrese producto" modal className="p-fluid" footer={productDialogFooter} onHide={carritoHideDialog}>
-                        <img src={`${contextPath}/demo/images/product/${product.fileImage}`} alt={product.name} className="w-9 shadow-2 my-3 mx-0" />
+                <Dialog visible={carritoDialog} style={{ width: '750px' }} header="Combo" modal className="p-fluid" footer={productDialogFooter} onHide={carritoHideDialog}>
+                        {product.image && <img src={`${contextPath}/demo/images/product/${product.image}`} alt={product.image} width="150" className="mt-0 mx-auto mb-5 block shadow-2" />}
                         <div className="field">
                             <h6 htmlFor="nombre">Nombre</h6>
                             <InputText id="nombre" value={product.nombre} onChange={(e) => onInputChange(e, 'nombre')} required autoFocus className={classNames({ 'p-invalid': submitted && !product.nombre })} />
@@ -414,25 +574,71 @@ const ListDemo = () => {
                             <InputText id="nombre" value={product.nombre} onChange={(e) => onInputChange(e, 'nombre')} required autoFocus className={classNames({ 'p-invalid': submitted && !product.nombre })} />
                             {submitted && !product.nombre && <small className="p-invalid">Name is required.</small>}
                         </div>
-                    </div>
-                    <div className="col-12 xl:col-13">
-                        <div className="card">
-                            <h6>Cambio de ingrediente</h6>
-                            <PickList
-                                source={picklistSourceValue}
-                                target={picklistTargetValue}
-                                sourceHeader="Ingredientes"
-                                targetHeader="Ingrediente seleccionado"
-                                itemTemplate={(item) => <div>{item.name}</div>}
-                                onChange={(e) => {
-                                    setPicklistSourceValue(e.source);
-                                    setPicklistTargetValue(e.target);
-                                }}
-                                sourceStyle={{ height: '200px' }}
-                                targetStyle={{ height: '200px' }}
-                            ></PickList>
+                    </div>  
+                    <div className="grid crud-demo">
+                        <div className="col-12">
+                            <div className="card">
+                                <Toast ref={toast} />
+                                <DataTable
+                                    ref={dt}
+                                    value={products}
+                                    selection={selectedProducts}
+                                    onSelectionChange={(e) => setSelectedProducts(e.value)}
+                                    dataKey="id"
+                                    paginator
+                                    rows={10}
+                                    rowsPerPageOptions={[5, 10, 25]}
+                                    className="datatable-responsive"
+                                    paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
+                                    currentPageReportTemplate="Showing {first} to {last} of {totalRecords} products"
+                                    globalFilter={globalFilter}
+                                    emptyMessage="No products found."
+                                    header={header}
+                                    responsiveLayout="scroll"
+                                >
+                                    <Column field="name" header="Nombre" sortable body={nameBodyTemplate} headerStyle={{ minWidth: '10rem' }}></Column>
+                                    <Column header="Imagen" body={imageBodyTemplate}></Column>
+                                    <Column field="name" header="Proteina a elegir" sortable body={proteinaBodyTemplate} headerStyle={{ minWidth: '10rem' }}></Column>
+                                    <Column field="name" header="Ingrediente" sortable body={ingredientesBodyTemplate} headerStyle={{ minWidth: '10rem' }}></Column>
+                                    <Column body={actionBodyTemplate} headerStyle={{ minWidth: '10rem' }}></Column>
+                                </DataTable>
+
+                                <Dialog visible={tableDialog} style={{ width: '750px' }} header="Product Details" modal className="p-fluid" footer={productDialogFooter} onHide={tablehideDialog}>
+                                    {product.image && <img src={`${contextPath}/demo/images/product/${product.image}`} alt={product.image} width="150" className="mt-0 mx-auto mb-5 block shadow-2" />}
+                                        <div className="field">
+                                            <h6 htmlFor="nombre">Nombre</h6>
+                                            <InputText id="nombre" value={product.nombre} onChange={(e) => onInputChange(e, 'nombre')} required autoFocus className={classNames({ 'p-invalid': submitted && !product.nombre })} />
+                                            {submitted && !product.nombre && <small className="p-invalid">Name is required.</small>}
+                                        </div>
+                               
+                                        <div className="field"> 
+                                        <h6>Tipo de producto</h6>
+                                        <Dropdown value={dropdownValue} onChange={(e) => setDropdownValue(e.value)} options={dropdownValues} optionLabel="name" placeholder="Select" />
+                                        </div>
+                  
+                                    <div className="col-12 xl:col-13">
+                                        <div className="card">
+                                            <h6>Seleccione los Ingredientes</h6>
+                                            <PickList
+                                                source={picklistSourceValue}
+                                                target={picklistTargetValue}
+                                                sourceHeader="Ingredientes"
+                                                targetHeader="Ingrediente Seleccionado"
+                                                itemTemplate={itemTemplatePickList2}
+                                                onChange={(e) => {
+                                                    setPicklistSourceValue(e.source);
+                                                    setPicklistTargetValue(e.target);
+                                                }}
+                                                sourceStyle={{ height: '200px' }}
+                                                targetStyle={{ height: '200px' }}
+                                                filter filterBy="name"
+                                            ></PickList>
+                                        </div>
+                                    </div>  
+                                </Dialog>
+                            </div>
                         </div>
-                    </div>      
+                    </div>   
                 </Dialog>
         </div>
 

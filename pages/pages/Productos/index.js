@@ -17,13 +17,13 @@ import getConfig from 'next/config';
 
 const ListDemo = () => {
     const listValue = [
-        { name: 'San Francisco', code: 'SF' },
-        { name: 'London', code: 'LDN' },
-        { name: 'Paris', code: 'PRS' },
-        { name: 'Istanbul', code: 'IST' },
-        { name: 'Berlin', code: 'BRL' },
-        { name: 'Barcelona', code: 'BRC' },
-        { name: 'Rome', code: 'RM' }
+        { name: 'Tomate', code: 'SF' },
+        { name: 'Cebolla', code: 'LDN' },
+        { name: 'Lechuga', code: 'PRS' },
+        { name: 'Huevo', code: 'IST' },
+        { name: 'Tomate', code: 'BRL' },
+        { name: 'Queso', code: 'BRC' },
+        { name: 'Jamon', code: 'RM' }
     ];
 
     let emptyProduct = {
@@ -219,6 +219,23 @@ const ListDemo = () => {
         );
     }
 
+    
+    const itemTemplatePickList = (item) => {
+        return (
+            <div className="flex flex-wrap p-2 align-items-center gap-3">
+                <img className="w-4rem shadow-2 flex-shrink-0 border-round" src={`${contextPath}/demo/images/product/${item.image}`} alt={item.name}/>
+                <div className="flex-1 flex flex-column gap-2">
+                    <span className="font-bold">{item.name}</span>
+                    <div className="flex align-items-center gap-2">
+                        <i className="pi pi-tag text-sm"></i>
+                        <span>{item.category}</span>
+                    </div>
+                </div>
+                <span className="font-bold text-900">${item.price}</span>
+            </div>
+        );
+    };
+
     const hideDialog = () => {
         setSubmitted(false);
         setProductDialog(false);
@@ -286,6 +303,8 @@ const ListDemo = () => {
         className: 'p-button-danger'
     };
 
+console.log('este baby lo tiene?', dataViewValue);
+
 /*Este es el que muestra como recuadros*/
     const dataviewGridItem = (data) => {
         return (
@@ -316,37 +335,16 @@ const ListDemo = () => {
                         <Button label="Agregar"  icon="pi pi-shopping-cart" onClick={carritOpenNew} />
                     </div>
                 </div>
-            </div>
-        );
-    };
-
-    const itemTemplate = (data, layout) => {
-        if (!data) {
-            return;
-        }
-
-        if (layout === 'list') {
-            return dataviewListItem(data);
-        } else if (layout === 'grid') {
-            return dataviewGridItem(data);
-        }
-    };
-
-    return (
-        <div className="grid list-demo">
-            <div className="col-12">
-                <div className="card">
-                    <h5>Productos</h5>
-                    <DataView value={filteredValue || dataViewValue} layout={layout} paginator rows={9} sortOrder={sortOrder} sortField={sortField} itemTemplate={itemTemplate} header={dataViewHeader}></DataView>
-                </div>
-            </div>
-                <Dialog visible={productDialog} style={{ width: '750px' }} header="Ingrese producto" modal className="p-fluid" footer={productDialogFooter} onHide={hideDialog}>
-                    {product.fileImage && <img src={`${contextPath}/demo/images/product/${product.fileImage}`} alt={product.fileImage} width="150" className="mt-0 mx-auto mb-5 block shadow-2" />}
+                                <Dialog visible={productDialog} style={{ width: '750px' }} header="Ingrese producto" modal className="p-fluid" footer={productDialogFooter} onHide={hideDialog}>
+                        <div className="field"> 
+                            {product.fileImage && <img src={`${contextPath}/demo/images/product/${product.fileImage}`} alt={product.fileImage} width="150" className="mt-0 mx-auto mb-5 block shadow-2" />}
+                        </div>
                         <div className="field">
                             <h6 htmlFor="nombre">Nombre</h6>
                             <InputText id="nombre" value={product.nombre} onChange={(e) => onInputChange(e, 'nombre')} required autoFocus className={classNames({ 'p-invalid': submitted && !product.nombre })} />
                             {submitted && !product.nombre && <small className="p-invalid">Name is required.</small>}
                         </div>
+                
                     <div className="formgrid grid">
                         <div className="field col"> 
                         <h6>Tipo de producto</h6>
@@ -374,36 +372,29 @@ const ListDemo = () => {
                                 target={picklistTargetValue}
                                 sourceHeader="Ingredientes"
                                 targetHeader="Ingrediente seleccionado"
-                                itemTemplate={(item) => <div>{item.name}</div>}
+                                itemTemplate={itemTemplatePickList}
                                 onChange={(e) => {
                                     setPicklistSourceValue(e.source);
                                     setPicklistTargetValue(e.target);
                                 }}
                                 sourceStyle={{ height: '200px' }}
                                 targetStyle={{ height: '200px' }}
+                                filter filterBy="name"
                             ></PickList>
                         </div>
                     </div>      
                 </Dialog>
-                
-                <Dialog visible={deleteProductDialog} style={{ width: '450px' }} header="Confirm" modal footer={deleteProductDialogFooter} onHide={hideDeleteProductDialog}>
-                        <div className="flex align-items-center justify-content-center">
-                            <i className="pi pi-exclamation-triangle mr-3" style={{ fontSize: '2rem' }} />
-                            {product && (
-                                <span>
-                                    Are you sure you want to delete <b>{product.nombre}</b>?
-                                </span>
-                            )}
-                        </div>
-                </Dialog>
-
                 <Dialog visible={carritoDialog} style={{ width: '750px' }} header="Ingrese producto" modal className="p-fluid" footer={productDialogFooter} onHide={carritoHideDialog}>
-                        <img src={`${contextPath}/demo/images/product/${product.fileImage}`} alt={product.name} className="w-9 shadow-2 my-3 mx-0" />
+                
+                        <div> 
+                        {data.image && <img src={`${contextPath}/demo/images/product/${data.image}`} alt={data.image} width="150" className="mt-0 mx-auto mb-5 block shadow-2" />}
+                        </div>
                         <div className="field">
                             <h6 htmlFor="nombre">Nombre</h6>
                             <InputText id="nombre" value={product.nombre} onChange={(e) => onInputChange(e, 'nombre')} required autoFocus className={classNames({ 'p-invalid': submitted && !product.nombre })} />
                             {submitted && !product.nombre && <small className="p-invalid">Name is required.</small>}
                         </div>
+                  
                     <div className="formgrid grid">
                         <div className="field col"> 
                         <h6>Tipo de producto</h6>
@@ -423,17 +414,56 @@ const ListDemo = () => {
                                 target={picklistTargetValue}
                                 sourceHeader="Ingredientes"
                                 targetHeader="Ingrediente seleccionado"
-                                itemTemplate={(item) => <div>{item.name}</div>}
+                                itemTemplate={itemTemplatePickList}
                                 onChange={(e) => {
                                     setPicklistSourceValue(e.source);
                                     setPicklistTargetValue(e.target);
                                 }}
                                 sourceStyle={{ height: '200px' }}
                                 targetStyle={{ height: '200px' }}
+                                filter filterBy="name"
                             ></PickList>
                         </div>
                     </div>      
                 </Dialog>
+            </div>
+            
+         
+        );
+    };
+
+    const itemTemplate = (data, layout) => {
+        if (!data) {
+            return;
+        }
+
+        if (layout === 'list') {
+            return dataviewListItem(data);
+        } else if (layout === 'grid') {
+            return dataviewGridItem(data);
+        }
+    };
+
+    return (
+        <div className="grid list-demo">
+            <div className="col-12">
+                <div className="card">
+                    <h5>Productos</h5>
+                    <DataView value={filteredValue || dataViewValue} layout={layout} paginator rows={9} sortOrder={sortOrder} sortField={sortField} itemTemplate={itemTemplate} header={dataViewHeader}></DataView>
+                </div>
+            </div>
+           
+                <Dialog visible={deleteProductDialog} style={{ width: '450px' }} header="Confirm" modal footer={deleteProductDialogFooter} onHide={hideDeleteProductDialog}>
+                        <div className="  justify-content-center">
+                            <i className="pi pi-exclamation-triangle mr-3" style={{ fontSize: '2rem' }} />
+                            {product && (
+                                <span>
+                                    Are you sure you want to delete <b>{product.nombre}</b>?
+                                </span>
+                            )}
+                        </div>
+                </Dialog>
+
         </div>
 
         
