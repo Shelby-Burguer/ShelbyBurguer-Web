@@ -25,6 +25,7 @@ const Crud = () => {
         nombre: '',
         unidad: '',
         nombreImage: '',
+        objectURL: '',
         urlImage: '',
         fileImage: '',
     };
@@ -51,9 +52,9 @@ const Crud = () => {
         setProducts(result);
     }, []);
 
-    const formatCurrency = (value) => {
+   /* const formatCurrency = (value) => {
         return value.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
-    };
+    };*/
 
     const openNew = () => {
         setProduct(emptyProduct);

@@ -37,6 +37,7 @@ const ListDemo = () => {
 
     const [products, setProducts] = useState(null);
     const [product, setProduct] = useState(emptyProduct);
+    const [tipoProducto, setTipoProducto] = useState(null);
     const [picklistSourceValue, setPicklistSourceValue] = useState(listValue);
     const [picklistTargetValue, setPicklistTargetValue] = useState([]);
     const [submitted, setSubmitted] = useState(false);
@@ -60,15 +61,10 @@ const ListDemo = () => {
         { label: 'Price Low to High', value: 'price' }
     ];
 
-    const dropdownValues = [
-        { name: 'Hambuerguesa', code: 'NY' },
-        { name: 'Perro', code: 'RM' },
-        { name: 'Pepito', code: 'LDN' },
-        { name: 'Bebida', code: 'IST' },
-    ];
     useEffect(() => {
         const productService = new ProductService();
         productService.getProducts().then((data) => setDataViewValue(data));
+        productService.getTypeProducts().then((data) => setTipoProducto(data))
         setGlobalFilterValue('');
     }, []);
 
@@ -222,7 +218,7 @@ const ListDemo = () => {
     
     const itemTemplatePickList = (item) => {
         return (
-            <div className="flex flex-wrap p-2 align-items-center gap-3">
+            <div className="flex flex-wrap p-1 align-items-center gap-2">
                 <img className="w-4rem shadow-2 flex-shrink-0 border-round" src={`${contextPath}/demo/images/product/${item.image}`} alt={item.name}/>
                 <div className="flex-1 flex flex-column gap-2">
                     <span className="font-bold">{item.name}</span>
@@ -231,7 +227,13 @@ const ListDemo = () => {
                         <span>{item.category}</span>
                     </div>
                 </div>
-                <span className="font-bold text-900">${item.price}</span>
+                {/*<span className="font-bold text-900">${item.price}</span>*/}
+                <div className="flex-1 flex flex-column gap-2">
+                   <span className="font-bold"> Cantidad</span>
+                    <div className="col-12 mb-0 lg:col-11 lg:mb-0">
+                        <InputText type="text" placeholder="#"></InputText>
+                    </div>
+                </div>
             </div>
         );
     };
@@ -335,7 +337,7 @@ console.log('este baby lo tiene?', dataViewValue);
                         <Button label="Agregar"  icon="pi pi-shopping-cart" onClick={carritOpenNew} />
                     </div>
                 </div>
-                                <Dialog visible={productDialog} style={{ width: '750px' }} header="Ingrese producto" modal className="p-fluid" footer={productDialogFooter} onHide={hideDialog}>
+                <Dialog visible={productDialog} style={{ width: '800px' }} header="Ingrese producto" modal className="p-fluid" footer={productDialogFooter} onHide={hideDialog}>
                         <div className="field"> 
                             {product.fileImage && <img src={`${contextPath}/demo/images/product/${product.fileImage}`} alt={product.fileImage} width="150" className="mt-0 mx-auto mb-5 block shadow-2" />}
                         </div>
@@ -348,7 +350,7 @@ console.log('este baby lo tiene?', dataViewValue);
                     <div className="formgrid grid">
                         <div className="field col"> 
                         <h6>Tipo de producto</h6>
-                        <Dropdown value={dropdownValue} onChange={(e) => setDropdownValue(e.value)} options={dropdownValues} optionLabel="name" placeholder="Select" />
+                        <Dropdown value={dropdownValue} onChange={(e) => setDropdownValue(e.value)} options={tipoProducto} optionLabel="name" placeholder="Select" />
                         </div>
                         <div className="field col">
                             <h6 htmlFor="nombre">Costo</h6>
@@ -384,7 +386,7 @@ console.log('este baby lo tiene?', dataViewValue);
                         </div>
                     </div>      
                 </Dialog>
-                <Dialog visible={carritoDialog} style={{ width: '750px' }} header="Ingrese producto" modal className="p-fluid" footer={productDialogFooter} onHide={carritoHideDialog}>
+                <Dialog visible={carritoDialog} style={{ width: '800px' }} header="Ingrese producto" modal className="p-fluid" footer={productDialogFooter} onHide={carritoHideDialog}>
                 
                         <div> 
                         {data.image && <img src={`${contextPath}/demo/images/product/${data.image}`} alt={data.image} width="150" className="mt-0 mx-auto mb-5 block shadow-2" />}
@@ -398,7 +400,7 @@ console.log('este baby lo tiene?', dataViewValue);
                     <div className="formgrid grid">
                         <div className="field col"> 
                         <h6>Tipo de producto</h6>
-                        <Dropdown value={dropdownValue} onChange={(e) => setDropdownValue(e.value)} options={dropdownValues} optionLabel="name" placeholder="Select" />
+                        <Dropdown value={dropdownValue} onChange={(e) => setDropdownValue(e.value)} options={tipoProducto} optionLabel="name" placeholder="Select" />
                         </div>
                         <div className="field col">
                             <h6 htmlFor="nombre">Costo</h6>
