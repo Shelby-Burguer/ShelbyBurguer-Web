@@ -1,0 +1,9 @@
+{
+    "data": [
+        {"id": "1000","name": "Hamburguesa"},
+        {"id": "1001","name": "Perro"},
+        {"id": "1002","name": "Pepito"},
+        {"id": "1003","name": "Papas"},
+        {"id": "1004","name": "Bebida"}
+    ]
+}

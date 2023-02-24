@@ -13,6 +13,7 @@ export class IngredienteService {
             id: null,
             nombre: '',
             unidad: '',
+            objectURL: '',
             nombreImagen: '',
             datosImagen: null,
         };
@@ -25,6 +26,7 @@ export class IngredienteService {
   
 
         await responseBody.then((dat) => resProduct = {...dat});
+        console.log('vamo a ver', resProduct)
         let testresProduct = [];
         let claves = Object.keys(resProduct); 
         for(let i=0; i< claves.length; i++){
@@ -96,12 +98,15 @@ export class IngredienteService {
             body: JSON.stringify({
                 nombre: data.nombre,
                 unidad: data.unidad,
+                objectURL: file.objectURL,
             }),
           
         })
 
-        await responseBody.then((dat) => dat.json().then((res) =>  {resProduct.id = res.id, resProduct.nombre = res.nombre, resProduct.unidad = res.unidad }));
-
+        await responseBody.then((dat) => dat.json().then((res) =>  {resProduct.id = res.id, resProduct.nombre = res.nombre, resProduct.unidad = res.unidad, resProduct.urlImage = res.objectURL}));
+        
+        console.log('Respuesta  ', resProduct);
+        console.log('Es el File', file.objectURL);
         const fileReq = new FormData();
         fileReq.append('file', file);
    
@@ -125,8 +130,10 @@ export class IngredienteService {
         console.log('Soy la respuesta file', test);
         resProduct.fileImage = test
         resProduct.nombreImage = test.name
-        resProduct.urlImage = test.objectURL
-
+        test.objectURL
+        
+        console.log('Respuesta final', resProduct)
+        
         return resProduct;
     }
 }
