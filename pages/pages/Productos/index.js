@@ -9,6 +9,7 @@ import { classNames } from 'primereact/utils';
 import { Tooltip } from 'primereact/tooltip';
 import { FileUpload } from 'primereact/fileupload';
 import { ProductService } from '../../../demo/service/ProductosServiceShelbyBurguer';
+import { NewProductoService } from '../../../demo/service/ProductoService';
 import { InputText } from 'primereact/inputtext';
 import { Toolbar } from 'primereact/toolbar';
 import { Dialog } from 'primereact/dialog';
@@ -63,8 +64,10 @@ const ListDemo = () => {
 
     useEffect(() => {
         const productService = new ProductService();
-        productService.getProducts().then((data) => setDataViewValue(data));
-        productService.getTypeProducts().then((data) => setTipoProducto(data))
+        const productoServicenew = new NewProductoService();
+        productoServicenew.getProductos().then((data) => setDataViewValue(data));
+        productService.getTypeProducts().then((data) => setTipoProducto(data));
+        productoServicenew.getProductos();
         setGlobalFilterValue('');
     }, []);
 
@@ -309,26 +312,55 @@ console.log('este baby lo tiene?', dataViewValue);
 
 /*Este es el que muestra como recuadros*/
     const dataviewGridItem = (data) => {
+
+        let arrProteinas = [];
+        for(let j=0; j< data.proteina.length; j++){
+            let proteina = data.proteina[j];
+            arrProteinas.push(proteina.nombre)
+        }
+
+        let arrIngredientes = [];
+        let arrIngredientes2 = [];
+        let arrIngredientes3 = [];
+        for(let j=0; j< data.ingrediente.length; j++){
+            let ingredientes = data.ingrediente[j];
+            if(j < 4){
+                arrIngredientes.push(ingredientes.nombre)
+            } else if(j >= 4 && j < 8){
+                arrIngredientes2.push(ingredientes.nombre)
+            } else if(j >= 8){
+                arrIngredientes3.push(ingredientes.nombre)
+            }
+
+        }
+      
+      console.log(data.image)
+
         return (
             <div className="col-12 lg:col-4">
                 <div className="card m-3 border-1 surface-borders">
                     <div className="flex flex-wrap gap-2 align-items-center justify-content-between mb-2">
                         <div className="flex align-items-center">
                             <i className="pi pi-tag mr-2" />
-                            <span className="font-semibold">{data.category}</span>
+                            <span className="font-semibold">{data.tipo}</span>
                         </div>
                     </div>
                     <div className="flex flex-column align-items-center text-center mb-3">
-                        <img src={`${contextPath}/demo/images/product/${data.image}`} alt={data.name} className="w-9 shadow-2 my-3 mx-0" />
-                        <div className="text-2xl font-bold">{data.name}</div>
+                        <img src={`${contextPath}/demo/images/product/${data.imagen}`} alt={data.name} className="w-9 shadow-2 my-3 mx-0" />
+                        <div className="text-2xl font-bold">{data.nombre}</div>
                         <div label="Text" className="mb-3"></div>
                         <h7>Proteinas a elegir:</h7>
-                        <div className="mb-3">
-                            {data.Proteina}
+                        <div className="mb-3 " >
+                            {arrProteinas.toString()}
                         </div>
                         <h7>Ingredientes:</h7>
-                        <div label="Text" className="mb-3">{data.Ingrediente}</div>
-                        <span className="text-2xl font-semibold">${data.price}</span>
+                        <div label="Text" className="mb-3">
+                        {arrIngredientes.toString()}<br></br>
+                        {arrIngredientes2.toString()}<br></br>
+                        {arrIngredientes3.toString()}
+                        </div>
+                        
+                        <span className="text-2xl font-semibold">${data.costo}</span>
                     </div>
                     <div className="flex align-items-center justify-content-between">
                         
