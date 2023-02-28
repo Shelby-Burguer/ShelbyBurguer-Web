@@ -10,41 +10,38 @@ import { Tooltip } from 'primereact/tooltip';
 import { FileUpload } from 'primereact/fileupload';
 import { ProductService } from '../../../demo/service/ProductosServiceShelbyBurguer';
 import { NewProductoService } from '../../../demo/service/ProductoService';
+import { IngredienteService } from '../../../demo/service/IngredienteService';
 import { InputText } from 'primereact/inputtext';
 import { Toolbar } from 'primereact/toolbar';
 import { Dialog } from 'primereact/dialog';
 import getConfig from 'next/config';
-
+import { Tag } from 'primereact/tag';
 
 const ListDemo = () => {
-    const listValue = [
-        { name: 'Tomate', code: 'SF' },
-        { name: 'Cebolla', code: 'LDN' },
-        { name: 'Lechuga', code: 'PRS' },
-        { name: 'Huevo', code: 'IST' },
-        { name: 'Tomate', code: 'BRL' },
-        { name: 'Queso', code: 'BRC' },
-        { name: 'Jamon', code: 'RM' }
-    ];
-
     let emptyProduct = {
         id: null,
         nombre: '',
-        unidad: '',
-        nombreImage: '',
-        urlImage: '',
-        fileImage: '',
+        tipo_producto: '',
+        costo: '',
+        nombre_imagen: ''
+    };
+
+    let emptyCantidad = {
+        id: null,
+        costo: ''
     };
 
     const [products, setProducts] = useState(null);
     const [product, setProduct] = useState(emptyProduct);
+    //const [listValue, setlistValue] = useState(null);
+    const [cantidad, setCantidad] = useState(emptyCantidad);
     const [tipoProducto, setTipoProducto] = useState(null);
-    const [picklistSourceValue, setPicklistSourceValue] = useState(listValue);
+    const [picklistSourceValue, setPicklistSourceValue] = useState(null);
     const [picklistTargetValue, setPicklistTargetValue] = useState([]);
     const [submitted, setSubmitted] = useState(false);
     const [productDialog, setProductDialog] = useState(false);
     const [carritoDialog, setcarritoDialog] = useState(false);
-    const [orderlistValue, setOrderlistValue] = useState(listValue);
+    //const [orderlistValue, setOrderlistValue] = useState(listValue);
     const [dataViewValue, setDataViewValue] = useState(null);
     const [globalFilterValue, setGlobalFilterValue] = useState('');
     const [filteredValue, setFilteredValue] = useState(null);
@@ -56,6 +53,9 @@ const ListDemo = () => {
     const fileUploadRef = useRef(null);
     const [dropdownValue, setDropdownValue] = useState(null);
     const [deleteProductDialog, setDeleteProductDialog] = useState(false);
+    const [totalSize, setTotalSize] = useState(0);
+    const [file, setfile] = useState(null);
+    const toast = useRef(null);
 
     const sortOptions = [
         { label: 'Price High to Low', value: '!price' },
@@ -65,8 +65,10 @@ const ListDemo = () => {
     useEffect(() => {
         const productService = new ProductService();
         const productoServicenew = new NewProductoService();
+
         productoServicenew.getProductos().then((data) => setDataViewValue(data));
         productService.getTypeProducts().then((data) => setTipoProducto(data));
+
         productoServicenew.getProductos();
         setGlobalFilterValue('');
     }, []);
@@ -76,8 +78,7 @@ const ListDemo = () => {
         setGlobalFilterValue(value);
         if (value.length === 0) {
             setFilteredValue(null);
-        }
-        else {
+        } else {
             const filtered = dataViewValue.filter((product) => {
                 return product.name.toLowerCase().includes(value);
             });
@@ -85,40 +86,43 @@ const ListDemo = () => {
         }
     };
 
-        const saveProduct = async() => {
+    const saveProduct = async () => {
         setSubmitted(true);
-        if (dataViewValue.name.trim()) {
-            let _products = [...products];
-            let _product = { ...product };
+        console.log('producto', dataViewValue);
+        console.log('producto', product);
+        console.log('Tipo de producto', dropdownValue);
+        console.log('Imagen', file);
+        console.log('Izquierda', picklistSourceValue);
+        console.log('Derecha', picklistTargetValue);
 
-            if (dataViewValue.id) {
+        if (product.nombre.trim()) {
+            /*  let _products = [...products];
+            let _product = { ...product };*/
+
+            if (product.id) {
                 const index = findIndexById(dataViewValue.id);
                 _products[index] = _product;
                 /*const ingredienteService = new IngredienteService();
                 ingredienteService.updateIngredientes(_product);*/
                 toast.current.show({ severity: 'success', summary: 'Successful', detail: 'Product Updated', life: 3000 });
             } else {
-                
-                /*const ingredienteService = new IngredienteService();
-                const response = await ingredienteService.postIngredientes(_product, file);
-                 _product = { ...response };
-                 //console.log('test',_product.image.objectURL)
-                 /*const test  = new FileReader();
-                 test.readAsDataURL(response.image);
-                 test.addEventListener('load', () => {
-                    const res = test.result;
-                    _product.image = res.toString();
-                    console.log('resultado',_product.image);
-                 })
-                 */
-                 
-                 _products.push(_product);
-                toast.current.show({ severity: 'success', summary: 'Successful', detail: 'Product Created', life: 3000 });
+                product.tipo_producto = dropdownValue.name;
+                let idIngredientes = picklistTargetValue.map(function (ingrediente) {
+                    return ingrediente.id;
+                });
+                console.log('gpt eres tu', idIngredientes);
+                console.log('Devuelve cantidades', cantidad);
+
+                const productoServicenew = new NewProductoService();
+                const response = await productoServicenew.postProducto(product, picklistTargetValue);
+
+                //toast.current.show({ severity: 'success', summary: 'Successful', detail: 'Product Created', life: 3000 });
             }
-            setProducts(_products);
-            setProductDialog(false);
-            setProduct(emptyProduct);
+            //setProducts(_products);
+            //setProductDialog(false);
+            // setProduct(emptyProduct);
         }
+        setPicklistTargetValue([]);
     };
 
     const deleteProduct = () => {
@@ -133,15 +137,14 @@ const ListDemo = () => {
         return (
             <React.Fragment>
                 <div className="my-1">
-                 <span className="block mt-1 md:mt-2 p-input-icon-left">
+                    <span className="block mt-1 md:mt-2 p-input-icon-left">
                         <i className="pi pi-search" />
                         <InputText value={globalFilterValue} onChange={onFilter} placeholder="Search by Name" />
-                 </span>
+                    </span>
                 </div>
             </React.Fragment>
         );
     };
-
 
     const rightToolbarTemplate = () => {
         return (
@@ -150,10 +153,17 @@ const ListDemo = () => {
             </React.Fragment>
         );
     };
-    
+
     const productDialogFooter = (
         <>
             <Button label="Cancel" icon="pi pi-times" className="p-button-text" onClick={hideDialog} />
+            <Button label="Save" icon="pi pi-check" className="p-button-text" onClick={saveProduct} />
+        </>
+    );
+
+    const carritotDialogFooter = (
+        <>
+            <Button label="Cancel" icon="pi pi-times" className="p-button-text" onClick={carritoHideDialog} />
             <Button label="Save" icon="pi pi-check" className="p-button-text" onClick={saveProduct} />
         </>
     );
@@ -170,71 +180,68 @@ const ListDemo = () => {
         setDeleteProductDialog(true);
     };
 
-
-        const onTemplateSelect = (e) => {
+    const onTemplateSelect = (e) => {
         let _totalSize = totalSize;
-        Object.keys(e.files).forEach(file => {
+        Object.keys(e.files).forEach((file) => {
             _totalSize += file.size;
         });
 
         setTotalSize(_totalSize);
-    }
+    };
 
     const onTemplateUpload = (e) => {
         let _totalSize = 0;
-        e.files.forEach(file => {
-            _totalSize += (file.size || 0);
+        e.files.forEach((file) => {
+            _totalSize += file.size || 0;
         });
 
         setTotalSize(_totalSize);
-        toast.current.show({severity: 'info', summary: 'Success', detail: 'File Uploaded'});
-    }
+        toast.current.show({ severity: 'info', summary: 'Success', detail: 'File Uploaded' });
+    };
 
     const emptyTemplate = () => {
         return (
             <div className="flex align-items-center flex-column">
-                <i className="pi pi-image mt-1 p-5" style={{'fontSize': '4em', borderRadius: '50%', backgroundColor: 'var(--surface-b)', color: 'var(--surface-d)'}}></i>
-                <span style={{'fontSize': '1.2em', color: 'var(--text-color-secondary)'}} className="my-4">Arrastre y suelte la imagen aqui</span>
+                <i className="pi pi-image mt-1 p-5" style={{ fontSize: '4em', borderRadius: '50%', backgroundColor: 'var(--surface-b)', color: 'var(--surface-d)' }}></i>
+                <span style={{ fontSize: '1.2em', color: 'var(--text-color-secondary)' }} className="my-4">
+                    Arrastre y suelte la imagen aqui
+                </span>
             </div>
-        )
-    }
+        );
+    };
 
     const onTemplateClear = () => {
         setTotalSize(0);
-    }
+    };
 
     const onTemplateRemove = (file, callback) => {
         setTotalSize(totalSize - file.size);
         callback();
-    }
+    };
 
-     const headerTemplate = (options) => {
+    const headerTemplate = (options) => {
         const { className, chooseButton, cancelButton } = options;
         return (
-            <div className={className} style={{backgroundColor: 'transparent', display: 'flex', alignItems: 'center'}}>
-                {chooseButton}       
+            <div className={className} style={{ backgroundColor: 'transparent', display: 'flex', alignItems: 'center' }}>
+                {chooseButton}
                 {cancelButton}
             </div>
         );
-    }
+    };
 
-    
     const itemTemplatePickList = (item) => {
         return (
             <div className="flex flex-wrap p-1 align-items-center gap-2">
-                <img className="w-4rem shadow-2 flex-shrink-0 border-round" src={`${contextPath}/demo/images/product/${item.image}`} alt={item.name}/>
+                <img className="w-4rem shadow-2 flex-shrink-0 border-round" src={`${contextPath}/demo/images/product/${item.imagen}`} alt={item.nombre} />
                 <div className="flex-1 flex flex-column gap-2">
-                    <span className="font-bold">{item.name}</span>
-                    <div className="flex align-items-center gap-2">
-                        <i className="pi pi-tag text-sm"></i>
-                        <span>{item.category}</span>
-                    </div>
+                    <span className="font-bold">{item.nombre}</span>
                 </div>
                 {/*<span className="font-bold text-900">${item.price}</span>*/}
                 <div className="flex-1 flex flex-column gap-2">
-                   <span className="font-bold"> Cantidad</span>
+                    <span className="font-bold"> Cantidad</span>
                     <div className="col-12 mb-0 lg:col-11 lg:mb-0">
-                        <InputText type="text" placeholder="#"></InputText>
+                        <InputText id="cantidad" value={cantidad.costo} onChange={(e) => onInputChange(e, 'cantidad')} required autoFocus className={classNames({ 'p-invalid': submitted && !cantidad.costo })} />
+                        {submitted && !cantidad.costo && <small className="p-invalid"></small>}
                     </div>
                 </div>
             </div>
@@ -242,23 +249,24 @@ const ListDemo = () => {
     };
 
     const hideDialog = () => {
+        setPicklistTargetValue([]);
         setSubmitted(false);
         setProductDialog(false);
     };
 
-
     const openNew = () => {
+        const ingredienteServie = new IngredienteService();
+        ingredienteServie.getIngredientes().then((data) => setPicklistSourceValue(data));
+        console.log('2 veces', picklistSourceValue);
         setProduct(emptyProduct);
         setSubmitted(false);
         setProductDialog(true);
     };
 
-    
     const carritoHideDialog = () => {
         setSubmitted(false);
         setcarritoDialog(false);
     };
-
 
     const carritOpenNew = () => {
         setProduct(emptyProduct);
@@ -278,7 +286,6 @@ const ListDemo = () => {
         setDeleteProductDialog(false);
     };
 
-
     const onSortChange = (event) => {
         const value = event.value;
 
@@ -293,48 +300,39 @@ const ListDemo = () => {
         }
     };
 
-    const dataViewHeader = (
-            <Toolbar className="mb-4" left={leftToolbarTemplate} right={rightToolbarTemplate}></Toolbar>
-    );
+    const dataViewHeader = <Toolbar className="mb-4" left={leftToolbarTemplate} right={rightToolbarTemplate}></Toolbar>;
 
     const chooseOptions = {
-        label: 'Archivo', 
+        label: 'Archivo',
         icon: 'pi pi-fw pi-plus'
     };
 
     const cancelOptions = {
-        label: 'Cancelar', 
-        icon: 'pi pi-times', 
+        label: 'Cancelar',
+        icon: 'pi pi-times',
         className: 'p-button-danger'
     };
 
-console.log('este baby lo tiene?', dataViewValue);
-
-/*Este es el que muestra como recuadros*/
     const dataviewGridItem = (data) => {
-
         let arrProteinas = [];
-        for(let j=0; j< data.proteina.length; j++){
+        for (let j = 0; j < data.proteina.length; j++) {
             let proteina = data.proteina[j];
-            arrProteinas.push(proteina.nombre)
+            arrProteinas.push(proteina.nombre);
         }
 
         let arrIngredientes = [];
         let arrIngredientes2 = [];
         let arrIngredientes3 = [];
-        for(let j=0; j< data.ingrediente.length; j++){
+        for (let j = 0; j < data.ingrediente.length; j++) {
             let ingredientes = data.ingrediente[j];
-            if(j < 4){
-                arrIngredientes.push(ingredientes.nombre)
-            } else if(j >= 4 && j < 8){
-                arrIngredientes2.push(ingredientes.nombre)
-            } else if(j >= 8){
-                arrIngredientes3.push(ingredientes.nombre)
+            if (j < 4) {
+                arrIngredientes.push(ingredientes.nombre);
+            } else if (j >= 4 && j < 8) {
+                arrIngredientes2.push(ingredientes.nombre);
+            } else if (j >= 8) {
+                arrIngredientes3.push(ingredientes.nombre);
             }
-
         }
-      
-      console.log(data.image)
 
         return (
             <div className="col-12 lg:col-4">
@@ -350,52 +348,63 @@ console.log('este baby lo tiene?', dataViewValue);
                         <div className="text-2xl font-bold">{data.nombre}</div>
                         <div label="Text" className="mb-3"></div>
                         <h7>Proteinas a elegir:</h7>
-                        <div className="mb-3 " >
-                            {arrProteinas.toString()}
-                        </div>
+                        <div className="mb-3 ">{arrProteinas.toString()}</div>
                         <h7>Ingredientes:</h7>
                         <div label="Text" className="mb-3">
-                        {arrIngredientes.toString()}<br></br>
-                        {arrIngredientes2.toString()}<br></br>
-                        {arrIngredientes3.toString()}
+                            {arrIngredientes.toString()}
+                            <br></br>
+                            {arrIngredientes2.toString()}
+                            <br></br>
+                            {arrIngredientes3.toString()}
                         </div>
-                        
+
                         <span className="text-2xl font-semibold">${data.costo}</span>
                     </div>
                     <div className="flex align-items-center justify-content-between">
-                        
                         <Button icon="pi pi-trash" className="p-button-danger" onClick={() => confirmDeleteProduct(data)} />
                         <Button icon="pi pi-pencil" className="p-button-success" onClick={openNew} />
-                        <Button label="Agregar"  icon="pi pi-shopping-cart" onClick={carritOpenNew} />
+                        <Button label="Agregar" icon="pi pi-shopping-cart" onClick={carritOpenNew} />
                     </div>
                 </div>
                 <Dialog visible={productDialog} style={{ width: '800px' }} header="Ingrese producto" modal className="p-fluid" footer={productDialogFooter} onHide={hideDialog}>
-                        <div className="field"> 
-                            {product.fileImage && <img src={`${contextPath}/demo/images/product/${product.fileImage}`} alt={product.fileImage} width="150" className="mt-0 mx-auto mb-5 block shadow-2" />}
-                        </div>
-                        <div className="field">
-                            <h6 htmlFor="nombre">Nombre</h6>
-                            <InputText id="nombre" value={product.nombre} onChange={(e) => onInputChange(e, 'nombre')} required autoFocus className={classNames({ 'p-invalid': submitted && !product.nombre })} />
-                            {submitted && !product.nombre && <small className="p-invalid">Name is required.</small>}
-                        </div>
-                
+                    <div className="field">{product.fileImage && <img src={`${contextPath}/demo/images/product/${product.fileImage}`} alt={product.fileImage} width="150" className="mt-0 mx-auto mb-5 block shadow-2" />}</div>
+                    <div className="field">
+                        <h6 htmlFor="nombre">Nombre</h6>
+                        <InputText id="nombre" value={product.nombre} onChange={(e) => onInputChange(e, 'nombre')} required autoFocus className={classNames({ 'p-invalid': submitted && !product.nombre })} />
+                        {submitted && !product.nombre && <small className="p-invalid">Name is required.</small>}
+                    </div>
+
                     <div className="formgrid grid">
-                        <div className="field col"> 
-                        <h6>Tipo de producto</h6>
-                        <Dropdown value={dropdownValue} onChange={(e) => setDropdownValue(e.value)} options={tipoProducto} optionLabel="name" placeholder="Select" />
+                        <div className="field col">
+                            <h6>Tipo de producto</h6>
+                            <Dropdown value={dropdownValue} onChange={(e) => setDropdownValue(e.value)} options={tipoProducto} optionLabel="name" placeholder="Select" />
                         </div>
                         <div className="field col">
-                            <h6 htmlFor="nombre">Costo</h6>
-                            <InputText id="nombre" value={product.nombre} onChange={(e) => onInputChange(e, 'nombre')} required autoFocus className={classNames({ 'p-invalid': submitted && !product.nombre })} />
-                            {submitted && !product.nombre && <small className="p-invalid">Name is required.</small>}
+                            <h6 htmlFor="costo">Costo</h6>
+                            <InputText id="costo" value={product.costo} onChange={(e) => onInputChange(e, 'costo')} required autoFocus className={classNames({ 'p-invalid': submitted && !product.costo })} />
+                            {submitted && !product.costo && <small className="p-invalid">Name is required.</small>}
                         </div>
                     </div>
                     <div className="card">
                         <h6>Agregar imagen</h6>
-                        <FileUpload ref={fileUploadRef} name="demo[]" url="https://primefaces.org/primereact/showcase/upload.php" accept="image/*" maxFileeSize={1000000}
-                            onUpload={onTemplateUpload} onSelect={onTemplateSelect} onError={onTemplateClear} onClear={onTemplateClear} onTemplateRemove= {onTemplateRemove}
-                            headerTemplate={headerTemplate} itemTemplate={itemTemplate} emptyTemplate={emptyTemplate} footer={productDialogFooter}
-                            chooseOptions={chooseOptions} cancelOptions={cancelOptions}/>
+                        <FileUpload
+                            ref={fileUploadRef}
+                            name="demo[]"
+                            url="https://primefaces.org/primereact/showcase/upload.php"
+                            accept="image/*"
+                            maxFileeSize={1000000}
+                            onUpload={onTemplateUpload}
+                            onSelect={onTemplateSelect}
+                            onError={onTemplateClear}
+                            onClear={onTemplateClear}
+                            onTemplateRemove={onTemplateRemove}
+                            headerTemplate={headerTemplate}
+                            itemTemplate={itemTemplateFile}
+                            emptyTemplate={emptyTemplate}
+                            footer={productDialogFooter}
+                            chooseOptions={chooseOptions}
+                            cancelOptions={cancelOptions}
+                        />
                     </div>
 
                     <div className="col-12 xl:col-13">
@@ -413,26 +422,24 @@ console.log('este baby lo tiene?', dataViewValue);
                                 }}
                                 sourceStyle={{ height: '200px' }}
                                 targetStyle={{ height: '200px' }}
-                                filter filterBy="name"
+                                filter
+                                filterBy="name"
                             ></PickList>
                         </div>
-                    </div>      
+                    </div>
                 </Dialog>
-                <Dialog visible={carritoDialog} style={{ width: '800px' }} header="Ingrese producto" modal className="p-fluid" footer={productDialogFooter} onHide={carritoHideDialog}>
-                
-                        <div> 
-                        {data.image && <img src={`${contextPath}/demo/images/product/${data.image}`} alt={data.image} width="150" className="mt-0 mx-auto mb-5 block shadow-2" />}
-                        </div>
-                        <div className="field">
-                            <h6 htmlFor="nombre">Nombre</h6>
-                            <InputText id="nombre" value={product.nombre} onChange={(e) => onInputChange(e, 'nombre')} required autoFocus className={classNames({ 'p-invalid': submitted && !product.nombre })} />
-                            {submitted && !product.nombre && <small className="p-invalid">Name is required.</small>}
-                        </div>
-                  
+                <Dialog visible={carritoDialog} style={{ width: '800px' }} header="Ingrese producto" modal className="p-fluid" footer={carritotDialogFooter} onHide={carritoHideDialog}>
+                    <div>{data.image && <img src={`${contextPath}/demo/images/product/${data.image}`} alt={data.image} width="150" className="mt-0 mx-auto mb-5 block shadow-2" />}</div>
+                    <div className="field">
+                        <h6 htmlFor="nombre">Nombre</h6>
+                        <InputText id="nombre" value={product.nombre} onChange={(e) => onInputChange(e, 'nombre')} required autoFocus className={classNames({ 'p-invalid': submitted && !product.nombre })} />
+                        {submitted && !product.nombre && <small className="p-invalid">Name is required.</small>}
+                    </div>
+
                     <div className="formgrid grid">
-                        <div className="field col"> 
-                        <h6>Tipo de producto</h6>
-                        <Dropdown value={dropdownValue} onChange={(e) => setDropdownValue(e.value)} options={tipoProducto} optionLabel="name" placeholder="Select" />
+                        <div className="field col">
+                            <h6>Tipo de producto</h6>
+                            <Dropdown value={dropdownValue} onChange={(e) => setDropdownValue(e.value)} options={tipoProducto} optionLabel="name" placeholder="Select" />
                         </div>
                         <div className="field col">
                             <h6 htmlFor="nombre">Costo</h6>
@@ -455,14 +462,13 @@ console.log('este baby lo tiene?', dataViewValue);
                                 }}
                                 sourceStyle={{ height: '200px' }}
                                 targetStyle={{ height: '200px' }}
-                                filter filterBy="name"
+                                filter
+                                filterBy="name"
                             ></PickList>
                         </div>
-                    </div>      
+                    </div>
                 </Dialog>
             </div>
-            
-         
         );
     };
 
@@ -478,6 +484,22 @@ console.log('este baby lo tiene?', dataViewValue);
         }
     };
 
+    const itemTemplateFile = (file, props) => {
+        setfile(file);
+        return (
+            <div className="flex align-items-center flex-wrap">
+                <div className="flex align-items-center" style={{ width: '40%' }}>
+                    <img alt={file.name} role="presentation" src={file.objectURL} width={100} />
+                    <span className="flex flex-column text-left ml-3">
+                        {file.name}
+                        <small>{new Date().toLocaleDateString()}</small>
+                    </span>
+                </div>
+                <Tag value={props.formatSize} severity="warning" className="px-3 py-2 ml-auto" />
+            </div>
+        );
+    };
+
     return (
         <div className="grid list-demo">
             <div className="col-12">
@@ -486,21 +508,18 @@ console.log('este baby lo tiene?', dataViewValue);
                     <DataView value={filteredValue || dataViewValue} layout={layout} paginator rows={9} sortOrder={sortOrder} sortField={sortField} itemTemplate={itemTemplate} header={dataViewHeader}></DataView>
                 </div>
             </div>
-           
-                <Dialog visible={deleteProductDialog} style={{ width: '450px' }} header="Confirm" modal footer={deleteProductDialogFooter} onHide={hideDeleteProductDialog}>
-                        <div className="  justify-content-center">
-                            <i className="pi pi-exclamation-triangle mr-3" style={{ fontSize: '2rem' }} />
-                            {product && (
-                                <span>
-                                    Are you sure you want to delete <b>{product.nombre}</b>?
-                                </span>
-                            )}
-                        </div>
-                </Dialog>
 
+            <Dialog visible={deleteProductDialog} style={{ width: '450px' }} header="Confirm" modal footer={deleteProductDialogFooter} onHide={hideDeleteProductDialog}>
+                <div className="  justify-content-center">
+                    <i className="pi pi-exclamation-triangle mr-3" style={{ fontSize: '2rem' }} />
+                    {product && (
+                        <span>
+                            Are you sure you want to delete <b>{product.nombre}</b>?
+                        </span>
+                    )}
+                </div>
+            </Dialog>
         </div>
-
-        
     );
 };
 

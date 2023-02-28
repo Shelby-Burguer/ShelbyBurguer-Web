@@ -273,7 +273,7 @@ const Crud = () => {
 
 
 
-    //saveBlob(file, 'test.png');
+
     setfile(file);
         return (
             <div className="flex align-items-center flex-wrap">
