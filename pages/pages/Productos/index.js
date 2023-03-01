@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, Component } from 'react';
 import { DataView, DataViewLayoutOptions } from 'primereact/dataview';
 import { Button } from 'primereact/button';
 import { Dropdown } from 'primereact/dropdown';
@@ -17,13 +17,15 @@ import { Dialog } from 'primereact/dialog';
 import getConfig from 'next/config';
 import { Tag } from 'primereact/tag';
 
+
 const ListDemo = () => {
     let emptyProduct = {
         id: null,
         nombre: '',
         tipo_producto: '',
         costo: '',
-        nombre_imagen: ''
+        nombre_imagen: '',
+        cantidad: ''
     };
 
     let emptyCantidad = {
@@ -88,7 +90,7 @@ const ListDemo = () => {
 
     const saveProduct = async () => {
         setSubmitted(true);
-        console.log('producto', dataViewValue);
+        console.log('productos', dataViewValue);
         console.log('producto', product);
         console.log('Tipo de producto', dropdownValue);
         console.log('Imagen', file);
@@ -102,8 +104,7 @@ const ListDemo = () => {
             if (product.id) {
                 const index = findIndexById(dataViewValue.id);
                 _products[index] = _product;
-                /*const ingredienteService = new IngredienteService();
-                ingredienteService.updateIngredientes(_product);*/
+
                 toast.current.show({ severity: 'success', summary: 'Successful', detail: 'Product Updated', life: 3000 });
             } else {
                 product.tipo_producto = dropdownValue.name;
@@ -126,11 +127,14 @@ const ListDemo = () => {
     };
 
     const deleteProduct = () => {
-        let _products = products.filter((val) => val.id !== product.id);
-        setProducts(_products);
+        let _dataViewValue = dataViewValue.filter((val) => val.id !== product.id);
+        setDataViewValue(_dataViewValue);
         setDeleteProductDialog(false);
         setProduct(emptyProduct);
-        toast.current.show({ severity: 'success', summary: 'Successful', detail: 'Product Deleted', life: 3000 });
+        const ProductoService = new NewProductoService();
+        ProductoService.DeleteProductos(product.id);
+        /*toast.current.show({ severity: 'success', summary: 'Successful', detail: 'Product Deleted', life: 3000 });
+        toast.current.show({ severity: 'success', summary: 'Successful', detail: 'Product Deleted', life: 3000 });*/
     };
 
     const leftToolbarTemplate = () => {
@@ -229,6 +233,48 @@ const ListDemo = () => {
         );
     };
 
+    class Ingrediente extends Component{
+        constructor(props) {
+            super(props);
+            this.state = {
+                cantidad: '',
+            }
+        }
+
+        handleQuantityChange = (event) => {
+            this.setState({ quantity: event.target.value});
+        }
+
+        render() {
+            const {nombre} = this.props;
+            const {cantidad} = this.state;
+
+            return (
+            <div>
+                <span>{nombre}</span>
+                <input type="Text" value={quantity} onChange={this.handleQuantityChange} />
+            </div>
+            );
+        }
+    }
+
+
+    class IngredienteList extends Component {
+        render(){
+            const { ingrediente } = this.props;
+
+            return (
+              <div>
+              {ingrediente.map((ingredient, index) => (
+                <Ingrediente key={index} name={ingredient} />
+              ))}
+              </div>  
+            
+            );
+
+        }
+    }
+
     const itemTemplatePickList = (item) => {
         return (
             <div className="flex flex-wrap p-1 align-items-center gap-2">
@@ -240,8 +286,8 @@ const ListDemo = () => {
                 <div className="flex-1 flex flex-column gap-2">
                     <span className="font-bold"> Cantidad</span>
                     <div className="col-12 mb-0 lg:col-11 lg:mb-0">
-                        <InputText id="cantidad" value={cantidad.costo} onChange={(e) => onInputChange(e, 'cantidad')} required autoFocus className={classNames({ 'p-invalid': submitted && !cantidad.costo })} />
-                        {submitted && !cantidad.costo && <small className="p-invalid"></small>}
+                        <InputText id="cantidad" value={product.cantidad} onChange={(e) => onInputChange(e, 'cantidad')} required autoFocus className={classNames({ 'p-invalid': submitted && !product.cantidad })} />
+                        {submitted && !product.cantidad && <small className="p-invalid"></small>}
                     </div>
                 </div>
             </div>

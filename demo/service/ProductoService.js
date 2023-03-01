@@ -82,7 +82,7 @@ export class NewProductoService {
 
     }
 
-        async postProducto(data) {
+        async postProducto(producto, ingredientes) {
         let resProduct = {
             id: null,
             nombre: '',
@@ -92,35 +92,32 @@ export class NewProductoService {
         };
 
         let resImg = {
-        nombreImagen: '',
-        datosImagen: null,
+            nombreImagen: '',
+            datosImagen: null,
         }
         
         const responseBody = fetch('http://localhost:10000/productos/create', {
             headers: { 'content-type': 'application/json'},
             method: 'POST',
             body: JSON.stringify({
-                nombre: data.nombre,
-                tipo: data.tipo_producto,
-                costo: data.costo
+                nombre: producto.nombre,
+                tipo: producto.tipo_producto,
+                costo: producto.costo
             }),
         })
-
-        await responseBody.then((dat) => dat.json().then((res) =>  {resProduct.id = res.id, resProduct.nombre = res.nombre, resProduct.tipo = res.tipo, resProduct.costo = res.costo, resProduct.imagen = res.imagen}));
+    
+       await responseBody.then((dat) => dat.json().then((res) =>  {resProduct.id = res.id, resProduct.nombre = res.nombre, resProduct.tipo = res.tipo, resProduct.costo = res.costo, resProduct.imagen = res.imagen}));
        
        console.log('Respuesta producto', resProduct)
-
-       /* 
-        console.log('Respuesta  ', resProduct);
-        console.log('Es el File', file.objectURL);
-        const fileReq = new FormData();
-        fileReq.append('file', file);
+       
+      /*
    
         const responseFile = fetch('http://localhost:10000/ingrediente/create/upload/'+ resProduct.id, {
             method: 'PUT',
             body: fileReq
  
-        })
+        })*
+        /*
 
         await responseFile.then((file) => file.json().then((img) => resImg = { ...img }));
         
@@ -142,4 +139,12 @@ export class NewProductoService {
         */
         return resProduct;
     }
+
+    DeleteProductos(id) {
+        return fetch('http://localhost:10000/productos/delete/'+ id, {
+            method: 'DELETE',
+        })
+    }
+
+
 }
