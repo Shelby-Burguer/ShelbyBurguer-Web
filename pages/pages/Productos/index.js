@@ -98,8 +98,8 @@ const ListDemo = () => {
         console.log('Derecha', picklistTargetValue);
 
         if (product.nombre.trim()) {
-            /*  let _products = [...products];
-            let _product = { ...product };*/
+              let _products = [...dataViewValue];
+         
 
             if (product.id) {
                 const index = findIndexById(dataViewValue.id);
@@ -107,19 +107,63 @@ const ListDemo = () => {
 
                 toast.current.show({ severity: 'success', summary: 'Successful', detail: 'Product Updated', life: 3000 });
             } else {
-                product.tipo_producto = dropdownValue.name;
-                let idIngredientes = picklistTargetValue.map(function (ingrediente) {
-                    return ingrediente.id;
-                });
-                console.log('gpt eres tu', idIngredientes);
-                console.log('Devuelve cantidades', cantidad);
 
+                    
                 const productoServicenew = new NewProductoService();
                 const response = await productoServicenew.postProducto(product, picklistTargetValue);
+               
+                console.log(response);
 
+                let arrIngredientes = [];
+                let arrProteinas = [];
+
+                for (let j = 0; j < picklistTargetValue.length; j++) {
+                    let ingrediente = picklistTargetValue[j];
+
+                    let newIngrediente = {
+                        id: null,
+                        nombre: '',
+                        cantidad: '',
+                        imagen: '',
+                        proteina: ''
+                    };
+
+                    newIngrediente.id = ingrediente.id;
+                    newIngrediente.nombre = ingrediente.nombre;
+                    newIngrediente.cantidad = ingrediente.cantidad;
+                    newIngrediente.imagen = ingrediente.nombreImage;
+                    newIngrediente.proteina = ingrediente.proteina;
+
+                    if (ingrediente.proteina == 'Si') {
+                        arrProteinas.push(newIngrediente);
+                    } else {
+                        arrIngredientes.push(newIngrediente);
+                    }
+                }
+
+                let NewProduct = {
+                    id: null,
+                    nombre: '',
+                    tipo: '',
+                    costo: '',
+                    imagen: '',
+                    proteina: null,
+                    proteina: arrProteinas,
+                    ingrediente: arrIngredientes
+                };
+
+                NewProduct.id = response.id;
+                NewProduct.nombre = response.nombre
+                NewProduct.tipo = dropdownValue.name;
+                NewProduct.costo = response.costo;
+                NewProduct.proteina = arrProteinas;
+                NewProduct.ingrediente = arrIngredientes;
+
+
+                 _products.push(NewProduct);
                 //toast.current.show({ severity: 'success', summary: 'Successful', detail: 'Product Created', life: 3000 });
             }
-            //setProducts(_products);
+            setDataViewValue(_products);
             //setProductDialog(false);
             // setProduct(emptyProduct);
         }
@@ -233,48 +277,6 @@ const ListDemo = () => {
         );
     };
 
-    class Ingrediente extends Component{
-        constructor(props) {
-            super(props);
-            this.state = {
-                cantidad: '',
-            }
-        }
-
-        handleQuantityChange = (event) => {
-            this.setState({ quantity: event.target.value});
-        }
-
-        render() {
-            const {nombre} = this.props;
-            const {cantidad} = this.state;
-
-            return (
-            <div>
-                <span>{nombre}</span>
-                <input type="Text" value={quantity} onChange={this.handleQuantityChange} />
-            </div>
-            );
-        }
-    }
-
-
-    class IngredienteList extends Component {
-        render(){
-            const { ingrediente } = this.props;
-
-            return (
-              <div>
-              {ingrediente.map((ingredient, index) => (
-                <Ingrediente key={index} name={ingredient} />
-              ))}
-              </div>  
-            
-            );
-
-        }
-    }
-
     const itemTemplatePickList = (item) => {
         return (
             <div className="flex flex-wrap p-1 align-items-center gap-2">
@@ -286,12 +288,39 @@ const ListDemo = () => {
                 <div className="flex-1 flex flex-column gap-2">
                     <span className="font-bold"> Cantidad</span>
                     <div className="col-12 mb-0 lg:col-11 lg:mb-0">
-                        <InputText id="cantidad" value={product.cantidad} onChange={(e) => onInputChange(e, 'cantidad')} required autoFocus className={classNames({ 'p-invalid': submitted && !product.cantidad })} />
-                        {submitted && !product.cantidad && <small className="p-invalid"></small>}
+                        <InputText id="cantidad" value={item.cantidad} onChange={(e) => onInputChangePickList(e, 'cantidad', item.id)} required  autoFocus className={classNames({ 'p-invalid': submitted && !item.cantidad })}/>
                     </div>
                 </div>
             </div>
         );
+    };
+
+    const onInputChangePickList = (e, propertyName, itemId) => {
+        const value = e.target.value;
+
+        if (picklistSourceValue.some((item) => item.id === itemId)) {
+        setPicklistSourceValue((prevState) => {
+            const newState = [...prevState];
+            const itemIndex = newState.findIndex((item) => item.id === itemId);
+            newState[itemIndex] = { ...newState[itemIndex], [propertyName]: value };
+            return newState;
+        });
+        } else {
+        setPicklistTargetValue((prevState) => {
+            const newState = [...prevState];
+            const itemIndex = newState.findIndex((item) => item.id === itemId);
+            newState[itemIndex] = { ...newState[itemIndex], [propertyName]: value };
+            return newState;
+        });
+        }
+    };
+    
+    const onInputChange = (e, name) => {
+        const val = (e.target && e.target.value) || '';
+        let _product = { ...product };
+        _product[`${name}`] = val;
+
+        setProduct(_product);
     };
 
     const hideDialog = () => {
@@ -303,7 +332,6 @@ const ListDemo = () => {
     const openNew = () => {
         const ingredienteServie = new IngredienteService();
         ingredienteServie.getIngredientes().then((data) => setPicklistSourceValue(data));
-        console.log('2 veces', picklistSourceValue);
         setProduct(emptyProduct);
         setSubmitted(false);
         setProductDialog(true);
@@ -320,16 +348,14 @@ const ListDemo = () => {
         setcarritoDialog(true);
     };
 
-    const onInputChange = (e, name) => {
-        const val = (e.target && e.target.value) || '';
-        let _product = { ...product };
-        _product[`${name}`] = val;
-
-        setProduct(_product);
-    };
-
     const hideDeleteProductDialog = () => {
         setDeleteProductDialog(false);
+    };
+
+    const editProduct = (product) => {
+        console.log(product)
+        setProduct({ ...product });
+        setProductDialog(true);
     };
 
     const onSortChange = (event) => {
@@ -408,7 +434,7 @@ const ListDemo = () => {
                     </div>
                     <div className="flex align-items-center justify-content-between">
                         <Button icon="pi pi-trash" className="p-button-danger" onClick={() => confirmDeleteProduct(data)} />
-                        <Button icon="pi pi-pencil" className="p-button-success" onClick={openNew} />
+                        <Button icon="pi pi-pencil" className="p-button-success" onClick={() => editProduct(product)} />
                         <Button label="Agregar" icon="pi pi-shopping-cart" onClick={carritOpenNew} />
                     </div>
                 </div>
@@ -556,7 +582,7 @@ const ListDemo = () => {
             </div>
 
             <Dialog visible={deleteProductDialog} style={{ width: '450px' }} header="Confirm" modal footer={deleteProductDialogFooter} onHide={hideDeleteProductDialog}>
-                <div className="  justify-content-center">
+                <div className="justify-content-center">
                     <i className="pi pi-exclamation-triangle mr-3" style={{ fontSize: '2rem' }} />
                     {product && (
                         <span>

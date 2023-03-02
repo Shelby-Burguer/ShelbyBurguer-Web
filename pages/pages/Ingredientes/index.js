@@ -75,7 +75,6 @@ const Crud = () => {
         setDeleteProductsDialog(false);
     };
 
-    const awaitTimeout = delay => new Promise(resolve => setTimeout(resolve, delay));
 
     const saveProduct = async() => {
         setSubmitted(true);
@@ -118,7 +117,7 @@ const Crud = () => {
 
     const editProduct = (product) => {
         setProduct({ ...product });
-        setProductDialog(true);
+         setProductDialog(true);
     };
 
     const confirmDeleteProduct = (product) => {
