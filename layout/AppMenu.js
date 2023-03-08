@@ -20,7 +20,10 @@ const AppMenu = () => {
         },
         {
             label: 'Administrador',
-            items: [{ label: 'Clientes', icon: 'pi pi-fw pi-user-edit', to: '/pages/admin/clientes' }]
+            items: [
+                { label: 'Clientes', icon: 'pi pi-fw pi-user-edit', to: '/pages/admin/clientes' },
+                { label: 'Zonas Delivery', icon: 'pi pi-fw pi-map-marker', to: '/pages/admin/lugares' }
+            ]
         },
         {
             label: 'UI Components',
