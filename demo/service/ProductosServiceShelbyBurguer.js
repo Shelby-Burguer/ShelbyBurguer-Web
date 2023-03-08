@@ -17,6 +17,12 @@ export class ProductService {
             .then((d) => d.data);
     }
 
+        getTypeProducts() {
+        return fetch(this.contextPath + '/demo/data/tipo_productos.json', { headers: { 'Cache-Control': 'no-cache' } })
+            .then((res) => res.json())
+            .then((d) => d.data);
+    }
+
     /*getProductsWithOrdersSmall() {
         return fetch(this.contextPath + '/demo/data/productos-ShelbyBurguer-orders-small.json', { headers: { 'Cache-Control': 'no-cache' } })
             .then((res) => res.json())
