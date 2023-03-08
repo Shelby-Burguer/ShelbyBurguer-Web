@@ -8,14 +8,14 @@ import React, { useRef, useState } from 'react';
 const Crud = () => {
     const emptyElements = {
         product: {
-            id: 1,
-            name: 'Product name',
-            image: 'https://example.com/product.jpg',
-            description: 'Product description',
-            category: 'Product category',
-            price: 10,
-            quantity: 5,
-            rating: 4,
+            id: null,
+            name: '',
+            image: '',
+            description: '',
+            category: '',
+            price: null,
+            quantity: null,
+            rating: null,
             inventoryStatus: 'INSTOCK'
         },
         user: {
@@ -62,7 +62,7 @@ const Crud = () => {
         setDeleteElementsDialog(false);
     };
 
-    const saveElement = () => {
+    const saveElement = (type) => {
         setSubmitted(true);
 
         if (element.name.trim()) {
@@ -76,14 +76,14 @@ const Crud = () => {
             } else {
                 _element.id = createId();
                 _element.code = createId();
-                _element.image = 'element-placeholder.svg';
+                _element.image = type + '-placeholder.svg';
                 _elements.push(_element);
                 toast.current.show({ severity: 'success', summary: 'Successful', detail: 'Element Created', life: 3000 });
             }
 
             setElements(_elements);
             setElementDialog(false);
-            setElement(emptyElement);
+            setElement(emptyElements[type]);
         }
     };
 
@@ -97,11 +97,11 @@ const Crud = () => {
         setDeleteElementDialog(true);
     };
 
-    const deleteElement = () => {
+    const deleteElement = (type) => {
         let _elements = elements.filter((val) => val.id !== element.id);
         setElements(_elements);
         setDeleteElementDialog(false);
-        setElement(emptyElement);
+        setElement(emptyElements[type]);
         toast.current.show({ severity: 'success', summary: 'Successful', detail: 'Element Deleted', life: 3000 });
     };
 
@@ -164,11 +164,11 @@ const Crud = () => {
         setElement(_element);
     };
 
-    const leftToolbarTemplate = () => {
+    const leftToolbarTemplate = (type) => {
         return (
             <React.Fragment>
                 <div className="my-2">
-                    <Button label="New" icon="pi pi-plus" className="p-button-success mr-2" onClick={openNew} />
+                    <Button label="New" icon="pi pi-plus" className="p-button-success mr-2" onClick={() => openNew(type)} />
                     <Button label="Delete" icon="pi pi-trash" className="p-button-danger" onClick={confirmDeleteSelected} disabled={!selectedElements || !selectedElements.length} />
                 </div>
             </React.Fragment>
@@ -242,7 +242,7 @@ const Crud = () => {
         return (
             <>
                 <span className="p-column-title">Status</span>
-                <span className={`element-badge status-${rowData.inventoryStatus.toLowerCase()}`}>{rowData.inventoryStatus}</span>
+                <span className={`product-badge status-${rowData.inventoryStatus.toLowerCase()}`}>{rowData.inventoryStatus}</span>
             </>
         );
     };
@@ -266,16 +266,19 @@ const Crud = () => {
         </div>
     );
 
-    const elementDialogFooter = (
-        <>
-            <Button label="Cancel" icon="pi pi-times" className="p-button-text" onClick={hideDialog} />
-            <Button label="Save" icon="pi pi-check" className="p-button-text" onClick={saveElement} />
-        </>
-    );
-    const deleteElementDialogFooter = (
+    const elementDialogFooter = (type) => {
+        return (
+            <React.Fragment>
+                <Button label="Cancel" icon="pi pi-times" className="p-button-text" onClick={hideDialog} />
+                <Button label="Save" icon="pi pi-check" className="p-button-text" onClick={() => saveElement(type)} />
+            </React.Fragment>
+        );
+    };
+
+    const deleteElementDialogFooter = (type) => (
         <>
             <Button label="No" icon="pi pi-times" className="p-button-text" onClick={hideDeleteElementDialog} />
-            <Button label="Yes" icon="pi pi-check" className="p-button-text" onClick={deleteElement} />
+            <Button label="Yes" icon="pi pi-check" className="p-button-text" onClick={() => deleteElement(type)} />
         </>
     );
     const deleteElementsDialogFooter = (
