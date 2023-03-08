@@ -16,6 +16,7 @@ const LugarPage = () => {
     const crudObject = Crud();
 
     let defaultProduct = crudObject.emptyElements.product;
+    const elementName = 'product';
 
     useEffect(() => {
         const productService = new ProductService();
@@ -28,7 +29,7 @@ const LugarPage = () => {
             <div className="col-12">
                 <div className="card">
                     <Toast ref={crudObject.toast} />
-                    <Toolbar className="mb-4" left={crudObject.leftToolbarTemplate} right={crudObject.rightToolbarTemplate}></Toolbar>
+                    <Toolbar className="mb-4" left={() => crudObject.leftToolbarTemplate(elementName)} right={crudObject.rightToolbarTemplate}></Toolbar>
 
                     <DataTable
                         ref={crudObject.dt}
@@ -50,7 +51,7 @@ const LugarPage = () => {
                         <Column selectionMode="multiple" headerStyle={{ width: '4rem' }}></Column>
                         <Column field="code" header="Code" sortable body={crudObject.codeBodyTemplate} headerStyle={{ minWidth: '15rem' }}></Column>
                         <Column field="name" header="Name" sortable body={crudObject.nameBodyTemplate} headerStyle={{ minWidth: '15rem' }}></Column>
-                        <Column header="Image" body={(rowData) => crudObject.imageBodyTemplate(rowData, 'product')}></Column>
+                        <Column header="Image" body={(rowData) => crudObject.imageBodyTemplate(rowData, elementName)}></Column>
                         <Column field="price" header="Price" body={crudObject.priceBodyTemplate} sortable></Column>
                         <Column field="category" header="Category" sortable body={crudObject.categoryBodyTemplate} headerStyle={{ minWidth: '10rem' }}></Column>
                         <Column field="rating" header="Reviews" body={crudObject.ratingBodyTemplate} sortable></Column>
@@ -58,16 +59,16 @@ const LugarPage = () => {
                         <Column body={crudObject.actionBodyTemplate} headerStyle={{ minWidth: '10rem' }}></Column>
                     </DataTable>
 
-                    <Dialog visible={crudObject.elementDialog} style={{ width: '450px' }} header="Product Details" modal className="p-fluid" footer={crudObject.elementDialogFooter} onHide={crudObject.hideDialog}>
-                        {crudObject.element?.image && <img src={`${crudObject.contextPath}/demo/images/product/${crudObject.element?.image}`} alt={crudObject.element?.image} width="150" className="mt-0 mx-auto mb-5 block shadow-2" />}
+                    <Dialog visible={crudObject.elementDialog} style={{ width: '450px' }} header="Product Details" modal className="p-fluid" footer={() => crudObject.elementDialogFooter(elementName)} onHide={crudObject.hideDialog}>
+                        {crudObject.element?.image && <img src={`${crudObject.contextPath}/demo/images/${elementName}/${crudObject.element?.image}`} alt={crudObject.element?.image} width="150" className="mt-0 mx-auto mb-5 block shadow-2" />}
                         <div className="field">
                             <label htmlFor="name">Name</label>
-                            <InputText id="name" value={crudObject.element?.name} onChange={(e) => onInputChange(e, 'name')} required autoFocus className={classNames({ 'p-invalid': crudObject.submitted && !crudObject.element?.name })} />
+                            <InputText id="name" value={crudObject.element?.name} onChange={(e) => crudObject.onInputChange(e, 'name')} required autoFocus className={classNames({ 'p-invalid': crudObject.submitted && !crudObject.element?.name })} />
                             {crudObject.submitted && !crudObject.element?.name && <small className="p-invalid">Name is required.</small>}
                         </div>
                         <div className="field">
                             <label htmlFor="description">Description</label>
-                            <InputTextarea id="description" value={crudObject.element?.description} onChange={(e) => onInputChange(e, 'description')} required rows={3} cols={20} />
+                            <InputTextarea id="description" value={crudObject.element?.description} onChange={(e) => crudObject.onInputChange(e, 'description')} required rows={3} cols={20} />
                         </div>
 
                         <div className="field">
@@ -95,16 +96,16 @@ const LugarPage = () => {
                         <div className="formgrid grid">
                             <div className="field col">
                                 <label htmlFor="price">Price</label>
-                                <InputNumber id="price" value={crudObject.element?.price} onValueChange={(e) => onInputNumberChange(e, 'price')} mode="currency" currency="USD" locale="en-US" />
+                                <InputNumber id="price" value={crudObject.element?.price} onValueChange={(e) => crudObject.onInputNumberChange(e, 'price')} mode="currency" currency="USD" locale="en-US" />
                             </div>
                             <div className="field col">
                                 <label htmlFor="quantity">Quantity</label>
-                                <InputNumber id="quantity" value={crudObject.element?.quantity} onValueChange={(e) => onInputNumberChange(e, 'quantity')} integeronly />
+                                <InputNumber id="quantity" value={crudObject.element?.quantity} onValueChange={(e) => crudObject.onInputNumberChange(e, 'quantity')} integeronly />
                             </div>
                         </div>
                     </Dialog>
 
-                    <Dialog visible={crudObject.deleteProductDialog} style={{ width: '450px' }} header="Confirm" modal footer={crudObject.deleteProductDialogFooter} onHide={crudObject.hideDeleteProductDialog}>
+                    <Dialog visible={crudObject.deleteElementDialog} style={{ width: '450px' }} header="Confirm" modal footer={crudObject.deleteElementDialogFooter} onHide={crudObject.hideDeleteElementDialog}>
                         <div className="flex align-items-center justify-content-center">
                             <i className="pi pi-exclamation-triangle mr-3" style={{ fontSize: '2rem' }} />
                             {crudObject.element && (
@@ -115,7 +116,7 @@ const LugarPage = () => {
                         </div>
                     </Dialog>
 
-                    <Dialog visible={crudObject.deleteProductsDialog} style={{ width: '450px' }} header="Confirm" modal footer={crudObject.deleteProductsDialogFooter} onHide={crudObject.hideDeleteProductsDialog}>
+                    <Dialog visible={crudObject.deleteElementsDialog} style={{ width: '450px' }} header="Confirm" modal footer={crudObject.deleteElementsDialogFooter} onHide={crudObject.hideDeleteElementsDialog}>
                         <div className="flex align-items-center justify-content-center">
                             <i className="pi pi-exclamation-triangle mr-3" style={{ fontSize: '2rem' }} />
                             {crudObject.element && <span>Are you sure you want to delete the selected products?</span>}
