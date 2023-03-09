@@ -6031,3 +6031,10 @@
 .p-datatable .p-datatable-tbody > tr.p-datatable-dragpoint-bottom > td {
   box-shadow: inset 0 -2px 0 0 #FFD54F;
 }
+.input-cantidad {
+  width: 50px;
+}
+
+.radio-spacer {
+  margin-right: 10px;
+}

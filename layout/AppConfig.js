@@ -5,8 +5,16 @@ import { InputSwitch } from 'primereact/inputswitch';
 import { RadioButton } from 'primereact/radiobutton';
 import { Sidebar } from 'primereact/sidebar';
 import { classNames } from 'primereact/utils';
+import { Card } from 'primereact/card';
 import React, { useContext, useEffect, useState } from 'react';
 import { LayoutContext } from './context/layoutcontext';
+import { DataView, DataViewLayoutOptions } from 'primereact/dataview';
+import { Dropdown } from 'primereact/dropdown';
+import { Rating } from 'primereact/rating';
+import { PickList } from 'primereact/picklist';
+import { OrderList } from 'primereact/orderlist';
+import { InputText } from 'primereact/inputtext';
+import { ProductService } from '../demo/service/ProductosServiceShelbyBurguer';
 
 const AppConfig = (props) => {
     const [scales] = useState([12, 13, 14, 15, 16]);
@@ -82,259 +90,228 @@ const AppConfig = (props) => {
     };
 
 
+const products = [
+  { id: 1, name: 'Producto 1', image: 'url-de-imagen-1', quantity: 10 },
+  { id: 2, name: 'Producto 2', image: 'url-de-imagen-2', quantity: 20 },
+  { id: 3, name: 'Producto 3', image: 'url-de-imagen-3', quantity: 30 },
+  // ...agrega tantos productos como necesites
+];
+
+const ProductList = () => {
+  return (
+    <div>
+      {products.map((product) => (
+        <Card key={product.id} title={product.name}>
+          <img src={product.image} alt={product.name} />
+          <p>Cantidad: {product.quantity}</p>
+        </Card>
+      ))}
+    </div>
+  );
+};
+    const listValue = [
+        { name: 'San Francisco', code: 'SF' },
+        { name: 'London', code: 'LDN' },
+        { name: 'Paris', code: 'PRS' },
+        { name: 'Istanbul', code: 'IST' },
+        { name: 'Berlin', code: 'BRL' },
+        { name: 'Barcelona', code: 'BRC' },
+        { name: 'Rome', code: 'RM' }
+    ];
+
+    const [picklistSourceValue, setPicklistSourceValue] = useState(listValue);
+    const [picklistTargetValue, setPicklistTargetValue] = useState([]);
+    const [orderlistValue, setOrderlistValue] = useState(listValue);
+    const [dataViewValue, setDataViewValue] = useState(null);
+    const [globalFilterValue, setGlobalFilterValue] = useState('');
+    const [filteredValue, setFilteredValue] = useState(null);
+    const [layout, setLayout] = useState('grid');
+    const [sortKey, setSortKey] = useState(null);
+    const [sortOrder, setSortOrder] = useState(null);
+    const [sortField, setSortField] = useState(null);
+    //const contextPath = getConfig().publicRuntimeConfig.contextPath;
+
+    const sortOptions = [
+        { label: 'Price High to Low', value: '!price' },
+        { label: 'Price Low to High', value: 'price' }
+    ];
+
+    useEffect(() => {
+        const productService = new ProductService();
+        productService.getProducts().then((data) => setDataViewValue(data));
+        setGlobalFilterValue('');
+    }, []);
+
+    const onFilter = (e) => {
+        const value = e.target.value;
+        setGlobalFilterValue(value);
+        if (value.length === 0) {
+            setFilteredValue(null);
+        }
+        else {
+            const filtered = dataViewValue.filter((product) => {
+                return product.name.toLowerCase().includes(value);
+            });
+            setFilteredValue(filtered);
+        }
+    };
+
+    const onSortChange = (event) => {
+        const value = event.value;
+
+        if (value.indexOf('!') === 0) {
+            setSortOrder(-1);
+            setSortField(value.substring(1, value.length));
+            setSortKey(value);
+        } else {
+            setSortOrder(1);
+            setSortField(value);
+            setSortKey(value);
+        }
+    };
+
+
+ const dataviewListItem = (data) => {
+        return (
+            <div className="col-12">
+                <div className="flex flex-column md:flex-row align-items-center p-2 w-full">
+                    <img src={`${contextPath}/demo/images/product/${data.image}`} alt={data.name} className="my-2 md:my-0 w-9 md:w-3rem shadow-2 mr-2" />
+                    <div className="flex-1 flex flex-column align-items-center text-center md:text-left">
+                        <div className="font-bold text-1xl">{data.name}</div>
+                        <div className="mb-2">{data.description}</div>
+                   
+                        <div className="flex align-items-center">
+                    
+                            <span className="font-semibold">{data.category}</span>
+                        </div>
+                    </div>
+                    <div className="flex flex-row md:flex-column justify-content-between w-full md:w-auto align-items-center md:align-items-end mt-5 md:mt-0">
+                        <span className="text-1xl font-semibold mb-2 align-self-center md:align-self-end">${data.price}</span>
+                        
+                    </div>
+                </div>
+            </div>
+        );
+    };
+
+/*
+const dataviewListItem = (data) => {
+  return (
+    <div className="col-12">
+      <div className="flex flex-row align-items-center p-2 w-full cart-item">
+        <img src={`${contextPath}/demo/images/product/${data.image}`} alt={data.name} className="my-2 md:my-0 w-9 md:w-4rem shadow-2 mr2"  />
+        <div className="flex-1 flex flex-column align-items-center text-center md:text-left">
+          <div className="font-bold text-1xl">{data.name}</div>
+          <div className="mb-2">{data.description}</div>
+          <div className="flex align-items-center">
+            <i className="pi pi-tag mr-2"></i>
+            <span className="font-semibold">{data.category}</span>
+          </div>
+        </div>
+        <div className="flex flex-row justify-content-between w-full md:w-auto align-items-center md:align-items-end">
+          <span className="text-1xl font-semibold">${data.price}</span>
+          <button className="p-button-outlined p-button-danger p-button-sm" onClick={() => onDelete(data)}>Eliminar</button>
+        </div>
+      </div>
+    </div>
+  );
+};*/
+
+
+const onDelete = (index) => {
+  const newData = [...filteredValue || dataViewValue];
+  newData.splice(index, 1);
+  setDataViewValue(newData);
+};
+
+
+    const dataviewGridItem = (data) => {
+        return (
+            <div className="col-12 lg:col-3">
+                <div className="card m-3 border-1 surface-border">
+                    <div className="flex flex-wrap gap-2 align-items-center justify-content-between mb-2">
+                        <div className="flex align-items-center">
+                            <i className="pi pi-tag mr-2" />
+                            <span className="font-semibold">{data.category}</span>
+                        </div>
+                        <span className={`product-badge status-${data.inventoryStatus.toLowerCase()}`}>{data.inventoryStatus}</span>
+                    </div>
+                    <div className="flex flex-column align-items-center text-center mb-3">
+                        <img src={`${contextPath}/demo/images/product/${data.image}`} alt={data.name} className="w-9 shadow-2 my-3 mx-0" />
+                        <div className="text-2xl font-bold">{data.name}</div>
+                        <div className="mb-3">{data.description}</div>
+                        <Rating value={data.rating} readOnly cancel={false} />
+                    </div>
+                    <div className="flex align-items-center justify-content-between">
+                        <span className="text-2xl font-semibold">${data.price}</span>
+                        <Button icon="pi pi-shopping-cart" disabled={data.inventoryStatus === 'OUTOFSTOCK'} />
+                    </div>
+                </div>
+            </div>
+        );
+    };
+
+    const itemTemplate = (data, layout) => {
+        if (!data) {
+            return;
+        }
+
+        if (layout === 'list') {
+            return dataviewListItem(data);
+        } else if (layout === 'grid') {
+            return dataviewGridItem(data);
+        }
+    };
+
+
+
+
     useEffect(() => {
         applyScale();
     }, [layoutConfig.scale]);
 
 
 
+
     return (
         <>
         
-            {/* <button className="layout-config-button p-link" type="button" onClick={onConfigButtonClick}>
-                <i className="pi pi-cog"></i>
-            </button>*/ }
+             <button className="layout-config-button p-link" type="button" onClick={onConfigButtonClick}>
+                <i className="pi pi-shopping-cart"></i>
+            </button>
          
-            <Sidebar visible={layoutState.configSidebarVisible} onHide={onConfigSidebarHide} position="right" className="layout-config-sidebar w-20rem">
-                <h5>Scale</h5>
-                <div className="flex align-items-center">
-                    <Button icon="pi pi-minus" type="button" onClick={decrementScale} className="p-button-text p-button-rounded w-2rem h-2rem mr-2" disabled={layoutConfig.scale === scales[0]}></Button>
-                    <div className="flex gap-2 align-items-center">
-                        {scales.map((item) => {
-                            return <i className={classNames('pi pi-circle-fill', { 'text-primary-500': item === layoutConfig.scale, 'text-300': item !== layoutConfig.scale })} key={item}></i>;
-                        })}
-                    </div>
-                    <Button icon="pi pi-plus" type="button" onClick={incrementScale} className="p-button-text p-button-rounded w-2rem h-2rem ml-2" disabled={layoutConfig.scale === scales[scales.length - 1]}></Button>
-                </div>
+            <Sidebar visible={layoutState.configSidebarVisible} onHide={onConfigSidebarHide} position="right" className="layout-config-sidebar w-30rem">
 
-                { !props.simple &&
-                    <>
-                        <h5>Menu Type</h5>
-                        <div class="flex">
-                            <div className="field-radiobutton flex-1">
-                                <RadioButton name="menuMode" value={'static'} checked={layoutConfig.menuMode === 'static'} onChange={(e) => changeMenuMode(e)} inputId="mode1"></RadioButton>
-                                <label htmlFor="mode1">Static</label>
-                            </div>
-                            <div className="field-radiobutton flex-1">
-                                <RadioButton name="menuMode" value={'overlay'} checked={layoutConfig.menuMode === 'overlay'} onChange={(e) => changeMenuMode(e)} inputId="mode2"></RadioButton>
-                                <label htmlFor="mode2">Overlay</label>
-                            </div>
+            {/*<h5>Carrito</h5>
+            <ProductList />*/}
+            <div className="grid list-demo">
+            <div className="col-12">
+                <div className="card">
+                <h5>Carrito</h5>
+                <DataView 
+                    value={filteredValue || dataViewValue} 
+                    layout={layout}  
+                    rows={3} 
+                    sortOrder={sortOrder} 
+                    sortField={sortField} 
+                    itemTemplate={dataviewListItem} 
+                    style={{height: '450px', overflowY: 'scroll'}} 
+                  
+                />
+                
+                <div className="carrito-total text-right" style={{height: '24px'}} >Total:216 </div>
+                    <div className="grid">
+                        <div className="md:col-6"> </div> 
+                            <div className="flex flex-wrap gap-2" style={{ display: 'flex', flexDirection: 'row' }}>  
+                                <Button label="Limpiar" className="p-button-danger" />  
+                                <Button label="Continuar" />    
+
                         </div>
-                    </>
-                }
-
-                <h5>Input Style</h5>
-                <div className="flex">
-                    <div className="field-radiobutton flex-1">
-                        <RadioButton name="inputStyle" value={'outlined'} checked={layoutConfig.inputStyle === 'outlined'} onChange={(e) => changeInputStyle(e)} inputId="outlined_input"></RadioButton>
-                        <label htmlFor="outlined_input">Outlined</label>
-                    </div>
-                    <div className="field-radiobutton flex-1">
-                        <RadioButton name="inputStyle" value={'filled'} checked={layoutConfig.inputStyle === 'filled'} onChange={(e) => changeInputStyle(e)} inputId="filled_input"></RadioButton>
-                        <label htmlFor="filled_input">Filled</label>
-                    </div>
+                    </div>  
                 </div>
-
-                <h5>Ripple Effect</h5>
-                <InputSwitch checked={layoutConfig.ripple} onChange={(e) => changeRipple(e)}></InputSwitch>
-
-                <h5>Bootstrap</h5>
-                <div className="grid">
-                    <div className="col-3">
-                        <button className="p-link w-2rem h-2rem" onClick={() => changeTheme('bootstrap4-light-blue', 'light')}>
-                            <img src={`${contextPath}/layout/images/themes/bootstrap4-light-blue.svg`} className="w-2rem h-2rem" alt="Bootstrap Light Blue" />
-                        </button>
-                    </div>
-                    <div className="col-3">
-                        <button className="p-link w-2rem h-2rem" onClick={() => changeTheme('bootstrap4-light-purple', 'light')}>
-                            <img src={`${contextPath}/layout/images/themes/bootstrap4-light-purple.svg`} className="w-2rem h-2rem" alt="Bootstrap Light Purple" />
-                        </button>
-                    </div>
-                    <div className="col-3">
-                        <button className="p-link w-2rem h-2rem" onClick={() => changeTheme('bootstrap4-dark-blue', 'dark')}>
-                            <img src={`${contextPath}/layout/images/themes/bootstrap4-dark-blue.svg`} className="w-2rem h-2rem" alt="Bootstrap Dark Blue" />
-                        </button>
-                    </div>
-                    <div className="col-3">
-                        <button className="p-link w-2rem h-2rem" onClick={() => changeTheme('bootstrap4-dark-purple', 'dark')}>
-                            <img src={`${contextPath}/layout/images/themes/bootstrap4-dark-purple.svg`} className="w-2rem h-2rem" alt="Bootstrap Dark Purple" />
-                        </button>
-                    </div>
-                </div>
-
-                <h5>Material Design</h5>
-                <div className="grid">
-                    <div className="col-3">
-                        <button className="p-link w-2rem h-2rem" onClick={() => changeTheme('md-light-indigo', 'light')}>
-                            <img src={`${contextPath}/layout/images/themes/md-light-indigo.svg`} className="w-2rem h-2rem" alt="Material Light Indigo" />
-                        </button>
-                    </div>
-                    <div className="col-3">
-                        <button className="p-link w-2rem h-2rem" onClick={() => changeTheme('md-light-deeppurple', 'light')}>
-                            <img src={`${contextPath}/layout/images/themes/md-light-deeppurple.svg`} className="w-2rem h-2rem" alt="Material Light DeepPurple" />
-                        </button>
-                    </div>
-                    <div className="col-3">
-                        <button className="p-link w-2rem h-2rem" onClick={() => changeTheme('md-dark-indigo', 'dark')}>
-                            <img src={`${contextPath}/layout/images/themes/md-dark-indigo.svg`} className="w-2rem h-2rem" alt="Material Dark Indigo" />
-                        </button>
-                    </div>
-                    <div className="col-3">
-                        <button className="p-link w-2rem h-2rem" onClick={() => changeTheme('md-dark-deeppurple', 'dark')}>
-                            <img src={`${contextPath}/layout/images/themes/md-dark-deeppurple.svg`} className="w-2rem h-2rem" alt="Material Dark DeepPurple" />
-                        </button>
-                    </div>
-                </div>
-
-                <h5>Material Design Compact</h5>
-                <div className="grid">
-                    <div className="col-3">
-                        <button className="p-link w-2rem h-2rem" onClick={() => changeTheme('mdc-light-indigo', 'light')}>
-                            <img src={`${contextPath}/layout/images/themes/md-light-indigo.svg`} className="w-2rem h-2rem" alt="Material Light Indigo" />
-                        </button>
-                    </div>
-                    <div className="col-3">
-                        <button className="p-link w-2rem h-2rem" onClick={() => changeTheme('mdc-light-deeppurple', 'light')}>
-                            <img src={`${contextPath}/layout/images/themes/md-light-deeppurple.svg`} className="w-2rem h-2rem" alt="Material Light Deep Purple" />
-                        </button>
-                    </div>
-                    <div className="col-3">
-                        <button className="p-link w-2rem h-2rem" onClick={() => changeTheme('mdc-dark-indigo', 'dark')}>
-                            <img src={`${contextPath}/layout/images/themes/md-dark-indigo.svg`} className="w-2rem h-2rem" alt="Material Dark Indigo" />
-                        </button>
-                    </div>
-                    <div className="col-3">
-                        <button className="p-link w-2rem h-2rem" onClick={() => changeTheme('mdc-dark-deeppurple', 'dark')}>
-                            <img src={`${contextPath}/layout/images/themes/md-dark-deeppurple.svg`} className="w-2rem h-2rem" alt="Material Dark Deep Purple" />
-                        </button>
-                    </div>
-                </div>
-
-                <h5>Tailwind</h5>
-                <div className="grid">
-                    <div className="col-3">
-                        <button className="p-link w-2rem h-2rem" onClick={() => changeTheme('tailwind-light', 'light')}>
-                            <img src={`${contextPath}/layout/images/themes/tailwind-light.png`} className="w-2rem h-2rem" alt="Tailwind Light" />
-                        </button>
-                    </div>
-                </div>
-
-                <h5>Fluent UI</h5>
-                <div className="grid">
-                    <div className="col-3">
-                        <button className="p-link w-2rem h-2rem" onClick={() => changeTheme('fluent-light', 'light')}>
-                            <img src={`${contextPath}/layout/images/themes/fluent-light.png`} className="w-2rem h-2rem" alt="Fluent Light" />
-                        </button>
-                    </div>
-                </div>
-
-                <h5>PrimeOne Design - 2022</h5>
-                <div className="grid">
-                    <div className="col-3">
-                        <button className="p-link w-2rem h-2rem" onClick={() => changeTheme('lara-light-indigo', 'light')}>
-                            <img src={`${contextPath}/layout/images/themes/lara-light-indigo.png`} className="w-2rem h-2rem" alt="Lara Light Indigo" />
-                        </button>
-                    </div>
-                    <div className="col-3">
-                        <button className="p-link w-2rem h-2rem" onClick={() => changeTheme('lara-light-blue', 'light')}>
-                            <img src={`${contextPath}/layout/images/themes/lara-light-blue.png`} className="w-2rem h-2rem" alt="Lara Light Blue" />
-                        </button>
-                    </div>
-                    <div className="col-3">
-                        <button className="p-link w-2rem h-2rem" onClick={() => changeTheme('lara-light-purple', 'light')}>
-                            <img src={`${contextPath}/layout/images/themes/lara-light-purple.png`} className="w-2rem h-2rem" alt="Lara Light Purple" />
-                        </button>
-                    </div>
-                    <div className="col-3">
-                        <button className="p-link w-2rem h-2rem" onClick={() => changeTheme('lara-light-teal', 'light')}>
-                            <img src={`${contextPath}/layout/images/themes/lara-light-teal.png`} className="w-2rem h-2rem" alt="Lara Light Teal" />
-                        </button>
-                    </div>
-                    <div className="col-3">
-                        <button className="p-link w-2rem h-2rem" onClick={() => changeTheme('lara-dark-indigo', 'dark')}>
-                            <img src={`${contextPath}/layout/images/themes/lara-dark-indigo.png`} className="w-2rem h-2rem" alt="Lara Dark Indigo" />
-                        </button>
-                    </div>
-                    <div className="col-3">
-                        <button className="p-link w-2rem h-2rem" onClick={() => changeTheme('lara-dark-blue', 'dark')}>
-                            <img src={`${contextPath}/layout/images/themes/lara-dark-blue.png`} className="w-2rem h-2rem" alt="Lara Dark Blue" />
-                        </button>
-                    </div>
-                    <div className="col-3">
-                        <button className="p-link w-2rem h-2rem" onClick={() => changeTheme('lara-dark-purple', 'dark')}>
-                            <img src={`${contextPath}/layout/images/themes/lara-dark-purple.png`} className="w-2rem h-2rem" alt="Lara Dark Purple" />
-                        </button>
-                    </div>
-                    <div className="col-3">
-                        <button className="p-link w-2rem h-2rem" onClick={() => changeTheme('lara-dark-teal', 'dark')}>
-                            <img src={`${contextPath}/layout/images/themes/lara-dark-teal.png`} className="w-2rem h-2rem" alt="Lara Dark Teal" />
-                        </button>
-                    </div>
-                </div>
-
-                <h5>PrimeOne Design - 2021</h5>
-                <div className="grid">
-                    <div className="col-3">
-                        <button className="p-link w-2rem h-2rem" onClick={() => changeTheme('saga-blue', 'light')}>
-                            <img src={`${contextPath}/layout/images/themes/saga-blue.png`} className="w-2rem h-2rem" alt="Saga Blue" />
-                        </button>
-                    </div>
-                    <div className="col-3">
-                        <button className="p-link w-2rem h-2rem" onClick={() => changeTheme('saga-green', 'light')}>
-                            <img src={`${contextPath}/layout/images/themes/saga-green.png`} className="w-2rem h-2rem" alt="Saga Green" />
-                        </button>
-                    </div>
-                    <div className="col-3">
-                        <button className="p-link w-2rem h-2rem" onClick={() => changeTheme('saga-orange', 'light')}>
-                            <img src={`${contextPath}/layout/images/themes/saga-orange.png`} className="w-2rem h-2rem" alt="Saga Orange" />
-                        </button>
-                    </div>
-                    <div className="col-3">
-                        <button className="p-link w-2rem h-2rem" onClick={() => changeTheme('saga-purple', 'light')}>
-                            <img src={`${contextPath}/layout/images/themes/saga-purple.png`} className="w-2rem h-2rem" alt="Saga Purple" />
-                        </button>
-                    </div>
-                    <div className="col-3">
-                        <button className="p-link w-2rem h-2rem" onClick={() => changeTheme('vela-blue', 'dark')}>
-                            <img src={`${contextPath}/layout/images/themes/vela-blue.png`} className="w-2rem h-2rem" alt="Vela Blue" />
-                        </button>
-                    </div>
-                    <div className="col-3">
-                        <button className="p-link w-2rem h-2rem" onClick={() => changeTheme('vela-green', 'dark')}>
-                            <img src={`${contextPath}/layout/images/themes/vela-green.png`} className="w-2rem h-2rem" alt="Vela Green" />
-                        </button>
-                    </div>
-                    <div className="col-3">
-                        <button className="p-link w-2rem h-2rem" onClick={() => changeTheme('vela-orange', 'dark')}>
-                            <img src={`${contextPath}/layout/images/themes/vela-orange.png`} className="w-2rem h-2rem" alt="Vela Orange" />
-                        </button>
-                    </div>
-                    <div className="col-3">
-                        <button className="p-link w-2rem h-2rem" onClick={() => changeTheme('vela-purple', 'dark')}>
-                            <img src={`${contextPath}/layout/images/themes/vela-purple.png`} className="w-2rem h-2rem" alt="Vela Purple" />
-                        </button>
-                    </div>
-                    <div className="col-3">
-                        <button className="p-link w-2rem h-2rem" onClick={() => changeTheme('arya-blue', 'dark')}>
-                            <img src={`${contextPath}/layout/images/themes/arya-blue.png`} className="w-2rem h-2rem" alt="Arya Blue" />
-                        </button>
-                    </div>
-                    <div className="col-3">
-                        <button className="p-link w-2rem h-2rem" onClick={() => changeTheme('arya-green', 'dark')}>
-                            <img src={`${contextPath}/layout/images/themes/arya-green.png`} className="w-2rem h-2rem" alt="Arya Green" />
-                        </button>
-                    </div>
-                    <div className="col-3">
-                        <button className="p-link w-2rem h-2rem" onClick={() => changeTheme('arya-orange', 'dark')}>
-                            <img src={`${contextPath}/layout/images/themes/arya-orange.png`} className="w-2rem h-2rem" alt="Arya Orange" />
-                        </button>
-                    </div>
-                    <div className="col-3">
-                        <button className="p-link w-2rem h-2rem" onClick={() => changeTheme('arya-purple', 'dark')}>
-                            <img src={`${contextPath}/layout/images/themes/arya-purple.png`} className="w-2rem h-2rem" alt="Arya Purple" />
-                        </button>
-                    </div>
-                </div>
+            </div>
+            </div>
+                
             </Sidebar>
         </>
     );

@@ -13,9 +13,20 @@ const AppMenu = () => {
             label: 'Home',
             items: [
                 { label: 'Dashboard', icon: 'pi pi-fw pi-home', to: '/' },
+            ]
+        },
+        {
+            label: 'Productos',
+            items: [
                 { label: 'Ingredientes', icon: 'pi pi-fw pi-home', to: '/pages/Ingredientes' },
                 { label: 'Productos', icon: 'pi pi-fw pi-home', to: '/pages/Productos' },
                 { label: 'Combos', icon: 'pi pi-fw pi-home', to: '/pages/Combos' }
+            ]
+        },
+        {
+            label: 'Ordenes',
+            items: [
+                { label: 'Culminacion de orden', icon: 'pi pi-fw pi-home', to: '/pages/Ordenes' },
             ]
         },
         {

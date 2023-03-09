@@ -45,6 +45,7 @@ export class IngredienteService {
             resProduct[clave].fileImage = test;
             resProduct[clave].nombreImage = test.name;
             resProduct[clave].urlImage= test.objectURL;
+            resProduct[clave].cantidad = '';
 
             window.URL.revokeObjectURL(blobURL);
 
