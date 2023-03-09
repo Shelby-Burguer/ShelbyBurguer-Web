@@ -26,7 +26,7 @@ const AppMenu = () => {
         {
             label: 'Ordenes',
             items: [
-                { label: 'Ingredientes', icon: 'pi pi-fw pi-home', to: '/pages/Ordenes' },
+                { label: 'Culminacion de orde', icon: 'pi pi-fw pi-home', to: '/pages/Ordenes' },
             ]
         },
         {
