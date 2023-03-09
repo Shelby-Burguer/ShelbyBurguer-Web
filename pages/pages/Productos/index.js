@@ -35,6 +35,7 @@ const ListDemo = () => {
 
     const [products, setProducts] = useState(null);
     const [product, setProduct] = useState(emptyProduct);
+    const [productAux, setProductAux] = useState(emptyProduct);
     //const [listValue, setlistValue] = useState(null);
     const [cantidad, setCantidad] = useState(emptyCantidad);
     const [tipoProducto, setTipoProducto] = useState(null);
@@ -54,6 +55,7 @@ const ListDemo = () => {
     const contextPath = getConfig().publicRuntimeConfig.contextPath;
     const fileUploadRef = useRef(null);
     const [dropdownValue, setDropdownValue] = useState(null);
+    const [dropdownValueAux, setDropdownValueAux] = useState(null);
     const [deleteProductDialog, setDeleteProductDialog] = useState(false);
     const [totalSize, setTotalSize] = useState(0);
     const [file, setfile] = useState(null);
@@ -67,10 +69,8 @@ const ListDemo = () => {
     useEffect(() => {
         const productService = new ProductService();
         const productoServicenew = new NewProductoService();
-
         productoServicenew.getProductos().then((data) => setDataViewValue(data));
         productService.getTypeProducts().then((data) => setTipoProducto(data));
-
         productoServicenew.getProductos();
         setGlobalFilterValue('');
     }, []);
@@ -88,6 +88,16 @@ const ListDemo = () => {
         }
     };
 
+    function buscarId(arr, nombre, tipo, costo) {
+        console.log('producto auxiliar', productAux);
+        for (let i = 0; i < arr.length; i++) {
+            if (arr[i].nombre === nombre && arr[i].tipo === tipo && arr[i].costo === costo) {
+            return arr[i].id;
+            }
+        }  
+        return null;
+    }
+
     const saveProduct = async () => {
         setSubmitted(true);
         console.log('productos', dataViewValue);
@@ -96,23 +106,43 @@ const ListDemo = () => {
         console.log('Imagen', file);
         console.log('Izquierda', picklistSourceValue);
         console.log('Derecha', picklistTargetValue);
+        console.log('producto auxiliar', productAux);
+        setDropdownValueAux(dropdownValue);
 
         if (product.nombre.trim()) {
-              let _products = [...dataViewValue];
-         
+        let _products = [...dataViewValue];
 
             if (product.id) {
-                const index = findIndexById(dataViewValue.id);
-                _products[index] = _product;
+                console.log('Entre en edit');
+                const productoServicenew = new NewProductoService();
+                product.tipo_producto = dropdownValue.name
+                const response = await productoServicenew.updateProducto(product.id, product, picklistTargetValue);
+                const index = findIndexById(product.id);
 
-                toast.current.show({ severity: 'success', summary: 'Successful', detail: 'Product Updated', life: 3000 });
+                let arrIngredientes = [];
+                let arrProteinas = [];
+                for (let j = 0; j < picklistTargetValue.length; j++) {
+                    if (picklistTargetValue[j].proteina == 'Si') {
+                            arrProteinas.push(picklistTargetValue[j]);
+                    } else {
+                            arrIngredientes.push(picklistTargetValue[j]);
+                    }
+                }
+
+                product.ingrediente = arrIngredientes;
+                product.proteina = arrProteinas
+                _products[index] = product;
+
             } else {
-
-                    
+                console.log('Entre en Save');   
+                console.log('Prducto', product);
+                console.log('Prducto', picklistTargetValue);
+                console.log('Tipo de producto', dropdownValue);
+                product.tipo_producto = dropdownValue.name;
                 const productoServicenew = new NewProductoService();
                 const response = await productoServicenew.postProducto(product, picklistTargetValue);
                
-                console.log(response);
+                console.log('response', response);
 
                 let arrIngredientes = [];
                 let arrProteinas = [];
@@ -156,22 +186,27 @@ const ListDemo = () => {
                 NewProduct.nombre = response.nombre
                 NewProduct.tipo = dropdownValue.name;
                 NewProduct.costo = response.costo;
+                NewProduct.imagen = response.imagen;
                 NewProduct.proteina = arrProteinas;
                 NewProduct.ingrediente = arrIngredientes;
 
-
+                console.log('test new product', NewProduct);
                  _products.push(NewProduct);
                 //toast.current.show({ severity: 'success', summary: 'Successful', detail: 'Product Created', life: 3000 });
             }
+
             setDataViewValue(_products);
-            //setProductDialog(false);
-            // setProduct(emptyProduct);
+            setProductDialog(false);
+            setDropdownValue(null);
+            //setProduct(emptyProduct);
         }
+
         setPicklistTargetValue([]);
     };
 
     const deleteProduct = () => {
         let _dataViewValue = dataViewValue.filter((val) => val.id !== product.id);
+        console.log('id Producto', product.id);
         setDataViewValue(_dataViewValue);
         setDeleteProductDialog(false);
         setProduct(emptyProduct);
@@ -180,6 +215,19 @@ const ListDemo = () => {
         /*toast.current.show({ severity: 'success', summary: 'Successful', detail: 'Product Deleted', life: 3000 });
         toast.current.show({ severity: 'success', summary: 'Successful', detail: 'Product Deleted', life: 3000 });*/
     };
+
+    const findIndexById = (id) => {
+        let index = -1;
+        for (let i = 0; i < dataViewValue.length; i++) {
+            if (dataViewValue[i].id === id) {
+                index = i;
+                break;
+            }   
+        }
+
+        return index;
+    };
+
 
     const leftToolbarTemplate = () => {
         return (
@@ -280,7 +328,7 @@ const ListDemo = () => {
     const itemTemplatePickList = (item) => {
         return (
             <div className="flex flex-wrap p-1 align-items-center gap-2">
-                <img className="w-4rem shadow-2 flex-shrink-0 border-round" src={`${contextPath}/demo/images/product/${item.imagen}`} alt={item.nombre} />
+                <img className="w-4rem shadow-2 flex-shrink-0 border-round" src={`${contextPath}/demo/images/combo/Verduras_y_frutas.jpg`} alt={item.nombre} />
                 <div className="flex-1 flex flex-column gap-2">
                     <span className="font-bold">{item.nombre}</span>
                 </div>
@@ -324,9 +372,12 @@ const ListDemo = () => {
     };
 
     const hideDialog = () => {
+        const ingredienteServie = new IngredienteService();
+        ingredienteServie.getIngredientes().then((data) => setPicklistSourceValue(data));
         setPicklistTargetValue([]);
         setSubmitted(false);
         setProductDialog(false);
+        setDropdownValue(null);
     };
 
     const openNew = () => {
@@ -352,11 +403,37 @@ const ListDemo = () => {
         setDeleteProductDialog(false);
     };
 
-    const editProduct = (product) => {
-        console.log(product)
+    const editProduct = async(product) => {
+        const ingredienteServie = new IngredienteService();
+        await ingredienteServie.getIngredientes().then((data) => setPicklistSourceValue(data));
+           
+        const nuevoTipoProducto = tipoProducto.find(producto => producto.name === product.tipo);
+
+        const picklistTargetValuenew = [
+            ...product.ingrediente,
+            ...product.proteina
+        ];
+
+        const idsSeleccionados = picklistTargetValuenew.map(ingrediente => ingrediente.id);
+
+        const picklistSourceValuenew = picklistSourceValue.filter(ingrediente => !idsSeleccionados.includes(ingrediente.id));
+
+        console.log('El producto',product);
+        console.log('Lista no seleccionada',picklistSourceValuenew);
+        console.log('Lista seleccionada',picklistTargetValuenew);
+
+     
+
+        setPicklistSourceValue(picklistSourceValuenew);
+        setPicklistTargetValue(picklistTargetValuenew);
+        setDropdownValue(nuevoTipoProducto);
+        setDropdownValueAux(nuevoTipoProducto);
         setProduct({ ...product });
+        setProductAux({ ...product });
         setProductDialog(true);
     };
+
+
 
     const onSortChange = (event) => {
         const value = event.value;
@@ -434,7 +511,7 @@ const ListDemo = () => {
                     </div>
                     <div className="flex align-items-center justify-content-between">
                         <Button icon="pi pi-trash" className="p-button-danger" onClick={() => confirmDeleteProduct(data)} />
-                        <Button icon="pi pi-pencil" className="p-button-success" onClick={() => editProduct(product)} />
+                        <Button icon="pi pi-pencil" className="p-button-success" onClick={() => editProduct(data)} />
                         <Button label="Agregar" icon="pi pi-shopping-cart" onClick={carritOpenNew} />
                     </div>
                 </div>
