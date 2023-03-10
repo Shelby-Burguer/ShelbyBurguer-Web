@@ -40,8 +40,17 @@ const ListDemo = () => {
         precio_unitario: '',
     };
 
+    let emptyResproduct = {
+        combo_id: null,
+        nombre_combo: '',
+        precio_unitario_combo: 0,
+        productos: [],
+        tiempo_aprox_preparacion_combo: '',
+    };
+
     const [products, setProducts] = useState(null);
     const [product, setProduct] = useState(emptyProduct);
+    const [resProduct, setResproduct] = useState(emptyResproduct);
     const [picklistSourceValue, setPicklistSourceValue] = useState(null);
     const [picklistTargetValue, setPicklistTargetValue] = useState([]);
     const [submitted, setSubmitted] = useState(false);
@@ -120,38 +129,23 @@ const ListDemo = () => {
             } else {
                 
                 const comboService = new NewComboService();
-                const response  = await comboService.postProducto(product, picklistTargetValue);
-
-                /*const ingredienteService = new IngredienteService();
-                const response = await ingredienteService.postIngredientes(_product, file);
-                 _product = { ...response };
-                 //console.log('test',_product.image.objectURL)
-                 /*const test  = new FileReader();
-                 test.readAsDataURL(response.image);
-                 test.addEventListener('load', () => {
-                    const res = test.result;
-                    _product.image = res.toString();
-                    console.log('resultado',_product.image);
-                 })
-                 */
-                 
-                 _products.push(_product);
-                
+                const response  = await comboService.postCombo(product, picklistTargetValue);
+                _products.push(response);
             }
-            setProducts(_products);
+            setDataViewValue(_products);
             setProductDialog(false);
             setProduct(emptyProduct);
+            setPicklistTargetValue([]);
         }
     };
 
     const deleteProduct = () => {
-        let _dataViewValue = dataViewValue.filter((val) => val.id !== product.id);
-        console.log('id Producto', product.id);
+        let _dataViewValue = dataViewValue.filter((val) => val.combo_id !== resProduct.combo_id);
         setDataViewValue(_dataViewValue);
         setDeleteProductDialog(false);
         setProduct(emptyProduct);
         const comboService = new NewComboService();   
-        comboService.DeleteCombo(product.id);
+        comboService.DeleteCombo(resProduct.combo_id);
         /*toast.current.show({ severity: 'success', summary: 'Successful', detail: 'Product Deleted', life: 3000 });
         toast.current.show({ severity: 'success', summary: 'Successful', detail: 'Product Deleted', life: 3000 });*/
     };
@@ -204,7 +198,8 @@ const ListDemo = () => {
     );
 
     const confirmDeleteProduct = (product) => {
-        setProduct(product);
+        console.log(product)
+        setResproduct(product);
         setDeleteProductDialog(true);
     };
 
