@@ -50,7 +50,10 @@ const Crud = () => {
         const result = await ingredienteService.getIngredientes();
         console.log('test', result);
         setProducts(result);
+
     }, []);
+
+
 
    /* const formatCurrency = (value) => {
         return value.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
@@ -164,6 +167,7 @@ const Crud = () => {
     const confirmDeleteSelected = () => {
         setDeleteProductsDialog(true);
     };
+    
     /*Para eliminar todos los seleccionados en checkbox*/ 
     const deleteSelectedProducts = () => {
         console.log('Delete Select Product',selectedProducts);
