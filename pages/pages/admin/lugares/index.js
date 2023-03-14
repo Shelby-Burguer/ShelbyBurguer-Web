@@ -26,46 +26,12 @@ const LugarPage = () => {
 
     const elementName = 'lugar';
 
-    const isArray = (data, elementName) => {
-        if (Array.isArray(data)) {
-            return data.map((element) => {
-                const newLugar = {};
-                for (let key in element) {
-                    if (key.endsWith('_' + elementName)) {
-                        newLugar[key.slice(0, -6)] = element[key];
-                    } else {
-                        newLugar[key] = element[key];
-                    }
-                }
-                return newLugar;
-            });
-        } else {
-            const newLugar = {};
-            for (let key in data) {
-                if (key.endsWith('_' + elementName)) {
-                    newLugar[key.slice(0, -6)] = data[key];
-                } else {
-                    newLugar[key] = data[key];
-                }
-            }
-            return [newLugar];
-        }
-    };
-
-    const addAppendix = (data, elementName) => {
-        const newLugar = {};
-        for (let key in data) {
-            newLugar[key.concat('_' + elementName)] = data[key];
-        }
-        return [newLugar];
-    };
-
     const saveLugar = async () => {
         _setSubmitted(true);
         const lugarService = new LugarService();
         let _elements = [...lugares];
         let _element = { ...lugar };
-        let data = addAppendix(_element, elementName);
+        let data = crudObject.addAppendix(_element, elementName);
         if (lugar.nombre.trim()) {
             if (lugar.id) {
                 const index = crudObject.findIndexById(lugar.id);
@@ -133,8 +99,8 @@ const LugarPage = () => {
         _setElement(defaultLugar);
         const fetchData = async () => {
             const lugarService = new LugarService();
-            const data = await lugarService.getLugaresByTipo('zona');
-            data = isArray(data, elementName);
+            let data = await lugarService.getLugaresByTipo('zona');
+            data = crudObject.isArray(data, elementName);
             _setElements(data);
         };
         fetchData();
@@ -178,7 +144,7 @@ const LugarPage = () => {
                                 <label htmlFor="nombre">Nombre</label>
                                 <InputText id="nombre" value={lugar?.nombre} onChange={(e) => crudObject.onInputChange(e, 'nombre')} required autoFocus className={classNames({ 'p-invalid': _submitted && !lugar?.nombre })} />
                                 {_submitted && !lugar?.nombre && <small className="p-invalid">El nombre es requerido.</small>}
-                                {_submitted && !lugar?.preco && <small className="p-invalid">El precio es requerido.</small>}
+                                {_submitted && !lugar?.precio && <small className="p-invalid">El precio es requerido.</small>}
                             </div>
                             <div className="field col">
                                 <label htmlFor="precio">Precio</label>
