@@ -1,14 +1,8 @@
 
 {
     "data": [
-        {"id": "1000","code": "f230fh0g3","name": "Hamburguesa","Proteina": "Carne, pollo, Mixto", "Ingrediente": "Lechuga, Tomate, Cebolla","image": "16891a7a-52f8-4bc6-8176-00a5ae0b1c0a.jpg","price": 65,"category": "Hamburguesa","quantity": 24,"inventoryStatus": "INSTOCK","rating": 5},
-        {"id": "1001","code": "nvklal433","name": "Black Watch","Proteina": "Carne, pollo, Mixto", "Ingrediente": "Lechuga, Tomate, Cebolla", "image": "16891a7a-52f8-4bc6-8176-00a5ae0b1c0a.jpg","price": 72,"category": "Hamburguesa","quantity": 61,"inventoryStatus": "INSTOCK","rating": 4},
-        {"id": "1002","code": "zz21cz3c1","name": "Blue Band","Proteina": "Carne, pollo, Mixto","Ingrediente": "Lechuga, Tomate, Cebolla", "image": "16891a7a-52f8-4bc6-8176-00a5ae0b1c0a.jpg","price": 79,"category": "Perro","quantity": 2,"inventoryStatus": "LOWSTOCK","rating": 3},
-        {"id": "1003","code": "244wgerg2","name": "Blue T-Shirt","Proteina": "Carne, pollo, Mixto", "Ingrediente": "Lechuga, Tomate, Cebolla","image": "16891a7a-52f8-4bc6-8176-00a5ae0b1c0a.jpg","price": 29,"category": "Pepito","quantity": 25,"inventoryStatus": "INSTOCK","rating": 5},
-        {"id": "1004","code": "h456wer53","name": "Bracelet","Proteina": "Carne, pollo, Mixto", "Ingrediente": "Lechuga, Tomate, Cebolla", "image": "16891a7a-52f8-4bc6-8176-00a5ae0b1c0a.jpg","price": 15,"category": "Hamburguesa","quantity": 73,"inventoryStatus": "INSTOCK","rating": 4},
-        {"id": "1005","code": "av2231fwg","name": "Brown Purse","Proteina": "Carne, pollo, Mixto", "Ingrediente": "Lechuga, Tomate, Cebolla", "image": "16891a7a-52f8-4bc6-8176-00a5ae0b1c0a.jpg","price": 120,"category": "Hamburguesa","quantity": 0,"inventoryStatus": "OUTOFSTOCK","rating": 4},
-        {"id": "1006","code": "bib36pfvm","name": "Chakra Bracelet","Proteina": "Carne, pollo, Mixto","Ingrediente": "Lechuga, Tomate, Cebolla", "image": "16891a7a-52f8-4bc6-8176-00a5ae0b1c0a.jpg","price": 32,"category": "Hamburguesa","quantity": 5,"inventoryStatus": "LOWSTOCK","rating": 3},
-        {"id": "1007","code": "mbvjkgip5","name": "Galaxy Earrings","Proteina": "Carne, pollo, Mixto","Ingrediente": "Lechuga, Tomate, Cebolla","image": "16891a7a-52f8-4bc6-8176-00a5ae0b1c0a.jpg","price": 34,"category": "Hamburguesa","quantity": 23,"inventoryStatus": "INSTOCK","rating": 5},
-        {"id": "1008","code": "vbb124btr","name": "Game Controller","Proteina": "Carne, pollo, Mixto","Ingrediente": "Lechuga, Tomate, Cebolla","image": "16891a7a-52f8-4bc6-8176-00a5ae0b1c0a.jpg","price": 99,"category": "Chuleta","quantity": 2,"inventoryStatus": "LOWSTOCK","rating": 4}
+        {"id": "1000","code": "f230fh0g3","name": "Hamburguesa Simple","Proteina": "Carne, pollo, Mixto", "Ingrediente": "Lechuga, Tomate, Cebolla","image": "16891a7a-52f8-4bc6-8176-00a5ae0b1c0a.jpg","price": 65,"category": "Cantidad: 1","quantity": 24,"inventoryStatus": "INSTOCK","rating": 5},
+        {"id": "1001","code": "nvklal433","name": "Hamburguesa Mixta","Proteina": "Carne, pollo, Mixto", "Ingrediente": "Lechuga, Tomate, Cebolla", "image": "16891a7a-52f8-4bc6-8176-00a5ae0b1c0a.jpg","price": 72,"category": "Cantidad: 1","quantity": 61,"inventoryStatus": "INSTOCK","rating": 4},
+        {"id": "1002","code": "zz21cz3c1","name": "Papas simples","Proteina": "Carne, pollo, Mixto","Ingrediente": "Lechuga, Tomate, Cebolla", "image": "16891a7a-52f8-4bc6-8176-00a5ae0b1c0a.jpg","price": 79,"category": "Cantidad: 1","quantity": 2,"inventoryStatus": "LOWSTOCK","rating": 3}
     ]
 }
