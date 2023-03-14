@@ -18,11 +18,12 @@ const Crud = () => {
             rating: null,
             inventoryStatus: 'INSTOCK'
         },
-        user: {
+        lugar: {
             id: null,
-            name: '',
-            email: '',
-            password: ''
+            nombre: '',
+            tipo: 'Zona',
+            precio: null,
+            id_padre: null
         }
         // Agrega más elementos vacíos según las necesidades de tus componentes
     };
@@ -62,31 +63,6 @@ const Crud = () => {
         setDeleteElementsDialog(false);
     };
 
-    const saveElement = (type) => {
-        setSubmitted(true);
-
-        if (element.name.trim()) {
-            let _elements = [...elements];
-            let _element = { ...element };
-            if (element.id) {
-                const index = findIndexById(element.id);
-
-                _elements[index] = _element;
-                toast.current.show({ severity: 'success', summary: 'Successful', detail: 'Element Updated', life: 3000 });
-            } else {
-                _element.id = createId();
-                _element.code = createId();
-                _element.image = type + '-placeholder.svg';
-                _elements.push(_element);
-                toast.current.show({ severity: 'success', summary: 'Successful', detail: 'Element Created', life: 3000 });
-            }
-
-            setElements(_elements);
-            setElementDialog(false);
-            setElement(emptyElements[type]);
-        }
-    };
-
     const editElement = (element) => {
         setElement({ ...element });
         setElementDialog(true);
@@ -95,14 +71,6 @@ const Crud = () => {
     const confirmDeleteElement = (element) => {
         setElement(element);
         setDeleteElementDialog(true);
-    };
-
-    const deleteElement = (type) => {
-        let _elements = elements.filter((val) => val.id !== element.id);
-        setElements(_elements);
-        setDeleteElementDialog(false);
-        setElement(emptyElements[type]);
-        toast.current.show({ severity: 'success', summary: 'Successful', detail: 'Element Deleted', life: 3000 });
     };
 
     const findIndexById = (id) => {
@@ -178,17 +146,17 @@ const Crud = () => {
     const rightToolbarTemplate = () => {
         return (
             <React.Fragment>
-                <FileUpload mode="basic" accept="image/*" maxFileSize={1000000} label="Import" chooseLabel="Import" className="mr-2 inline-block" />
+                <FileUpload mode="basic" accept="image/*" maxFileSize={1000000} disabled label="Import" chooseLabel="Import" className="mr-2 inline-block" />
                 <Button label="Export" icon="pi pi-upload" className="p-button-help" onClick={exportCSV} />
             </React.Fragment>
         );
     };
 
-    const codeBodyTemplate = (rowData) => {
+    const idBodyTemplate = (rowData) => {
         return (
             <>
-                <span className="p-column-title">Code</span>
-                {rowData.code}
+                <span className="p-column-title">Id</span>
+                {rowData.id}
             </>
         );
     };
@@ -196,8 +164,8 @@ const Crud = () => {
     const nameBodyTemplate = (rowData) => {
         return (
             <>
-                <span className="p-column-title">Name</span>
-                {rowData.name}
+                <span className="p-column-title">Nombre</span>
+                {rowData.nombre}
             </>
         );
     };
@@ -214,8 +182,8 @@ const Crud = () => {
     const priceBodyTemplate = (rowData) => {
         return (
             <>
-                <span className="p-column-title">Price</span>
-                {formatCurrency(rowData.price)}
+                <span className="p-column-title">Precio</span>
+                {formatCurrency(rowData.precio)}
             </>
         );
     };
@@ -256,35 +224,37 @@ const Crud = () => {
         );
     };
 
-    const header = (
-        <div className="flex flex-column md:flex-row md:justify-content-between md:align-items-center">
-            <h5 className="m-0">Manage Elements</h5>
-            <span className="block mt-2 md:mt-0 p-input-icon-left">
-                <i className="pi pi-search" />
-                <InputText type="search" onInput={(e) => setGlobalFilter(e.target.value)} placeholder="Search..." />
-            </span>
-        </div>
-    );
+    const header = (headerName) => {
+        return (
+            <div className="flex flex-column md:flex-row md:justify-content-between md:align-items-center">
+                <h5 className="m-0">Administrar {headerName}</h5>
+                <span className="block mt-2 md:mt-0 p-input-icon-left">
+                    <i className="pi pi-search" />
+                    <InputText type="search" onInput={(e) => setGlobalFilter(e.target.value)} placeholder="Search..." />
+                </span>
+            </div>
+        );
+    };
 
-    const elementDialogFooter = (type) => {
+    const elementDialogFooter = (onSave) => {
         return (
             <React.Fragment>
                 <Button label="Cancel" icon="pi pi-times" className="p-button-text" onClick={hideDialog} />
-                <Button label="Save" icon="pi pi-check" className="p-button-text" onClick={() => saveElement(type)} />
+                <Button label="Save" icon="pi pi-check" className="p-button-text" onClick={() => onSave()} />
             </React.Fragment>
         );
     };
 
-    const deleteElementDialogFooter = (type) => (
+    const deleteElementDialogFooter = (onDelete) => (
         <>
             <Button label="No" icon="pi pi-times" className="p-button-text" onClick={hideDeleteElementDialog} />
-            <Button label="Yes" icon="pi pi-check" className="p-button-text" onClick={() => deleteElement(type)} />
+            <Button label="Yes" icon="pi pi-check" className="p-button-text" onClick={() => onDelete()} />
         </>
     );
-    const deleteElementsDialogFooter = (
+    const deleteElementsDialogFooter = (onDelete) => (
         <>
             <Button label="No" icon="pi pi-times" className="p-button-text" onClick={hideDeleteElementsDialog} />
-            <Button label="Yes" icon="pi pi-check" className="p-button-text" onClick={deleteSelectedElements} />
+            <Button label="Yes" icon="pi pi-check" className="p-button-text" onClick={() => onDelete()} />
         </>
     );
 
@@ -314,10 +284,8 @@ const Crud = () => {
         hideDialog: hideDialog,
         hideDeleteElementDialog: hideDeleteElementDialog,
         hideDeleteElementsDialog: hideDeleteElementsDialog,
-        saveElement: saveElement,
         editElement: editElement,
         confirmDeleteElement: confirmDeleteElement,
-        deleteElement: deleteElement,
         findIndexById: findIndexById,
         createId: createId,
         exportCSV: exportCSV,
@@ -328,7 +296,7 @@ const Crud = () => {
         onInputNumberChange: onInputNumberChange,
         leftToolbarTemplate: leftToolbarTemplate,
         rightToolbarTemplate: rightToolbarTemplate,
-        codeBodyTemplate: codeBodyTemplate,
+        idBodyTemplate: idBodyTemplate,
         nameBodyTemplate: nameBodyTemplate,
         imageBodyTemplate: imageBodyTemplate,
         priceBodyTemplate: priceBodyTemplate,
