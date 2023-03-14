@@ -3,123 +3,205 @@ import { DataTable } from 'primereact/datatable';
 import { Dialog } from 'primereact/dialog';
 import { InputNumber } from 'primereact/inputnumber';
 import { InputText } from 'primereact/inputtext';
-import { InputTextarea } from 'primereact/inputtextarea';
-import { RadioButton } from 'primereact/radiobutton';
 import { Toast } from 'primereact/toast';
 import { Toolbar } from 'primereact/toolbar';
 import { classNames } from 'primereact/utils';
 import React, { useEffect } from 'react';
-import { ProductService } from '../../../../demo/service/ProductService';
 import Crud from '../../../../shelby/utils/CrudFunctions';
+import { LugarService } from '../../../../shelby/service/LugarService';
 
 const LugarPage = () => {
     const crudObject = Crud();
+    let defaultLugar = crudObject.emptyElements.lugar;
 
-    let defaultProduct = crudObject.emptyElements.product;
-    const elementName = 'product';
+    let lugar = crudObject.element;
+    let lugares = crudObject.elements;
+
+    let _setElement = crudObject.setElement;
+    let _setElements = crudObject.setElements;
+    let _submitted = crudObject.submitted;
+    let _setSubmitted = crudObject.setSubmitted;
+    let _selectedElements = crudObject.selectedElements;
+    let _toast = crudObject.toast;
+
+    const elementName = 'lugar';
+
+    const isArray = (data, elementName) => {
+        if (Array.isArray(data)) {
+            return data.map((element) => {
+                const newLugar = {};
+                for (let key in element) {
+                    if (key.endsWith('_' + elementName)) {
+                        newLugar[key.slice(0, -6)] = element[key];
+                    } else {
+                        newLugar[key] = element[key];
+                    }
+                }
+                return newLugar;
+            });
+        } else {
+            const newLugar = {};
+            for (let key in data) {
+                if (key.endsWith('_' + elementName)) {
+                    newLugar[key.slice(0, -6)] = data[key];
+                } else {
+                    newLugar[key] = data[key];
+                }
+            }
+            return [newLugar];
+        }
+    };
+
+    const addAppendix = (data, elementName) => {
+        const newLugar = {};
+        for (let key in data) {
+            newLugar[key.concat('_' + elementName)] = data[key];
+        }
+        return [newLugar];
+    };
+
+    const saveLugar = async () => {
+        _setSubmitted(true);
+        const lugarService = new LugarService();
+        let _elements = [...lugares];
+        let _element = { ...lugar };
+        let data = addAppendix(_element, elementName);
+        if (lugar.nombre.trim()) {
+            if (lugar.id) {
+                const index = crudObject.findIndexById(lugar.id);
+                const res = await lugarService.actualizarLugar(data[0]);
+                if (res.status >= 200 && res.status < 300) {
+                    _elements[index] = _element;
+                    _toast.current.show({ severity: 'success', summary: 'Successful', detail: 'Lugar Creado', life: 3000 });
+                } else {
+                    _toast.current.show({ severity: 'error', summary: 'Error', detail: 'No se pudo crear el lugar', life: 3000 });
+                }
+            } else {
+                const res = await lugarService.crearLugar(data[0]);
+                if (res.status >= 200 && res.status < 300) {
+                    _elements.push(_element);
+                    _toast.current.show({ severity: 'success', summary: 'Successful', detail: 'Lugar Creado', life: 3000 });
+                } else {
+                    _toast.current.show({ severity: 'error', summary: 'Error', detail: 'No se pudo crear el lugar', life: 3000 });
+                }
+            }
+            _setElements(_elements);
+            crudObject.setElementDialog(false);
+            _setElement(elementName);
+        }
+    };
+
+    const deleteLugar = async () => {
+        const lugarService = new LugarService();
+        let _elements = lugares.filter((val) => val.id !== lugar.id);
+        const res = await lugarService.borrarLugar(lugar.id);
+        const nombre = lugar.nombre;
+        if (res.status >= 200 && res.status < 300) {
+            _setElements(_elements);
+            _setElement(defaultLugar);
+            _toast.current.show({ severity: 'success', summary: 'Successful', detail: nombre + ' eliminado', life: 3000 });
+        } else {
+            _toast.current.show({ severity: 'error', summary: 'Error', detail: 'No se pudo eliminar ' + nombre, life: 3000 });
+        }
+        crudObject.setDeleteElementDialog(false);
+    };
+
+    const deleteLugaresSeleccionados = async () => {
+        const lugarService = new LugarService();
+
+        // Itera sobre los elementos seleccionados y llama la función `deleteLugar()` para cada uno
+        await Promise.all(
+            _selectedElements.map(async (element) => {
+                const res = await lugarService.borrarLugar(element.id);
+                const nombre = element.nombre;
+                if (res.status >= 200 && res.status < 300) {
+                    const _elements = lugares.filter((val) => val.id !== element.id);
+                    _setElements(_elements);
+                    _toast.current.show({ severity: 'success', summary: 'Successful', detail: nombre + ' eliminado', life: 3000 });
+                } else {
+                    _toast.current.show({ severity: 'error', summary: 'Error', detail: 'No se pudo eliminar ' + nombre, life: 3000 });
+                }
+            })
+        );
+
+        // Reinicia la selección de elementos
+        crudObject.setSelectedElements([]);
+        crudObject.setDeleteElementsDialog(false);
+    };
 
     useEffect(() => {
-        const productService = new ProductService();
-        productService.getProducts().then((data) => crudObject.setElements(data));
-        crudObject.setElement(defaultProduct);
+        _setElement(defaultLugar);
+        const fetchData = async () => {
+            const lugarService = new LugarService();
+            const data = await lugarService.getLugaresByTipo('zona');
+            data = isArray(data, elementName);
+            _setElements(data);
+        };
+        fetchData();
     }, []);
 
     return (
         <div className="grid crud-demo">
             <div className="col-12">
                 <div className="card">
-                    <Toast ref={crudObject.toast} />
+                    <Toast ref={_toast} />
                     <Toolbar className="mb-4" left={() => crudObject.leftToolbarTemplate(elementName)} right={crudObject.rightToolbarTemplate}></Toolbar>
 
                     <DataTable
                         ref={crudObject.dt}
-                        value={crudObject.elements}
-                        selection={crudObject.selectedElements}
+                        value={lugares}
+                        selection={_selectedElements}
                         onSelectionChange={(e) => crudObject.setSelectedElements(e.value)}
                         dataKey="id"
+                        sortField="nombre"
+                        sortOrder={1}
                         paginator
                         rows={10}
                         rowsPerPageOptions={[5, 10, 25]}
                         className="datatable-responsive"
                         paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
-                        currentPageReportTemplate="Showing {first} to {last} of {totalRecords} products"
+                        currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} lugares"
                         globalFilter={crudObject.globalFilter}
-                        emptyMessage="No products found."
-                        header={crudObject.header}
+                        emptyMessage="No se encontraron lugares."
+                        header={crudObject.header('Zonas')}
                         responsiveLayout="scroll"
                     >
                         <Column selectionMode="multiple" headerStyle={{ width: '4rem' }}></Column>
-                        <Column field="code" header="Code" sortable body={crudObject.codeBodyTemplate} headerStyle={{ minWidth: '15rem' }}></Column>
-                        <Column field="name" header="Name" sortable body={crudObject.nameBodyTemplate} headerStyle={{ minWidth: '15rem' }}></Column>
-                        <Column header="Image" body={(rowData) => crudObject.imageBodyTemplate(rowData, elementName)}></Column>
-                        <Column field="price" header="Price" body={crudObject.priceBodyTemplate} sortable></Column>
-                        <Column field="category" header="Category" sortable body={crudObject.categoryBodyTemplate} headerStyle={{ minWidth: '10rem' }}></Column>
-                        <Column field="rating" header="Reviews" body={crudObject.ratingBodyTemplate} sortable></Column>
-                        <Column field="inventoryStatus" header="Status" body={crudObject.statusBodyTemplate} sortable headerStyle={{ minWidth: '10rem' }}></Column>
+                        <Column field="nombre" header="Nombre" sortable body={crudObject.nameBodyTemplate} headerStyle={{ minWidth: '15rem' }}></Column>
+                        <Column field="precio" header="Precio" body={crudObject.priceBodyTemplate} sortable></Column>
                         <Column body={crudObject.actionBodyTemplate} headerStyle={{ minWidth: '10rem' }}></Column>
                     </DataTable>
 
-                    <Dialog visible={crudObject.elementDialog} style={{ width: '450px' }} header="Product Details" modal className="p-fluid" footer={() => crudObject.elementDialogFooter(elementName)} onHide={crudObject.hideDialog}>
-                        {crudObject.element?.image && <img src={`${crudObject.contextPath}/demo/images/${elementName}/${crudObject.element?.image}`} alt={crudObject.element?.image} width="150" className="mt-0 mx-auto mb-5 block shadow-2" />}
-                        <div className="field">
-                            <label htmlFor="name">Name</label>
-                            <InputText id="name" value={crudObject.element?.name} onChange={(e) => crudObject.onInputChange(e, 'name')} required autoFocus className={classNames({ 'p-invalid': crudObject.submitted && !crudObject.element?.name })} />
-                            {crudObject.submitted && !crudObject.element?.name && <small className="p-invalid">Name is required.</small>}
-                        </div>
-                        <div className="field">
-                            <label htmlFor="description">Description</label>
-                            <InputTextarea id="description" value={crudObject.element?.description} onChange={(e) => crudObject.onInputChange(e, 'description')} required rows={3} cols={20} />
-                        </div>
-
-                        <div className="field">
-                            <label className="mb-3">Category</label>
-                            <div className="formgrid grid">
-                                <div className="field-radiobutton col-6">
-                                    <RadioButton inputId="category1" name="category" value="Accessories" onChange={crudObject.onCategoryChange} checked={crudObject.element?.category === 'Accessories'} />
-                                    <label htmlFor="category1">Accessories</label>
-                                </div>
-                                <div className="field-radiobutton col-6">
-                                    <RadioButton inputId="category2" name="category" value="Clothing" onChange={crudObject.onCategoryChange} checked={crudObject.element?.category === 'Clothing'} />
-                                    <label htmlFor="category2">Clothing</label>
-                                </div>
-                                <div className="field-radiobutton col-6">
-                                    <RadioButton inputId="category3" name="category" value="Electronics" onChange={crudObject.onCategoryChange} checked={crudObject.element?.category === 'Electronics'} />
-                                    <label htmlFor="category3">Electronics</label>
-                                </div>
-                                <div className="field-radiobutton col-6">
-                                    <RadioButton inputId="category4" name="category" value="Fitness" onChange={crudObject.onCategoryChange} checked={crudObject.element?.category === 'Fitness'} />
-                                    <label htmlFor="category4">Fitness</label>
-                                </div>
-                            </div>
-                        </div>
-
+                    <Dialog visible={crudObject.elementDialog} style={{ width: '450px' }} header="Detalle de Lugar" modal className="p-fluid" footer={() => crudObject.elementDialogFooter(saveLugar)} onHide={crudObject.hideDialog}>
                         <div className="formgrid grid">
                             <div className="field col">
-                                <label htmlFor="price">Price</label>
-                                <InputNumber id="price" value={crudObject.element?.price} onValueChange={(e) => crudObject.onInputNumberChange(e, 'price')} mode="currency" currency="USD" locale="en-US" />
+                                <label htmlFor="nombre">Nombre</label>
+                                <InputText id="nombre" value={lugar?.nombre} onChange={(e) => crudObject.onInputChange(e, 'nombre')} required autoFocus className={classNames({ 'p-invalid': _submitted && !lugar?.nombre })} />
+                                {_submitted && !lugar?.nombre && <small className="p-invalid">El nombre es requerido.</small>}
+                                {_submitted && !lugar?.preco && <small className="p-invalid">El precio es requerido.</small>}
                             </div>
                             <div className="field col">
-                                <label htmlFor="quantity">Quantity</label>
-                                <InputNumber id="quantity" value={crudObject.element?.quantity} onValueChange={(e) => crudObject.onInputNumberChange(e, 'quantity')} integeronly />
+                                <label htmlFor="precio">Precio</label>
+                                <InputNumber id="precio" value={lugar?.precio} onValueChange={(e) => crudObject.onInputNumberChange(e, 'precio')} mode="currency" currency="USD" locale="en-US" />
                             </div>
                         </div>
                     </Dialog>
 
-                    <Dialog visible={crudObject.deleteElementDialog} style={{ width: '450px' }} header="Confirm" modal footer={crudObject.deleteElementDialogFooter} onHide={crudObject.hideDeleteElementDialog}>
+                    <Dialog visible={crudObject.deleteElementDialog} style={{ width: '450px' }} header="Confirm" modal footer={crudObject.deleteElementDialogFooter(deleteLugar)} onHide={crudObject.hideDeleteElementDialog}>
                         <div className="flex align-items-center justify-content-center">
                             <i className="pi pi-exclamation-triangle mr-3" style={{ fontSize: '2rem' }} />
-                            {crudObject.element && (
+                            {lugar && (
                                 <span>
-                                    Are you sure you want to delete <b>{crudObject.element?.name}</b>?
+                                    ¿Estás seguro que quieres borrar <b>{lugar?.nombre}</b>?
                                 </span>
                             )}
                         </div>
                     </Dialog>
 
-                    <Dialog visible={crudObject.deleteElementsDialog} style={{ width: '450px' }} header="Confirm" modal footer={crudObject.deleteElementsDialogFooter} onHide={crudObject.hideDeleteElementsDialog}>
+                    <Dialog visible={crudObject.deleteElementsDialog} style={{ width: '450px' }} header="Confirm" modal footer={crudObject.deleteElementsDialogFooter(deleteLugaresSeleccionados)} onHide={crudObject.hideDeleteElementsDialog}>
                         <div className="flex align-items-center justify-content-center">
                             <i className="pi pi-exclamation-triangle mr-3" style={{ fontSize: '2rem' }} />
-                            {crudObject.element && <span>Are you sure you want to delete the selected products?</span>}
+                            {lugar && <span>¿Estás seguro de que quieres borrar los lugares seleccionados?</span>}
                         </div>
                     </Dialog>
                 </div>
