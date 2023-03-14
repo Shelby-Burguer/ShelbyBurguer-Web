@@ -6050,3 +6050,7 @@
 .p-ai-center {
   align-items: center !important;
 }
+
+.total-text {
+  font-size: 25px;
+}

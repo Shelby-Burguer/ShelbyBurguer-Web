@@ -11,6 +11,7 @@ import { FileUpload } from 'primereact/fileupload';
 import { ProductService } from '../../../demo/service/ProductosServiceShelbyBurguer';
 import { NewProductoService } from '../../../demo/service/ProductoService';
 import { IngredienteService } from '../../../demo/service/IngredienteService';
+import { CarritoService } from '../../../demo/service/CarritoService';
 import { addToCart } from "../../../layout/addToCar";
 import { InputText } from 'primereact/inputtext';
 import { Toolbar } from 'primereact/toolbar';
@@ -76,14 +77,11 @@ const ListDemo = (props) => {
         productoServicenew.getProductos();
         setGlobalFilterValue('');
 
-        
         const myStoredObject = JSON.parse(localStorage.getItem("myKey"));
-        const idbumber = myStoredObject ? myStoredObject.idbumber : null;
-        console.log('este es el id de orden', idbumber);
-       
+        const idbumber = myStoredObject ? myStoredObject.orden_id : null;
+        setOrderId(idbumber)
+        console.log('Este es el id de orden', idbumber);
     }, []);
-
-
 
     const onFilter = (e) => {
         const value = e.target.value;
@@ -97,7 +95,6 @@ const ListDemo = (props) => {
             setFilteredValue(filtered);
         }
     };
-
 
     function buscarId(arr, nombre, tipo, costo) {
         console.log('producto auxiliar', productAux);
@@ -124,7 +121,6 @@ const ListDemo = (props) => {
         let _products = [...dataViewValue];
 
             if (product.id) {
-                console.log('Entre en edit');
                 const productoServicenew = new NewProductoService();
                 product.tipo_producto = dropdownValue.name
                 const response = await productoServicenew.updateProducto(product.id, product, picklistTargetValue);
@@ -232,92 +228,17 @@ const ListDemo = (props) => {
         addToCart(product, carrito, setCarrito);
         if (product.nombre.trim()) {
         let _products = [...dataViewValue];
-
-            if (product.id) {
-                /*console.log('Entre en edit');
-                const productoServicenew = new NewProductoService();
-                product.tipo_producto = dropdownValue.name
-                const response = await productoServicenew.updateProducto(product.id, product, picklistTargetValue);
-                const index = findIndexById(product.id);
-
-                let arrIngredientes = [];
-                let arrProteinas = [];
-                for (let j = 0; j < picklistTargetValue.length; j++) {
-                    if (picklistTargetValue[j].proteina == 'Si') {
-                            arrProteinas.push(picklistTargetValue[j]);
-                    } else {
-                            arrIngredientes.push(picklistTargetValue[j]);
-                    }
-                }
-
-                product.ingrediente = arrIngredientes;
-                product.proteina = arrProteinas
-                _products[index] = product;*/
-
-            } else {
-               /* console.log('Entre en Save');   
-                console.log('Prducto', product);
-                console.log('Prducto', picklistTargetValue);
-                console.log('Tipo de producto', dropdownValue);
-                product.tipo_producto = dropdownValue.name;
-                const productoServicenew = new NewProductoService();
-                const response = await productoServicenew.postProducto(product, picklistTargetValue);
-               
-                console.log('response', response);
-
-                let arrIngredientes = [];
-                let arrProteinas = [];
-
-                for (let j = 0; j < picklistTargetValue.length; j++) {
-                    let ingrediente = picklistTargetValue[j];
-
-                    let newIngrediente = {
-                        id: null,
-                        nombre: '',
-                        cantidad: '',
-                        imagen: '',
-                        proteina: ''
-                    };
-
-                    newIngrediente.id = ingrediente.id;
-                    newIngrediente.nombre = ingrediente.nombre;
-                    newIngrediente.cantidad = ingrediente.cantidad;
-                    newIngrediente.imagen = ingrediente.nombreImage;
-                    newIngrediente.proteina = ingrediente.proteina;
-
-                    if (ingrediente.proteina == 'Si') {
-                        arrProteinas.push(newIngrediente);
-                    } else {
-                        arrIngredientes.push(newIngrediente);
-                    }
-                }
-
-                let NewProduct = {
-                    id: null,
-                    nombre: '',
-                    tipo: '',
-                    costo: '',
-                    imagen: '',
-                    proteina: null,
-                    proteina: arrProteinas,
-                    ingrediente: arrIngredientes
-                };
-
-                NewProduct.id = response.id;
-                NewProduct.nombre = response.nombre
-                NewProduct.tipo = dropdownValue.name;
-                NewProduct.costo = response.costo;
-                NewProduct.imagen = response.imagen;
-                NewProduct.proteina = arrProteinas;
-                NewProduct.ingrediente = arrIngredientes;
-
-                console.log('test new product', NewProduct);
-                 _products.push(NewProduct); */
-                //toast.current.show({ severity: 'success', summary: 'Successful', detail: 'Product Created', life: 3000 });
-            }
+        console.log('idOrden', orderId);    
+        const carritoService = new CarritoService();
+        const response = await carritoService.postCarrito(product.id, orderId);
+        
+        //idProducto
+        //idOrden
+        //toast.current.show({ severity: 'success', summary: 'Successful', detail: 'Product Created', life: 3000 });
+    
 
             setDataViewValue(_products);
-            setProductDialog(false);
+            setcarritoDialog(false);
             setDropdownValue(null);
             //setProduct(emptyProduct);
         }
@@ -326,7 +247,6 @@ const ListDemo = (props) => {
     };
 
     const deleteProduct = () => {
-        console.log('Entra?')
         let _dataViewValue = dataViewValue.filter((val) => val.id !== product.id);
         console.log('id Producto', product.id);
         setDataViewValue(_dataViewValue);
@@ -562,7 +482,7 @@ const addCarrito = async (product) => {
 
     const nuevoTipoProducto = tipoProducto.find(producto => producto.name === product.tipo);
 
-    const picklistTargetValuenew = [      ...product.ingrediente,      ...product.proteina    ];
+    const picklistTargetValuenew = [...product.ingrediente, ...product.proteina];
 
     const idsSeleccionados = picklistTargetValuenew.map(ingrediente => ingrediente.id);
 

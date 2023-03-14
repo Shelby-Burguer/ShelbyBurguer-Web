@@ -16,18 +16,32 @@ import { PickList } from 'primereact/picklist';
 import { OrderList } from 'primereact/orderlist';
 import { InputText } from 'primereact/inputtext';
 import { ProductService } from '../demo/service/ProductosServiceShelbyBurguer';
+import { CarritoService } from '../demo/service/CarritoService';
 import  ListDemo  from '../pages/pages/Productos/index';
 import { addToCart } from './addToCar';
 import { Column } from 'primereact/column';
+import { useRouter } from 'next/router';
 
 const AppConfig = (props) => {
     const [scales] = useState([12, 13, 14, 15, 16]);
     const { layoutConfig, setLayoutConfig, layoutState, setLayoutState } = useContext(LayoutContext);
 
     const contextPath = getConfig().publicRuntimeConfig.contextPath;
+    const router = useRouter();
 
-    const onConfigButtonClick = () => {
+    const onConfigButtonClick = async() => {
         setLayoutState((prevState) => ({ ...prevState, configSidebarVisible: true }));
+        const carritoService = new CarritoService()
+        const resProductos = await carritoService.getCarrito()
+        const updatedProductos = resProductos.map(producto => ({ ...producto, cantidad: 1 }));
+        setDataViewValue(updatedProductos);
+
+        let total = 0;
+        resProductos.forEach((producto) => {
+            total += parseFloat(producto.costo_producto);
+        });
+        setTotal(total);
+
     };
 
     const onConfigSidebarHide = () => {
@@ -136,7 +150,12 @@ const AppConfig = (props) => {
     const [selectedProducts, setSelectedProducts] = useState(null);
     const [globalFilter, setGlobalFilter] = useState(null);
     const [orderId, setOrderId] = useState(null);
-    //const contextPath = getConfig().publicRuntimeConfig.contextPath;
+    const [orden, setOrden] = useState('');
+    const [total, setTotal] = useState('0');
+    const [contador, setContador] = useState(1);
+    const [orderCount, setOrderCount] = useState(1);
+    const [ordenCreada, setOrdenCreada] = useState(false);
+
 
     const sortOptions = [
         { label: 'Price High to Low', value: '!price' },
@@ -144,8 +163,6 @@ const AppConfig = (props) => {
     ];
 
     useEffect(() => {
-        const productService = new ProductService();
-        productService.getProducts().then((data) => setDataViewValue(data));
         setGlobalFilterValue('');
     }, []);
 
@@ -180,11 +197,60 @@ const AppConfig = (props) => {
         addToCart(item, carrito, setCarrito);
     };
 
+    const continuarCarrito = async () => {
+    const carritoService = new CarritoService();
+    await carritoService.DeleteCarrito();
+    setOrderCount(orderCount + 1);
+    setOrdenCreada(false);
+    setOrden(null);
+    setDataViewValue([]);
+    router.push('http://localhost:3000/pages/Ordenes/');
+    };
+
     const addCarrito = async () => {
-    const myObject = {idbumber : "123"};
-    localStorage.setItem("myKey", JSON.stringify(myObject));
+    setOrdenCreada(true);
+    const IdOrdenService = new CarritoService(); 
+    const idOrden = await IdOrdenService.postOrdenCarrito();
+    setOrden(idOrden.orden_id);
+    localStorage.setItem("myKey", JSON.stringify(idOrden));
+    };
+
+    const addProductToCarrito = (product) => {
+        const newCarrito = [...carrito, product];
+        setCarrito(newCarrito);
+
+        let newTotal = 0;
+        newCarrito.forEach((product) => {
+            newTotal += product.precio * product.cantidad;
+        });
+        setTotal(newTotal);
+    };
+
+    const deleteCarrito = async () => {
+    const carritoService = new CarritoService();
+    await carritoService.DeleteCarrito();
+    setDataViewValue([]);
+    setTotal(0);
 
     };
+
+    const deleteProductoCarrito = async (producto) => {
+    let _dataViewValue = dataViewValue.filter((val) => val.producto_id !== producto.producto_id);
+    console.log(dataViewValue);
+    console.log(_dataViewValue);
+    console.log(producto.producto_id);
+    setDataViewValue(_dataViewValue);      
+    const carritoService = new CarritoService();
+    await carritoService.DeleteProductoCarrito(producto.producto_id);
+
+    let total = 0;
+    _dataViewValue.forEach((producto) => {
+        total += parseFloat(producto.costo_producto);
+    });
+    setTotal(total);
+
+    };
+
 
     const dataviewListItem = (data) => {
         return (
@@ -240,7 +306,7 @@ const dataviewListItem = (data) => {
         return (
             <>
                 <span className="p-column-title">Producto</span>
-                {rowData.name}
+                {rowData.nombre_producto}
             </>
         );
     };
@@ -249,7 +315,7 @@ const dataviewListItem = (data) => {
         return (
             <>
                 <span className="p-column-title">Cantidad</span>
-                {rowData.category}
+                {rowData.cantidad}
             </>
         );
     };
@@ -258,7 +324,7 @@ const dataviewListItem = (data) => {
         return (
             <>
                 <span className="p-column-title">Cantidad</span>
-                {rowData.rating}
+                {rowData.costo_producto}
             </>
         );
     };
@@ -267,7 +333,7 @@ const dataviewListItem = (data) => {
         return (
             <>
                 <span className="p-column-title">Imagen</span>
-                <img src={`${contextPath}/demo/images/product/${rowData.image}`} alt={rowData.image} className="shadow-2" width="40" />
+                <img src={`${contextPath}/demo/images/product/${rowData.nombre_imagen}`} alt={rowData.nombre_imagen} className="shadow-2" width="40" />
             </>
         );
     };
@@ -275,7 +341,7 @@ const dataviewListItem = (data) => {
     const actionBodyTemplate = (rowData) => {
         return (
             <>
-                <Button icon="pi pi-trash" className="p-button-rounded p-button-danger" onClick={() => confirmDeleteProduct(rowData)} />
+                <Button icon="pi pi-trash" className="p-button-rounded p-button-danger" onClick={() => deleteProductoCarrito(rowData)} />
             </>
         );
     };
@@ -325,59 +391,60 @@ const dataviewListItem = (data) => {
 
     const fechaActual = new Date().toLocaleDateString();
 
+
     return (
-        <>
-            <button className="layout-config-button p-link" type="button" onClick={onConfigButtonClick}>
-                <i className="pi pi-shopping-cart"></i>
-            </button>
+    <>
+        <button className="layout-config-button p-link" type="button" onClick={onConfigButtonClick}>
+        <i className="pi pi-shopping-cart"></i>
+        </button>
 
-            <Sidebar visible={layoutState.configSidebarVisible} onHide={onConfigSidebarHide} position="right" style={{ width: '38rem' }}>
-                {/*<h5>Carrito</h5>
-            <ProductList />*/}
-                <div className="grid list-demo">
-                    <div className="col-12">
-                        <div className="card">
-                            <h5>Carrito</h5>
-                             <div className= "my-3" style={{ display: 'flex', justifyContent: 'space-between' }}>
-                                <div>Orden: <span>001</span></div>
-                                <div>{fechaActual}</div>
-                            </div>
-                            <DataTable
-                                value={dataViewValue}
-                                selection={selectedProducts}
-                                onSelectionChange={(e) => setSelectedProducts(e.value)}
-                                dataKey="id"
-                                rows={10}
-                                style={{ height: '340px', overflowY: 'scroll' }}
-                                className="datatable-responsive"
-                                globalFilter={globalFilter}
-                                emptyMessage="No products found."
-                            >
-                                <Column header="Imagen" body={imageBodyTemplate} headerStyle={{ minWidth: '0rem' }}></Column>
-                                <Column field="nombre" header="Nombre" body={nombreBodyTemplate} headerStyle={{ minWidth: '0rem' }}></Column>
-                                <Column field="cantidad" header="Cantidad" body={cantidadBodyTemplate} headerStyle={{ minWidth: '0rem' }}></Column>
-                                <Column field="precio" header="Precio" body={precioBodyTemplate} headerStyle={{ minWidth: '0rem' }}></Column>
-                                <Column body={actionBodyTemplate}></Column>
-                            </DataTable>
-
-                            {/*<DataView value={filteredValue || dataViewValue} layout={layout} rows={3} sortOrder={sortOrder} sortField={sortField} itemTemplate={dataviewListItem} style={{ height: '450px', overflowY: 'scroll' }} />*/}
-
-                            <div className="carrito-total text-right" style={{ height: '24px' }}>
-                                Total:216{' '}
-                            </div>
-
-                            <div className="flex align-items-center justify-content-between my-3">
-                                <Button label="Limpiar" className="p-button-danger" />
-                                <Button label="Continuar" />
-                            </div>
-                            <div className="p-d-flex p-jc-center p-ai-center">
-                                <Button label="Crear orden" onClick={() => addCarrito()}/>
-                            </div>
-                        </div>
-                    </div>
+        <Sidebar visible={layoutState.configSidebarVisible} onHide={onConfigSidebarHide} position="right" style={{ width: '38rem' }}>
+        {/*<h5>Carrito</h5>
+                <ProductList />*/}
+        <div className="grid list-demo">
+            <div className="col-12">
+            <div className="card">
+                <h5>Carrito</h5>
+                <div className="my-3" style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <div>Orden: <span>{ordenCreada ? `${orderCount}` : ""}</span></div>
+                <div>{fechaActual}</div>
                 </div>
-            </Sidebar>
-        </>
+                <DataTable
+                value={dataViewValue}
+                selection={selectedProducts}
+                onSelectionChange={(e) => setSelectedProducts(e.value)}
+                dataKey="id"
+                rows={10}
+                style={{ height: '340px', overflowY: 'scroll' }}
+                className="datatable-responsive"
+                globalFilter={globalFilter}
+                emptyMessage="No products found."
+                >
+                <Column header="Imagen" body={imageBodyTemplate} headerStyle={{ minWidth: '0rem' }}></Column>
+                <Column field="nombre" header="Nombre" body={nombreBodyTemplate} headerStyle={{ minWidth: '0rem' }}></Column>
+                <Column field="cantidad" header="Cantidad" body={cantidadBodyTemplate} headerStyle={{ minWidth: '0rem' }}></Column>
+                <Column field="precio" header="Precio" body={precioBodyTemplate} headerStyle={{ minWidth: '0rem' }}></Column>
+                <Column body={actionBodyTemplate}></Column>
+                </DataTable>
+
+                {/*<DataView value={filteredValue || dataViewValue} layout={layout} rows={3} sortOrder={sortOrder} sortField={sortField} itemTemplate={dataviewListItem} style={{ height: '450px', overflowY: 'scroll' }} />*/}
+
+                <div className="carrito-total text-right total-text">
+                Total: {total}
+                </div>
+
+                <div className="flex align-items-center justify-content-between my-3">
+                <Button label="Limpiar" className="p-button-danger" onClick={() => deleteCarrito()} />
+                <Button label="Continuar"  onClick={() => continuarCarrito()} />
+                </div>
+                <div className="p-d-flex p-jc-center p-ai-center">
+                <Button label="Crear orden" onClick={() => addCarrito()} />
+                </div>
+            </div>
+            </div>
+        </div>
+        </Sidebar>
+    </>
     );
 };
 
