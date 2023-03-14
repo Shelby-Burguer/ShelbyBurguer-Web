@@ -90,7 +90,9 @@ export class NewComboService {
         return arrFinalProduct;
     }
 
-    async postProducto(combo, productos) {
+    async postCombo(combo, productos) {
+
+        let resCombo;
 
         const responseProducto = fetch('http://localhost:10000/combo/create', {
             headers: { 'content-type': 'application/json' },
@@ -104,11 +106,11 @@ export class NewComboService {
         });
 
         await responseProducto.then((dat) =>
-            dat.json().then((res) => console.log(res)
+            dat.json().then((res) => resCombo = {...res}
             )
         );
-
-        return 
+        
+        return resCombo;
     }
 
     DeleteCombo(id) {

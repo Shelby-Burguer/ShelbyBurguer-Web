@@ -6038,3 +6038,19 @@
 .radio-spacer {
   margin-right: 10px;
 }
+
+.p-d-flex {
+  display: flex !important;
+}
+
+.p-jc-center {
+  justify-content: center !important;
+}
+
+.p-ai-center {
+  align-items: center !important;
+}
+
+.total-text {
+  font-size: 25px;
+}
