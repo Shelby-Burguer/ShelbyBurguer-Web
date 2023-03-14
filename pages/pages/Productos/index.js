@@ -11,6 +11,8 @@ import { FileUpload } from 'primereact/fileupload';
 import { ProductService } from '../../../demo/service/ProductosServiceShelbyBurguer';
 import { NewProductoService } from '../../../demo/service/ProductoService';
 import { IngredienteService } from '../../../demo/service/IngredienteService';
+import { CarritoService } from '../../../demo/service/CarritoService';
+import { addToCart } from "../../../layout/addToCar";
 import { InputText } from 'primereact/inputtext';
 import { Toolbar } from 'primereact/toolbar';
 import { Dialog } from 'primereact/dialog';
@@ -18,7 +20,7 @@ import getConfig from 'next/config';
 import { Tag } from 'primereact/tag';
 
 
-const ListDemo = () => {
+const ListDemo = (props) => {
     let emptyProduct = {
         id: null,
         nombre: '',
@@ -33,10 +35,9 @@ const ListDemo = () => {
         costo: ''
     };
 
-    const [products, setProducts] = useState(null);
+
     const [product, setProduct] = useState(emptyProduct);
     const [productAux, setProductAux] = useState(emptyProduct);
-    //const [listValue, setlistValue] = useState(null);
     const [cantidad, setCantidad] = useState(emptyCantidad);
     const [tipoProducto, setTipoProducto] = useState(null);
     const [picklistSourceValue, setPicklistSourceValue] = useState(null);
@@ -44,7 +45,6 @@ const ListDemo = () => {
     const [submitted, setSubmitted] = useState(false);
     const [productDialog, setProductDialog] = useState(false);
     const [carritoDialog, setcarritoDialog] = useState(false);
-    //const [orderlistValue, setOrderlistValue] = useState(listValue);
     const [dataViewValue, setDataViewValue] = useState(null);
     const [globalFilterValue, setGlobalFilterValue] = useState('');
     const [filteredValue, setFilteredValue] = useState(null);
@@ -60,7 +60,10 @@ const ListDemo = () => {
     const [totalSize, setTotalSize] = useState(0);
     const [file, setfile] = useState(null);
     const toast = useRef(null);
-
+    const [items, setItems] = useState([]);
+    const [carrito, setCarrito] = useState([]);
+    const [orderId, setOrderId] = useState(null);
+      
     const sortOptions = [
         { label: 'Price High to Low', value: '!price' },
         { label: 'Price Low to High', value: 'price' }
@@ -73,6 +76,11 @@ const ListDemo = () => {
         productService.getTypeProducts().then((data) => setTipoProducto(data));
         productoServicenew.getProductos();
         setGlobalFilterValue('');
+
+        const myStoredObject = JSON.parse(localStorage.getItem("myKey"));
+        const idbumber = myStoredObject ? myStoredObject.orden_id : null;
+        setOrderId(idbumber)
+        console.log('Este es el id de orden', idbumber);
     }, []);
 
     const onFilter = (e) => {
@@ -113,7 +121,6 @@ const ListDemo = () => {
         let _products = [...dataViewValue];
 
             if (product.id) {
-                console.log('Entre en edit');
                 const productoServicenew = new NewProductoService();
                 product.tipo_producto = dropdownValue.name
                 const response = await productoServicenew.updateProducto(product.id, product, picklistTargetValue);
@@ -204,12 +211,47 @@ const ListDemo = () => {
         setPicklistTargetValue([]);
     };
 
+    const handleAddToCart = () => {
+    addToCart(product, carrito, setCarrito);
+    };
+
+    const saveCarrito = async () => {
+        setSubmitted(true);
+        console.log('productos', dataViewValue);
+        console.log('producto', product);
+        console.log('Tipo de producto', dropdownValue);
+        console.log('Imagen', file);
+        console.log('Izquierda', picklistSourceValue);
+        console.log('Derecha', picklistTargetValue);
+        console.log('producto auxiliar', productAux);
+        setDropdownValueAux(dropdownValue);
+        addToCart(product, carrito, setCarrito);
+        if (product.nombre.trim()) {
+        let _products = [...dataViewValue];
+        console.log('idOrden', orderId);    
+        const carritoService = new CarritoService();
+        const response = await carritoService.postCarrito(product.id, orderId);
+        
+        //idProducto
+        //idOrden
+        //toast.current.show({ severity: 'success', summary: 'Successful', detail: 'Product Created', life: 3000 });
+    
+
+            setDataViewValue(_products);
+            setcarritoDialog(false);
+            setDropdownValue(null);
+            //setProduct(emptyProduct);
+        }
+
+        setPicklistTargetValue([]);
+    };
+
     const deleteProduct = () => {
         let _dataViewValue = dataViewValue.filter((val) => val.id !== product.id);
         console.log('id Producto', product.id);
         setDataViewValue(_dataViewValue);
         setDeleteProductDialog(false);
-        setProduct(emptyProduct);
+        setProduct(emptyProduct);        
         const ProductoService = new NewProductoService();
         ProductoService.DeleteProductos(product.id);
         /*toast.current.show({ severity: 'success', summary: 'Successful', detail: 'Product Deleted', life: 3000 });
@@ -252,21 +294,21 @@ const ListDemo = () => {
 
     const productDialogFooter = (
         <>
-            <Button label="Cancel" icon="pi pi-times" className="p-button-text" onClick={hideDialog} />
+            <Button label="Cancel" icon="pi pi-times" className="p-button-text" onClick={() => hideDialog()} />
             <Button label="Save" icon="pi pi-check" className="p-button-text" onClick={saveProduct} />
         </>
     );
 
     const carritotDialogFooter = (
         <>
-            <Button label="Cancel" icon="pi pi-times" className="p-button-text" onClick={carritoHideDialog} />
-            <Button label="Save" icon="pi pi-check" className="p-button-text" onClick={saveProduct} />
+            <Button label="Cancel" icon="pi pi-times" className="p-button-text" onClick={() => carritoHideDialog()} />
+            <Button label="Save" icon="pi pi-check" className="p-button-text" onClick={saveCarrito} />
         </>
     );
 
     const deleteProductDialogFooter = (
         <>
-            <Button label="No" icon="pi pi-times" className="p-button-text" onClick={hideDeleteProductDialog} />
+            <Button label="No" icon="pi pi-times" className="p-button-text" onClick={() => setDeleteProductDialog(false)} />
             <Button label="Yes" icon="pi pi-check" className="p-button-text" onClick={deleteProduct} />
         </>
     );
@@ -372,6 +414,7 @@ const ListDemo = () => {
     };
 
     const hideDialog = () => {
+        console.log('Entra?')
         const ingredienteServie = new IngredienteService();
         ingredienteServie.getIngredientes().then((data) => setPicklistSourceValue(data));
         setPicklistTargetValue([]);
@@ -400,38 +443,63 @@ const ListDemo = () => {
     };
 
     const hideDeleteProductDialog = () => {
+    console.log('LLega a eliminar');
+        setSubmitted(false);
+        setProductDialog(false);
         setDeleteProductDialog(false);
+        setProduct(emptyProduct); // Restablecer el producto cuando se cierre el diálogo
     };
 
-    const editProduct = async(product) => {
-        const ingredienteServie = new IngredienteService();
-        await ingredienteServie.getIngredientes().then((data) => setPicklistSourceValue(data));
-           
-        const nuevoTipoProducto = tipoProducto.find(producto => producto.name === product.tipo);
+const editProduct = async (product) => {
+  try {
+    const ingredienteServie = new IngredienteService();
+    const data = await ingredienteServie.getIngredientes();
 
-        const picklistTargetValuenew = [
-            ...product.ingrediente,
-            ...product.proteina
-        ];
+    const nuevoTipoProducto = tipoProducto.find(producto => producto.name === product.tipo);
 
-        const idsSeleccionados = picklistTargetValuenew.map(ingrediente => ingrediente.id);
+    const picklistTargetValuenew = [      ...product.ingrediente,      ...product.proteina    ];
 
-        const picklistSourceValuenew = picklistSourceValue.filter(ingrediente => !idsSeleccionados.includes(ingrediente.id));
+    const idsSeleccionados = picklistTargetValuenew.map(ingrediente => ingrediente.id);
 
-        console.log('El producto',product);
-        console.log('Lista no seleccionada',picklistSourceValuenew);
-        console.log('Lista seleccionada',picklistTargetValuenew);
+    const picklistSourceValuenew = data.filter(ingrediente => !idsSeleccionados.includes(ingrediente.id));
 
-     
+    setPicklistSourceValue(picklistSourceValuenew);
+    setPicklistTargetValue(picklistTargetValuenew);
+    setDropdownValue(nuevoTipoProducto);
+    setDropdownValueAux(nuevoTipoProducto);
+    setProduct({ ...product });
+    setProductAux({ ...product });
+    setProductDialog(true);
+  } catch (error) {
+    console.log(error);
+  }
+};
 
-        setPicklistSourceValue(picklistSourceValuenew);
-        setPicklistTargetValue(picklistTargetValuenew);
-        setDropdownValue(nuevoTipoProducto);
-        setDropdownValueAux(nuevoTipoProducto);
-        setProduct({ ...product });
-        setProductAux({ ...product });
-        setProductDialog(true);
-    };
+const addCarrito = async (product) => {
+  try {
+    const ingredienteServie = new IngredienteService();
+    const data = await ingredienteServie.getIngredientes();
+
+    const nuevoTipoProducto = tipoProducto.find(producto => producto.name === product.tipo);
+
+    const picklistTargetValuenew = [...product.ingrediente, ...product.proteina];
+
+    const idsSeleccionados = picklistTargetValuenew.map(ingrediente => ingrediente.id);
+
+    const picklistSourceValuenew = data.filter(ingrediente => !idsSeleccionados.includes(ingrediente.id));
+
+    setPicklistSourceValue(picklistSourceValuenew);
+    setPicklistTargetValue(picklistTargetValuenew);
+    setDropdownValue(nuevoTipoProducto);
+    setDropdownValueAux(nuevoTipoProducto);
+    setProduct({ ...product });
+    setProductAux({ ...product });
+    setcarritoDialog(true);
+    carritOpenNew
+  } catch (error) {
+    console.log(error);
+  }
+};
 
 
 
@@ -512,7 +580,7 @@ const ListDemo = () => {
                     <div className="flex align-items-center justify-content-between">
                         <Button icon="pi pi-trash" className="p-button-danger" onClick={() => confirmDeleteProduct(data)} />
                         <Button icon="pi pi-pencil" className="p-button-success" onClick={() => editProduct(data)} />
-                        <Button label="Agregar" icon="pi pi-shopping-cart" onClick={carritOpenNew} />
+                        <Button label="Agregar" icon="pi pi-shopping-cart" onClick={() => addCarrito(data)} />
                     </div>
                 </div>
                 <Dialog visible={productDialog} style={{ width: '800px' }} header="Ingrese producto" modal className="p-fluid" footer={productDialogFooter} onHide={hideDialog}>
@@ -577,8 +645,8 @@ const ListDemo = () => {
                         </div>
                     </div>
                 </Dialog>
-                <Dialog visible={carritoDialog} style={{ width: '800px' }} header="Ingrese producto" modal className="p-fluid" footer={carritotDialogFooter} onHide={carritoHideDialog}>
-                    <div>{data.image && <img src={`${contextPath}/demo/images/product/${data.image}`} alt={data.image} width="150" className="mt-0 mx-auto mb-5 block shadow-2" />}</div>
+                <Dialog visible={carritoDialog} style={{ width: '800px' }} header="Modificaciones" modal className="p-fluid" footer={carritotDialogFooter} onHide={carritoHideDialog}>
+                    {<img src={`${contextPath}/demo/images/product/16891a7a-52f8-4bc6-8176-00a5ae0b1c0a.jpg`} alt={product.nombre_imagen} width="150" className="mt-0 mx-auto mb-5 block shadow-2" />}
                     <div className="field">
                         <h6 htmlFor="nombre">Nombre</h6>
                         <InputText id="nombre" value={product.nombre} onChange={(e) => onInputChange(e, 'nombre')} required autoFocus className={classNames({ 'p-invalid': submitted && !product.nombre })} />
@@ -591,9 +659,9 @@ const ListDemo = () => {
                             <Dropdown value={dropdownValue} onChange={(e) => setDropdownValue(e.value)} options={tipoProducto} optionLabel="name" placeholder="Select" />
                         </div>
                         <div className="field col">
-                            <h6 htmlFor="nombre">Costo</h6>
-                            <InputText id="nombre" value={product.nombre} onChange={(e) => onInputChange(e, 'nombre')} required autoFocus className={classNames({ 'p-invalid': submitted && !product.nombre })} />
-                            {submitted && !product.nombre && <small className="p-invalid">Name is required.</small>}
+                            <h6 htmlFor="Costo">Costo</h6>
+                            <InputText id="costo" value={product.costo} onChange={(e) => onInputChange(e, 'costo')} required autoFocus className={classNames({ 'p-invalid': submitted && !product.costo})} />
+                            {submitted && !product.costo && <small className="p-invalid">Name is required.</small>}
                         </div>
                     </div>
                     <div className="col-12 xl:col-13">

@@ -1,8 +1,8 @@
 
 {
     "data": [
-        {"id": "1000","code": "f230fh0g3","name": "Hamburguesa Simple","Proteina": "Carne, pollo, Mixto", "Ingrediente": "Lechuga, Tomate, Cebolla","image": "16891a7a-52f8-4bc6-8176-00a5ae0b1c0a.jpg","price": 65,"category": "Cantidad: 1","quantity": 24,"inventoryStatus": "INSTOCK","rating": 5},
-        {"id": "1001","code": "nvklal433","name": "Hamburguesa Mixta","Proteina": "Carne, pollo, Mixto", "Ingrediente": "Lechuga, Tomate, Cebolla", "image": "16891a7a-52f8-4bc6-8176-00a5ae0b1c0a.jpg","price": 72,"category": "Cantidad: 1","quantity": 61,"inventoryStatus": "INSTOCK","rating": 4},
-        {"id": "1002","code": "zz21cz3c1","name": "Papas simples","Proteina": "Carne, pollo, Mixto","Ingrediente": "Lechuga, Tomate, Cebolla", "image": "16891a7a-52f8-4bc6-8176-00a5ae0b1c0a.jpg","price": 79,"category": "Cantidad: 1","quantity": 2,"inventoryStatus": "LOWSTOCK","rating": 3}
+        {"id": "1000","code": "f230fh0g3","name": "Hamburguesa Simple","Proteina": "Carne, pollo, Mixto", "Ingrediente": "Lechuga, Tomate, Cebolla","image": "16891a7a-52f8-4bc6-8176-00a5ae0b1c0a.jpg","price": 65,"category": "1","quantity": 24,"inventoryStatus": "INSTOCK","rating": 5},
+        {"id": "1001","code": "nvklal433","name": "Hamburguesa Mixta","Proteina": "Carne, pollo, Mixto", "Ingrediente": "Lechuga, Tomate, Cebolla", "image": "16891a7a-52f8-4bc6-8176-00a5ae0b1c0a.jpg","price": 72,"category": "1","quantity": 61,"inventoryStatus": "INSTOCK","rating": 4},
+        {"id": "1002","code": "zz21cz3c1","name": "Papas simples","Proteina": "Carne, pollo, Mixto","Ingrediente": "Lechuga, Tomate, Cebolla", "image": "16891a7a-52f8-4bc6-8176-00a5ae0b1c0a.jpg","price": 79,"category": "1","quantity": 2,"inventoryStatus": "LOWSTOCK","rating": 3}
     ]
 }
