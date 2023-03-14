@@ -230,7 +230,18 @@ const Crud = () => {
                 <h5 className="m-0">Administrar {headerName}</h5>
                 <span className="block mt-2 md:mt-0 p-input-icon-left">
                     <i className="pi pi-search" />
-                    <InputText type="search" onInput={(e) => setGlobalFilter(e.target.value)} placeholder="Search..." />
+                    <InputText
+                        type="search"
+                        onInput={(e) => {
+                            setGlobalFilter(e.target.value);
+                            if (!e.target.value.trim()) {
+                                setTimeout(() => {
+                                    dt.current.reset();
+                                }, 300);
+                            }
+                        }}
+                        placeholder="Search..."
+                    />
                 </span>
             </div>
         );
