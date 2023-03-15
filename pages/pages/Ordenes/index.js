@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import getConfig from 'next/config';
 import { InputText } from 'primereact/inputtext';
 import { InputTextarea } from 'primereact/inputtextarea';
 import { AutoComplete } from 'primereact/autocomplete';
@@ -24,7 +25,7 @@ import { CountryService } from '../../../demo/service/CountryService';
 import { NodeService } from '../../../demo/service/NodeService';
 import { DataTable } from 'primereact/datatable';
 import { Column } from 'primereact/column';
-
+import { OrdenService } from '../../../demo/service/OrdenService';
 
 
 export const InputDemo = () => {
@@ -38,11 +39,11 @@ export const InputDemo = () => {
     };
 
     const [products, setProducts] = useState([
-    { id: 1, nombre: 'Producto 1', precio: 10.5, cantidad: 2 },
-    { id: 2, nombre: 'Producto 2', precio: 15.0, cantidad: 1 },
-    { id: 3, nombre: 'Producto 3', precio: 20.0, cantidad: 3 },
-  ]);
-    
+        { id: 1, nombre: 'Producto 1', precio: 10.5, cantidad: 2 },
+        { id: 2, nombre: 'Producto 2', precio: 15.0, cantidad: 1 },
+        { id: 3, nombre: 'Producto 3', precio: 20.0, cantidad: 3 },
+    ]);
+
     const [floatValue, setFloatValue] = useState('');
     const [autoValue, setAutoValue] = useState(null);
     const [selectedAutoValue, setSelectedAutoValue] = useState(null);
@@ -74,7 +75,6 @@ export const InputDemo = () => {
     const [telefono, setTelefono] = useState('');
     const [tableNumber, setTableNumber] = useState('');
     const [discount, setDiscount] = useState('');
-    const [total, setTotal] = useState(0);
     const [cardNumber, setCardNumber] = useState('');
     const [expirationMonth, setExpirationMonth] = useState('');
     const [expirationYear, setExpirationYear] = useState('');
@@ -91,6 +91,11 @@ export const InputDemo = () => {
     const [cardSecurityCode, setCardSecurityCode] = useState('');
     const [zelleEmail, setZelleEmail] = useState('');
     const [electronicPaymentMethod, setElectronicPaymentMethod] = useState('');
+    const [orderId, setOrderId] = useState(null);
+    const [dataViewValue, setDataViewValue] = useState(null);
+    const [selectedProducts, setSelectedProducts] = useState(null);
+    const [globalFilter, setGlobalFilter] = useState(null);
+    const [total, setTotal] = useState('0');
 
     const currencyOptions = [
         { label: 'Bolívares', value: 'Bs.' },
@@ -162,13 +167,29 @@ export const InputDemo = () => {
         { name: 'Option 3', code: 'O3' }
     ];
 
-    useEffect(() => {
+    useEffect(async () => {
         calculateTotal();
+        const ordenService = new OrdenService();
         const countryService = new CountryService();
         const nodeService = new NodeService();
+
+        const myStoredObject = JSON.parse(localStorage.getItem("myKey"));
+        const idbumber = myStoredObject ? myStoredObject.orden_id : null;
+        setOrderId(idbumber)
+        console.log('Este es el id de orden', idbumber);
+
+        await ordenService.getProductoOrden(idbumber).then((data) => setDataViewValue(data));
         countryService.getCountries().then((data) => setAutoValue(data));
         nodeService.getTreeNodes().then((data) => setTreeSelectNodes(data));
+
+        let total = 0;
+        dataViewValue.forEach((producto) => {
+            total += parseFloat(producto.costo_producto);
+        });
+        setTotal(total);
     }, []);
+
+    const contextPath = getConfig().publicRuntimeConfig.contextPath;
 
     const searchCountry = (event) => {
         setTimeout(() => {
@@ -209,127 +230,172 @@ export const InputDemo = () => {
     };
 
 
+    const nombreBodyTemplate = (rowData) => {
+        return (
+            <>
+                <span className="p-column-title">Producto</span>
+                {rowData.nombre_producto}
+            </>
+        );
+    };
 
-  const handleOpcionesChange = (event) => {
-    setOpciones(event.target.value);
-    setMostradorOptions('');
-    setDireccion('');
-    setTelefono('');
-  };
+    const cantidadBodyTemplate = (rowData) => {
+        return (
+            <>
+                <span className="p-column-title">Cantidad</span>
+                {rowData.cantidad}
+            </>
+        );
+    };
 
-  const handleMostradorOptionsChange = (event) => {
-    setMostradorOptions(event.target.value);
-  };
+    const precioBodyTemplate = (rowData) => {
+        return (
+            <>
+                <span className="p-column-title">Cantidad</span>
+                {rowData.costo_producto}
+            </>
+        );
+    };
+
+    const imageBodyTemplate = (rowData) => {
+        return (
+            <>
+                <span className="p-column-title">Imagen</span>
+                <img src={`${contextPath}/demo/images/product/${rowData.nombre_imagen}`} alt={rowData.nombre_imagen} className="shadow-2" width="40" />
+            </>
+        );
+    };
+
+    const actionBodyTemplate = (rowData) => {
+        return (
+            <>
+                <Button icon="pi pi-trash" className="p-button-rounded p-button-danger" onClick={() => deleteProductoCarrito(rowData)} />
+            </>
+        );
+    };
+
+
+
+    const handleOpcionesChange = (event) => {
+        setOpciones(event.target.value);
+        setMostradorOptions('');
+        setDireccion('');
+        setTelefono('');
+    };
+
+    const handleMostradorOptionsChange = (event) => {
+        setMostradorOptions(event.target.value);
+    };
 
     const handleNumeroMesaChange = (event) => {
-    setMostradorOptions(event.target.value);
-  };
+        setMostradorOptions(event.target.value);
+    };
 
-  const handleDireccionChange = (event) => {
-    setDireccion(event.target.value);
-  };
+    const handleDireccionChange = (event) => {
+        setDireccion(event.target.value);
+    };
 
-  const handleTelefonoChange = (event) => {
-    setTelefono(event.target.value);
-  };
+    const handleTelefonoChange = (event) => {
+        setTelefono(event.target.value);
+    };
 
-  const handleSubmit = (event) => {
-    event.preventDefault();
-    console.log({
-      opciones,
-      mostradorOptions,
-      direccion,
-      telefono
-    });
-  };
+    const handleSubmit = (event) => {
+        event.preventDefault();
+        console.log({
+            opciones,
+            mostradorOptions,
+            direccion,
+            telefono
+        });
+    };
 
     const handlePayment = () => {
-    // Aquí iría la lógica para procesar el pago según el método seleccionado
-    switch (paymentMethod) {
-      case "electronico":
-        console.log("Pago electrónico procesado con número de referencia:", referenceNumber);
-        break;
-      case "efectivo":
-        console.log("Pago en efectivo procesado con los siguientes datos:", serialNumber, denomination, currency);
-        break;
-      case "zelle":
-        console.log("Pago Zelle procesado con el siguiente correo electrónico:", email);
-        break;
-      default:
-        console.log("Por favor, selecciona un método de pago.");
-    }
-  };
+        // Aquí iría la lógica para procesar el pago según el método seleccionado
+        switch (paymentMethod) {
+            case "electronico":
+                console.log("Pago electrónico procesado con número de referencia:", referenceNumber);
+                break;
+            case "efectivo":
+                console.log("Pago en efectivo procesado con los siguientes datos:", serialNumber, denomination, currency);
+                break;
+            case "zelle":
+                console.log("Pago Zelle procesado con el siguiente correo electrónico:", email);
+                break;
+            default:
+                console.log("Por favor, selecciona un método de pago.");
+        }
+    };
 
-  const fechaActual = new Date().toLocaleDateString();
+    const fechaActual = new Date().toLocaleDateString();
 
     return (
         <div className="grid p-fluid">
             <div className="col-12 md:col-6">
                 <div className="card">
                     <h5>Informacion del cliente</h5>
-                    <div className="grid formgrid">         
-                            <div className="field col">
-                                <label htmlFor="cedula">Cédula</label>
-                                <InputText id="cedula" value={client.cedula} onChange={(e) => onInputChange(e, 'cedula')} required autoFocus className={classNames({ 'p-invalid': submitted && !client.cedula })} />
-                                {submitted && !client.cedula && <small className="p-invalid">La cédula es obligatoria.</small>}
-                            </div>
-                            <div className="field col">
-                                <label htmlFor="telefono">Teléfono</label>
-                                <InputText id="telefono" value={client.telefono} onChange={(e) => onInputChange(e, 'telefono')} required autoFocus className={classNames({ 'p-invalid': submitted && !client.telefono })} />
-                                {submitted && !client.telefono && <small className="p-invalid">El teléfono es obligatorio.</small>}
-                            </div>
+                    <div className="grid formgrid">
+                        <div className="field col">
+                            <label htmlFor="cedula">Cédula</label>
+                            <InputText id="cedula" value={client.cedula} onChange={(e) => onInputChange(e, 'cedula')} required autoFocus className={classNames({ 'p-invalid': submitted && !client.cedula })} />
+                            {submitted && !client.cedula && <small className="p-invalid">La cédula es obligatoria.</small>}
                         </div>
-                        <div className="formgrid grid">
-                            <div className="field col">
-                                <label htmlFor="nombre">Nombre</label>
-                                <InputText id="nombre" value={client.nombre} onChange={(e) => onInputChange(e, 'nombre')} required autoFocus className={classNames({ 'p-invalid': submitted && !client.nombre })} />
-                                {submitted && !client.nombre && <small className="p-invalid">El nombre es obligatorio.</small>}
-                            </div>
-                            <div className="field col">
-                                <label htmlFor="apellido">Apellido</label>
-                                <InputText id="apellido" value={client.apellido} onChange={(e) => onInputChange(e, 'apellido')} />
-                            </div>
+                        <div className="field col">
+                            <label htmlFor="telefono">Teléfono</label>
+                            <InputText id="telefono" value={client.telefono} onChange={(e) => onInputChange(e, 'telefono')} required autoFocus className={classNames({ 'p-invalid': submitted && !client.telefono })} />
+                            {submitted && !client.telefono && <small className="p-invalid">El teléfono es obligatorio.</small>}
                         </div>
-                            <h5>Tipo de orden</h5>
-                                <div className="p-grid">
-                                    <div className="grid formgrid">   
-                                    <div className="p-col-6">
-                                     <div className="field col">
-                                        <div className="p-field-radiobutton">
-                                            <RadioButton
-                                                inputId="mostrador"
-                                                name="opciones"
-                                                value="mostrador"
-                                                onChange={handleOpcionesChange}
-                                                checked={opciones === 'mostrador'}
-                                                className="radio-spacer"
-                                            />
-                                            <label htmlFor="mostrador">Mostrador</label>
-                                        </div>
-                                        </div>
-                                    </div>
-                                     <div className="field col">
-                                     <div className="p-col-6">
-                                        <div className="p-field-radiobutton">
-                                            <RadioButton
-                                                inputId="delivery"
-                                                name="opciones"
-                                                value="delivery"
-                                                onChange={handleOpcionesChange}
-                                                checked={opciones === 'delivery'}
-                                                className="radio-spacer"
-                                            />
-                                            <label htmlFor="delivery">Delivery</label>
-                                        </div>
-                                      </div>
+                    </div>
+                    <div className="formgrid grid">
+                        <div className="field col">
+                            <label htmlFor="nombre">Nombre</label>
+                            <InputText id="nombre" value={client.nombre} onChange={(e) => onInputChange(e, 'nombre')} required autoFocus className={classNames({ 'p-invalid': submitted && !client.nombre })} />
+                            {submitted && !client.nombre && <small className="p-invalid">El nombre es obligatorio.</small>}
+                        </div>
+                        <div className="field col">
+                            <label htmlFor="apellido">Apellido</label>
+                            <InputText id="apellido" value={client.apellido} onChange={(e) => onInputChange(e, 'apellido')} />
+                        </div>
+                    </div>
+                    <h5>Tipo de orden</h5>
+                    <div className="p-grid">
+                        <div className="grid formgrid">
+                            <div className="p-col-6">
+                                <div className="field col">
+                                    <div className="p-field-radiobutton">
+                                        <RadioButton
+                                            inputId="mostrador"
+                                            name="opciones"
+                                            value="mostrador"
+                                            onChange={handleOpcionesChange}
+                                            checked={opciones === 'mostrador'}
+                                            className="radio-spacer"
+                                        />
+                                        <label htmlFor="mostrador">Mostrador</label>
                                     </div>
                                 </div>
                             </div>
-                                {opciones === 'mostrador' && (
-                                    <div>    
-                                        <div className="grid formgrid">   
-                                        <div className="field col">
-                                        <div className="p-field-radiobutton">
+                            <div className="field col">
+                                <div className="p-col-6">
+                                    <div className="p-field-radiobutton">
+                                        <RadioButton
+                                            inputId="delivery"
+                                            name="opciones"
+                                            value="delivery"
+                                            onChange={handleOpcionesChange}
+                                            checked={opciones === 'delivery'}
+                                            className="radio-spacer"
+                                        />
+                                        <label htmlFor="delivery">Delivery</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {opciones === 'mostrador' && (
+                        <div>
+                            <div className="grid formgrid">
+                                <div className="field col">
+                                    <div className="p-field-radiobutton">
                                         <label htmlFor="comer-aqui">Comer aquí</label>
                                         <RadioButton
                                             inputId="comer-aqui"
@@ -338,81 +404,89 @@ export const InputDemo = () => {
                                             onChange={handleMostradorOptionsChange}
                                             checked={mostradorOptions === 'comer-aqui'}
                                         />
-                                        
-                                        </div>
-                                        </div>
 
-                                        <div className="field col">
-                                        <div className="p-field-radiobutton">
+                                    </div>
+                                </div>
+
+                                <div className="field col">
+                                    <div className="p-field-radiobutton">
                                         <RadioButton
                                             inputId="para-llevar"
                                             name="mostradorOptions"
                                             value="para-llevar"
                                             onChange={handleMostradorOptionsChange}
                                             checked={mostradorOptions === 'para-llevar'}
-                                            
                                         />
                                         <label htmlFor="para-llevar">Para llevar</label>
-                                        </div>
-                                        </div>
                                     </div>
-                                    {mostradorOptions === 'comer-aqui' && (
-                                        <div className="p-field">
-                                        <div className="field col">
-                                            <label htmlFor="numero-mesa">Número de mesa:</label>
-                                            <InputText id="numero-mesa" value={tableNumber} onChange={(e) => setTableNumber(e.target.value)} />
-                                        </div>
-                                        </div>
-                                        )}
-                                    </div>
-                                    )}
-                                {opciones === 'delivery' && (
-                                    <div>
-                                        <div className="p-field">
-                                            <label htmlFor="direccion">Dirección:</label>
-                                            <InputText id="direccion" value={direccion} onChange={handleDireccionChange} />
-                                        </div>
-                                        <div className="p-field">
-                                            <label htmlFor="telefono">Zona</label>
-                                             <Dropdown value={dropdownValue} onChange={(e) => setDropdownValue(e.value)} options={dropdownValues} optionLabel="name" placeholder="Select" />
-                                        </div>
-                                    </div>
-                                )}
-                         </div>
-                    </div>
-
-                    <div className="col-12 md:col-6">
-                        <div className="card">
-                            <div>
-                            <h5>Detalle de orden</h5>
-                            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                                <div>Orden: <span>001</span></div>
-                                <div>Fecha de orden: {fechaActual}</div>
+                                </div>
                             </div>
-                            <DataTable value={products} >
-                                <Column field="nombre" header="Nombre" />
-                                <Column field="cantidad" header="Cantidad" />
-                                <Column field="precio" header="Precio" />
-                            </DataTable>
-                            </div>
-                            <div>
-                            <div>
-                                <label htmlFor="descuento">Descuento:</label>
-                                <InputText id="descuento" value={discount} onChange={(e) => setDiscount(e.target.value)} />
-                            </div>
-                            <div style={{ fontSize: '20px' }}> Total: {total}$</div> {/* Aquí se muestra el total */}
-                            </div>   
-                                <div className="grid">
-                                    <div className="md:col-6"> </div> 
-                                        <div className="flex flex-wrap gap-2" style={{ display: 'flex', flexDirection: 'row' }}>  
-                                            <Button label="Borrar info" className="p-button-danger" />  
-                                            <Button label="Procesar" />    
-                                        
+                            {mostradorOptions === 'comer-aqui' && (
+                                <div className="p-field">
+                                    <div className="field col">
+                                        <label htmlFor="numero-mesa">Número de mesa:</label>
+                                        <InputText id="numero-mesa" value={tableNumber} onChange={(e) => setTableNumber(e.target.value)} />
                                     </div>
-                                </div>  
+                                </div>
+                            )}
                         </div>
-                    </div>    
+                    )}
+                    {opciones === 'delivery' && (
+                        <div>
+                            <div className="p-field">
+                                <label htmlFor="direccion">Dirección:</label>
+                                <InputText id="direccion" value={direccion} onChange={handleDireccionChange} />
+                            </div>
+                            <div className="p-field">
+                                <label htmlFor="telefono">Zona</label>
+                                <Dropdown value={dropdownValue} onChange={(e) => setDropdownValue(e.value)} options={dropdownValues} optionLabel="name" placeholder="Select" />
+                            </div>
+                        </div>
+                    )}
+                </div>
+            </div>
             <div className="col-12 md:col-6">
+                <div className="card">
+                    <div>
+                        <h5>Detalle de orden</h5>
+                        <div className="my-2" style={{ display: 'flex', justifyContent: 'space-between' }}>
+                            <div>Orden: <span>001</span></div>
+                            <div>Fecha de orden: {fechaActual}</div>
+                        </div>
+                        <DataTable
+                            value={dataViewValue}
+                            selection={selectedProducts}
+                            onSelectionChange={(e) => setSelectedProducts(e.value)}
+                            dataKey="id"
+                            rows={10}
+                            style={{ height: '285px', overflowY: 'scroll' }}
+                            className="datatable-responsive"
+                            globalFilter={globalFilter}
+                            emptyMessage="No existen productos."
+                        >
+                            <Column header="Imagen" body={imageBodyTemplate} headerStyle={{ minWidth: '0rem' }}></Column>
+                            <Column field="nombre" header="Nombre" body={nombreBodyTemplate} headerStyle={{ minWidth: '0rem' }}></Column>
+                            <Column field="cantidad" header="Cantidad" body={cantidadBodyTemplate} headerStyle={{ minWidth: '0rem' }}></Column>
+                            <Column field="precio" header="Precio" body={precioBodyTemplate} headerStyle={{ minWidth: '0rem' }}></Column>
+                            <Column body={actionBodyTemplate}></Column>
+                        </DataTable>
+                    </div>
+                    <div>
+                        <div className="my-2">
+                            <label htmlFor="descuento">Descuento:</label>
+                            <InputText id="descuento" value={discount} onChange={(e) => setDiscount(e.target.value)} />
+                        </div>
+                        <div className="carrito-total text-right total-text my-3">
+                            Total: {total}$
+                        </div>
+                    </div>
+                    <div className="flex align-items-center justify-content-between my-3">
+                        <Button label="Cancelar" className="p-button-danger" onClick={() => deleteCarrito()} />
+                        <Button label="Procesar" onClick={() => continuarCarrito()} />
+                    </div>
+                </div>
+            </div>
+            {/*<div className="col-12 md:col-6">
                 <div className="card">
                     <div>
                         <h5>Métodos de pago:</h5>
@@ -464,7 +538,7 @@ export const InputDemo = () => {
                         )}
                     </div>
                 </div>
-            </div>    
+            </div> */}
         </div>
     );
 };

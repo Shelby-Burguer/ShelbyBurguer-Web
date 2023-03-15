@@ -31,8 +31,8 @@ const AppConfig = (props) => {
 
     const onConfigButtonClick = async() => {
         setLayoutState((prevState) => ({ ...prevState, configSidebarVisible: true }));
-        const carritoService = new CarritoService()
-        const resProductos = await carritoService.getCarrito()
+        const carritoService = new CarritoService();
+        const resProductos = await carritoService.getCarrito();
         const updatedProductos = resProductos.map(producto => ({ ...producto, cantidad: 1 }));
         setDataViewValue(updatedProductos);
 
@@ -198,12 +198,18 @@ const AppConfig = (props) => {
     };
 
     const continuarCarrito = async () => {
+    const ProductoOrden = dataViewValue.map((item) => ({
+    idProducto: item.producto_id,
+    idOrden: orden
+    }));
+    console.log(ProductoOrden)
     const carritoService = new CarritoService();
-    await carritoService.DeleteCarrito();
+    await carritoService.postProductosOrden(ProductoOrden);
     setOrderCount(orderCount + 1);
     setOrdenCreada(false);
     setOrden(null);
     setDataViewValue([]);
+    await carritoService.DeleteCarrito();
     router.push('http://localhost:3000/pages/Ordenes/');
     };
 
@@ -399,8 +405,6 @@ const dataviewListItem = (data) => {
         </button>
 
         <Sidebar visible={layoutState.configSidebarVisible} onHide={onConfigSidebarHide} position="right" style={{ width: '38rem' }}>
-        {/*<h5>Carrito</h5>
-                <ProductList />*/}
         <div className="grid list-demo">
             <div className="col-12">
             <div className="card">
@@ -429,18 +433,18 @@ const dataviewListItem = (data) => {
 
                 {/*<DataView value={filteredValue || dataViewValue} layout={layout} rows={3} sortOrder={sortOrder} sortField={sortField} itemTemplate={dataviewListItem} style={{ height: '450px', overflowY: 'scroll' }} />*/}
 
-                <div className="carrito-total text-right total-text">
+            <div className="carrito-total text-right total-text  my-3">
                 Total: {total}
                 </div>
 
-                <div className="flex align-items-center justify-content-between my-3">
-                <Button label="Limpiar" className="p-button-danger" onClick={() => deleteCarrito()} />
-                <Button label="Continuar"  onClick={() => continuarCarrito()} />
+                    <div className="flex align-items-center justify-content-between my-3">
+                        <Button label="Limpiar" className="p-button-danger" onClick={() => deleteCarrito()} />
+                        <Button label="Continuar"  onClick={() => continuarCarrito()} />
+                    </div>
+                    <div className="p-d-flex p-jc-center p-ai-center">
+                        <Button label="Crear orden" onClick={() => addCarrito()} />
+                    </div>
                 </div>
-                <div className="p-d-flex p-jc-center p-ai-center">
-                <Button label="Crear orden" onClick={() => addCarrito()} />
-                </div>
-            </div>
             </div>
         </div>
         </Sidebar>
