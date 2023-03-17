@@ -41,7 +41,6 @@ const AppConfig = (props) => {
             total += parseFloat(producto.costo_producto);
         });
         setTotal(total);
-
     };
 
     const onConfigSidebarHide = () => {
@@ -151,6 +150,7 @@ const AppConfig = (props) => {
     const [globalFilter, setGlobalFilter] = useState(null);
     const [orderId, setOrderId] = useState(null);
     const [orden, setOrden] = useState('');
+    const [numOrden, setnumOrden] = useState('');
     const [total, setTotal] = useState('0');
     const [contador, setContador] = useState(1);
     const [orderCount, setOrderCount] = useState(1);
@@ -218,6 +218,8 @@ const AppConfig = (props) => {
     const IdOrdenService = new CarritoService(); 
     const idOrden = await IdOrdenService.postOrdenCarrito();
     setOrden(idOrden.orden_id);
+    setnumOrden(idOrden.numero_orden.toString())
+    
     localStorage.setItem("myKey", JSON.stringify(idOrden));
     };
 
@@ -410,7 +412,7 @@ const dataviewListItem = (data) => {
             <div className="card">
                 <h5>Carrito</h5>
                 <div className="my-3" style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <div>Orden: <span>{ordenCreada ? `${orderCount}` : ""}</span></div>
+                <div>Orden: <span>{ordenCreada ? `${numOrden}` : ""}</span></div>
                 <div>{fechaActual}</div>
                 </div>
                 <DataTable

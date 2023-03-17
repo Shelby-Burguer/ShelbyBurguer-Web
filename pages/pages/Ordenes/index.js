@@ -74,7 +74,7 @@ export const InputDemo = () => {
     const [direccion, setDireccion] = useState('');
     const [telefono, setTelefono] = useState('');
     const [tableNumber, setTableNumber] = useState('');
-    const [discount, setDiscount] = useState('');
+    const [discount, setdiscount] = useState('');
     const [cardNumber, setCardNumber] = useState('');
     const [expirationMonth, setExpirationMonth] = useState('');
     const [expirationYear, setExpirationYear] = useState('');
@@ -96,6 +96,7 @@ export const InputDemo = () => {
     const [selectedProducts, setSelectedProducts] = useState(null);
     const [globalFilter, setGlobalFilter] = useState(null);
     const [total, setTotal] = useState('0');
+    const [idOrden, setidOrden] = useState('');
 
     const currencyOptions = [
         { label: 'Bolívares', value: 'Bs.' },
@@ -178,15 +179,21 @@ export const InputDemo = () => {
         setOrderId(idbumber)
         console.log('Este es el id de orden', idbumber);
 
-        await ordenService.getProductoOrden(idbumber).then((data) => setDataViewValue(data));
+        await ordenService.getProductoOrden(idbumber).then((data) => {
+            const updatedProductos = data.map(producto => ({ ...producto, cantidad: 1 }));
+            setDataViewValue(updatedProductos);
+            let total = 0;
+            data.forEach((producto) => {
+                total += parseFloat(producto.costo_producto);
+            });
+            setTotal(total);
+        });
+        
+        const orden = await ordenService.getOrden(idbumber)
         countryService.getCountries().then((data) => setAutoValue(data));
         nodeService.getTreeNodes().then((data) => setTreeSelectNodes(data));
+        setidOrden(orden.numero_orden)
 
-        let total = 0;
-        dataViewValue.forEach((producto) => {
-            total += parseFloat(producto.costo_producto);
-        });
-        setTotal(total);
     }, []);
 
     const contextPath = getConfig().publicRuntimeConfig.contextPath;
@@ -204,6 +211,9 @@ export const InputDemo = () => {
             }
         }, 250);
     };
+
+
+
 
     const calculateTotal = () => {
         const subtotal = products.reduce((acc, product) => acc + product.precio * product.cantidad, 0);
@@ -269,12 +279,31 @@ export const InputDemo = () => {
     const actionBodyTemplate = (rowData) => {
         return (
             <>
-                <Button icon="pi pi-trash" className="p-button-rounded p-button-danger" onClick={() => deleteProductoCarrito(rowData)} />
+                <Button icon="pi pi-book" className="p-button-rounded p-button-success" onClick={() => deleteProductoCarrito(rowData)} />
             </>
         );
     };
 
+    const procesarOrden = async () => {
+    
+    console.log('test',discount)
+    const ordenService = new OrdenService();
+    await ordenService.getUpdateOrden(orderId, discount);
+    setidOrden('');
+    setOrderId('')
+    setDataViewValue([]);
+    setdiscount('')
+    };
 
+    const deleteOrder = async () => {
+    console.log('test',discount)
+    const ordenService = new OrdenService();
+    await ordenService.DeleteOrden(orderId);
+    setidOrden('');
+    setOrderId('')
+    setDataViewValue([]);
+    setdiscount('')
+    };
 
     const handleOpcionesChange = (event) => {
         setOpciones(event.target.value);
@@ -450,7 +479,7 @@ export const InputDemo = () => {
                     <div>
                         <h5>Detalle de orden</h5>
                         <div className="my-2" style={{ display: 'flex', justifyContent: 'space-between' }}>
-                            <div>Orden: <span>001</span></div>
+                            <div>Orden: <span>{idOrden}</span></div>
                             <div>Fecha de orden: {fechaActual}</div>
                         </div>
                         <DataTable
@@ -474,15 +503,15 @@ export const InputDemo = () => {
                     <div>
                         <div className="my-2">
                             <label htmlFor="descuento">Descuento:</label>
-                            <InputText id="descuento" value={discount} onChange={(e) => setDiscount(e.target.value)} />
+                            <InputText id="descuento" value={discount} onChange={(e) => setdiscount(e.target.value)} />
                         </div>
                         <div className="carrito-total text-right total-text my-3">
                             Total: {total}$
                         </div>
                     </div>
                     <div className="flex align-items-center justify-content-between my-3">
-                        <Button label="Cancelar" className="p-button-danger" onClick={() => deleteCarrito()} />
-                        <Button label="Procesar" onClick={() => continuarCarrito()} />
+                        <Button label="Cancelar" className="p-button-danger" onClick={() => deleteOrder()} />
+                        <Button label="Procesar" onClick={() => procesarOrden()}/>
                     </div>
                 </div>
             </div>
