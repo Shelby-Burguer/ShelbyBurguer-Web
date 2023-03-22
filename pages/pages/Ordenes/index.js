@@ -290,9 +290,10 @@ export const InputDemo = () => {
     const ordenService = new OrdenService();
     await ordenService.getUpdateOrden(orderId, discount);
     setidOrden('');
-    setOrderId('')
+    setTotal('0');
+    setOrderId('');
     setDataViewValue([]);
-    setdiscount('')
+    setdiscount('');
     };
 
     const deleteOrder = async () => {
@@ -300,9 +301,10 @@ export const InputDemo = () => {
     const ordenService = new OrdenService();
     await ordenService.DeleteOrden(orderId);
     setidOrden('');
-    setOrderId('')
+    setTotal('0');
+    setOrderId('');
     setDataViewValue([]);
-    setdiscount('')
+    setdiscount('');
     };
 
     const handleOpcionesChange = (event) => {
