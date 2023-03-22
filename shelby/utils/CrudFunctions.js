@@ -7,23 +7,19 @@ import React, { useRef, useState } from 'react';
 
 const Crud = () => {
     const emptyElements = {
-        product: {
-            id: null,
-            name: '',
-            image: '',
-            description: '',
-            category: '',
-            price: null,
-            quantity: null,
-            rating: null,
-            inventoryStatus: 'INSTOCK'
-        },
         lugar: {
             id: null,
             nombre: '',
             tipo: 'Zona',
             precio: null,
             id_padre: null
+        },
+        cliente: {
+            id: null,
+            cedula: '',
+            nombre: '',
+            apellido: '',
+            telefono: ''
         }
         // Agrega más elementos vacíos según las necesidades de tus componentes
     };
@@ -36,9 +32,44 @@ const Crud = () => {
     const [selectedElements, setSelectedElements] = useState(null);
     const [submitted, setSubmitted] = useState(false);
     const [globalFilter, setGlobalFilter] = useState(null);
+    const [selectedPrefix, setSelectedPrefix] = useState({ label: '', value: '' });
     const toast = useRef(null);
     const dt = useRef(null);
     const contextPath = getConfig().publicRuntimeConfig.contextPath;
+
+    const addAppendix = (data, elementName) => {
+        const newElement = {};
+        for (let key in data) {
+            newElement[key.concat('_' + elementName)] = data[key];
+        }
+        return [newElement];
+    };
+
+    const isArray = (data, elementName) => {
+        if (Array.isArray(data)) {
+            return data.map((element) => {
+                const newElement = {};
+                for (let key in element) {
+                    if (key.endsWith('_' + elementName)) {
+                        newElement[key.slice(0, -1 - elementName.length)] = element[key];
+                    } else {
+                        newElement[key] = element[key];
+                    }
+                }
+                return newElement;
+            });
+        } else {
+            const newElement = {};
+            for (let key in data) {
+                if (key.endsWith('_' + elementName)) {
+                    newElement[key.slice(0, -1 - elementName.length)] = data[key];
+                } else {
+                    newElement[key] = data[key];
+                }
+            }
+            return [newElement];
+        }
+    };
 
     const formatCurrency = (value) => {
         return value.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
@@ -132,6 +163,10 @@ const Crud = () => {
         setElement(_element);
     };
 
+    const handleDropdownSelect = (event) => {
+        setSelectedPrefix(event.value);
+    };
+
     const leftToolbarTemplate = (type) => {
         return (
             <React.Fragment>
@@ -166,6 +201,15 @@ const Crud = () => {
             <>
                 <span className="p-column-title">Nombre</span>
                 {rowData.nombre}
+            </>
+        );
+    };
+
+    const stringBodyTemplate = (rowData, type, title) => {
+        return (
+            <>
+                <span className="p-column-title">{title}</span>
+                {rowData[type]}
             </>
         );
     };
@@ -287,9 +331,13 @@ const Crud = () => {
         setSelectedElements,
         setSubmitted,
         setGlobalFilter,
+        selectedPrefix,
+        setSelectedPrefix,
         toast,
         dt,
         contextPath,
+        addAppendix: addAppendix,
+        isArray: isArray,
         formatCurrency: formatCurrency,
         openNew: openNew,
         hideDialog: hideDialog,
@@ -305,9 +353,11 @@ const Crud = () => {
         onCategoryChange: onCategoryChange,
         onInputChange: onInputChange,
         onInputNumberChange: onInputNumberChange,
+        handleDropdownSelect: handleDropdownSelect,
         leftToolbarTemplate: leftToolbarTemplate,
         rightToolbarTemplate: rightToolbarTemplate,
         idBodyTemplate: idBodyTemplate,
+        stringBodyTemplate: stringBodyTemplate,
         nameBodyTemplate: nameBodyTemplate,
         imageBodyTemplate: imageBodyTemplate,
         priceBodyTemplate: priceBodyTemplate,
