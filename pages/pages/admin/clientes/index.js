@@ -114,6 +114,7 @@ const ClientePage = () => {
             let data = await clienteService.getClientes();
             data = crudObject.isArray(data, elementName);
             _setElements(data);
+            console.log(data);
         };
         fetchData();
     }, []);

@@ -20,12 +20,15 @@ import { TreeSelect } from 'primereact/treeselect';
 import { SelectButton } from 'primereact/selectbutton';
 import { Button } from 'primereact/button';
 import { InputNumber } from 'primereact/inputnumber';
+import { Dialog } from 'primereact/dialog';
 import { classNames } from 'primereact/utils';
 import { CountryService } from '../../../demo/service/CountryService';
 import { NodeService } from '../../../demo/service/NodeService';
 import { DataTable } from 'primereact/datatable';
 import { Column } from 'primereact/column';
 import { OrdenService } from '../../../demo/service/OrdenService';
+import { ClienteService } from '../../../shelby/service/ClienteService';
+import Crud from '../../../shelby/utils/CrudFunctions';
 
 
 export const InputDemo = () => {
@@ -38,6 +41,25 @@ export const InputDemo = () => {
         direccion: ''
     };
 
+    const prefixOptions = [
+        { label: 'V', value: 'V' },
+        { label: 'E', value: 'E' },
+        { label: 'J', value: 'J' }
+    ];
+
+    const crudObject = Crud();
+
+    let cliente = crudObject.element;
+    let clientes = crudObject.elements;
+
+    let _setElement = crudObject.setElement;
+    let _setElements = crudObject.setElements;
+    let _submitted = crudObject.submitted;
+    let _setSubmitted = crudObject.setSubmitted;
+    let _selectedElements = crudObject.selectedElements;
+    let _toast = crudObject.toast;
+    let _stringBody = crudObject.stringBodyTemplate;
+    
     const [products, setProducts] = useState([
         { id: 1, nombre: 'Producto 1', precio: 10.5, cantidad: 2 },
         { id: 2, nombre: 'Producto 2', precio: 15.0, cantidad: 1 },
@@ -45,7 +67,7 @@ export const InputDemo = () => {
     ]);
 
     const [floatValue, setFloatValue] = useState('');
-    const [autoValue, setAutoValue] = useState(null);
+    const [autoValue, setAutoValue] = useState('');
     const [selectedAutoValue, setSelectedAutoValue] = useState(null);
     const [autoFilteredValue, setAutoFilteredValue] = useState([]);
     const [calendarValue, setCalendarValue] = useState(null);
@@ -97,19 +119,17 @@ export const InputDemo = () => {
     const [globalFilter, setGlobalFilter] = useState(null);
     const [total, setTotal] = useState('0');
     const [idOrden, setidOrden] = useState('');
+    const [_clientes, setClientes] = useState(null);
+    const [filteredClientes, setFilteredClientes] = useState([]);
+    const [selectedClient, setSelectedClient] = useState(null);
+    const [autoCompletePlaceholder, setAutoCompletePlaceholder] = useState('Cedula');
 
     const currencyOptions = [
         { label: 'Bolívares', value: 'Bs.' },
         { label: 'Dólares', value: 'USD' },
         { label: 'Euros', value: 'EUR' }
     ];
-    const listboxValues = [
-        { name: 'New York', code: 'NY' },
-        { name: 'Rome', code: 'RM' },
-        { name: 'London', code: 'LDN' },
-        { name: 'Istanbul', code: 'IST' },
-        { name: 'Paris', code: 'PRS' }
-    ];
+
 
     const electronicPaymentMethodOptions = [
         { label: 'Transferencia', value: 'transferencia' },
@@ -143,41 +163,20 @@ export const InputDemo = () => {
         { value: 'zelle', label: 'Zelle' }
     ];
 
-    const multiselectValues = [
-        { name: 'Australia', code: 'AU' },
-        { name: 'Brazil', code: 'BR' },
-        { name: 'China', code: 'CN' },
-        { name: 'Egypt', code: 'EG' },
-        { name: 'France', code: 'FR' },
-        { name: 'Germany', code: 'DE' },
-        { name: 'India', code: 'IN' },
-        { name: 'Japan', code: 'JP' },
-        { name: 'Spain', code: 'ES' },
-        { name: 'United States', code: 'US' }
-    ];
-
-    const selectButtonValues1 = [
-        { name: 'Option 1', code: 'O1' },
-        { name: 'Option 2', code: 'O2' },
-        { name: 'Option 3', code: 'O3' }
-    ];
-
-    const selectButtonValues2 = [
-        { name: 'Option 1', code: 'O1' },
-        { name: 'Option 2', code: 'O2' },
-        { name: 'Option 3', code: 'O3' }
-    ];
 
     useEffect(async () => {
         calculateTotal();
         const ordenService = new OrdenService();
         const countryService = new CountryService();
         const nodeService = new NodeService();
+        const clienteService = new ClienteService();
 
         const myStoredObject = JSON.parse(localStorage.getItem("myKey"));
         const idbumber = myStoredObject ? myStoredObject.orden_id : null;
         setOrderId(idbumber)
         console.log('Este es el id de orden', idbumber);
+
+        await clienteService.getClientes().then((data) => setClientes(data))
 
         await ordenService.getProductoOrden(idbumber).then((data) => {
             const updatedProductos = data.map(producto => ({ ...producto, cantidad: 1 }));
@@ -198,22 +197,38 @@ export const InputDemo = () => {
 
     const contextPath = getConfig().publicRuntimeConfig.contextPath;
 
-    const searchCountry = (event) => {
-        setTimeout(() => {
-            if (!event.query.trim().length) {
-                setAutoFilteredValue([...autoValue]);
-            } else {
-                setAutoFilteredValue(
-                    autoValue.filter((country) => {
-                        return country.name.toLowerCase().startsWith(event.query.toLowerCase());
-                    })
-                );
-            }
-        }, 250);
+
+    const searchCliente = (event) => {
+    let filteredClientes = [];
+    if (_clientes) {
+      filteredClientes = _clientes.filter((cliente) => {
+        return cliente.cedula_cliente.toLowerCase().startsWith(event.query.toLowerCase());
+      });
+    }
+
+    console.log('Filtered', filteredClientes)
+    setFilteredClientes(filteredClientes);
     };
 
+    const onClientSelect = (e) => {
+    
+    setClient(e.value);
+    setSelectedClient(e.value);
+    setAutoValue(e.value?.cedula_cliente || '');
+    setSubmitted(false); // reiniciar el estado de submitted
 
+    // Establecer los valores del cliente seleccionado en el estado
+    setClient({
+        cedula: e.value.cedula_cliente,
+        telefono: e.value.telefono_cliente,
+        nombre: e.value.nombre_cliente,
+        apellido: e.value.apellido_cliente,
+    });
+    };
 
+    const onInputChange = (e) => {
+        setAutoValue(e.target.value);
+    };
 
     const calculateTotal = () => {
         const subtotal = products.reduce((acc, product) => acc + product.precio * product.cantidad, 0);
@@ -363,6 +378,22 @@ export const InputDemo = () => {
         <div className="grid p-fluid">
             <div className="col-12 md:col-6">
                 <div className="card">
+                    <h5>AutoComplete</h5>
+                    <AutoComplete
+                    placeholder="Cedula"
+                    id="dd"
+                    dropdown
+                    value={autoValue}
+                    onChange={onInputChange}
+                    suggestions={filteredClientes}
+                    completeMethod={searchCliente}
+                    field="cedula_cliente"
+                    onSelect={onClientSelect}
+                    emptyMessage="Cedula"
+                    />
+                    <div className="flex align-items-center justify-content-between my-3">
+                        <Button label="Nuevo Cliente" onClick={() => crudObject.openNew()}/>
+                    </div>
                     <h5>Informacion del cliente</h5>
                     <div className="grid formgrid">
                         <div className="field col">
@@ -570,6 +601,41 @@ export const InputDemo = () => {
                     </div>
                 </div>
             </div> */}
+            <Dialog visible={crudObject.elementDialog} style={{ width: '450px' }} header="Detalle de Cliente" modal className="p-fluid" footer={() => crudObject.elementDialogFooter(saveCliente)} onHide={crudObject.hideDialog}>
+                        <div className="formgrid grid">
+                            <div className="field col">
+                                <label htmlFor="cedula">Cédula</label>
+                                <div className="p-inputgroup">
+                                    <Dropdown value={crudObject.selectedPrefix} options={prefixOptions} onChange={crudObject.handleDropdownSelect} optionLabel="label" />
+                                    <InputText
+                                        style={{ width: '30%' }}
+                                        id="cedula"
+                                        value={cliente?.cedula}
+                                        onChange={(e) => crudObject.onInputChange(e, 'cedula')}
+                                        required
+                                        autoFocus
+                                        className={classNames({ 'p-invalid': _submitted && !cliente?.cedula })}
+                                    />
+                                    {_submitted && !cliente?.cedula && <small className="p-invalid">La cedula es requerida.</small>}
+                                </div>
+                            </div>
+                            <div className="field col">
+                                <label htmlFor="nombre">Nombre</label>
+                                <InputText id="nombre" value={cliente?.nombre} onChange={(e) => crudObject.onInputChange(e, 'nombre')} required autoFocus className={classNames({ 'p-invalid': _submitted && !cliente?.nombre })} />
+                                {_submitted && !cliente?.nombre && <small className="p-invalid">El nombre es requerido.</small>}
+                            </div>
+                        </div>
+                        <div className="formgrid grid">
+                            <div className="field col">
+                                <label htmlFor="apellido">Apellido</label>
+                                <InputText id="apellido" value={cliente?.apellido} onChange={(e) => crudObject.onInputChange(e, 'apellido')} />
+                            </div>
+                            <div className="field col">
+                                <label htmlFor="telefono">Telefono</label>
+                                <InputText id="telefono" value={cliente?.telefono} onChange={(e) => crudObject.onInputChange(e, 'telefono')} />
+                            </div>
+                        </div>
+                    </Dialog>
         </div>
     );
 };
