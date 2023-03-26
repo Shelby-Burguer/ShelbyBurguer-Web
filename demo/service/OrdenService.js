@@ -37,7 +37,7 @@ export class OrdenService {
         return resOrden;
     }
 
-        async getUpdateOrden(id, descuento) {
+        async getUpdateOrden(id, descuento, tipo_orden, clienteId, numMesa ) {
 
         let resOrden;
 
@@ -45,7 +45,10 @@ export class OrdenService {
             headers: { 'content-type': 'application/json' },
             method: 'PUT',
             body: JSON.stringify({
-            descuento: descuento
+            descuento: descuento,
+            tipo_orden: tipo_orden,
+            lugar_id: clienteId,
+            numero_mesa: numMesa,
             })
         })
 
