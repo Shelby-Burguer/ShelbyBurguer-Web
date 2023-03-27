@@ -128,6 +128,7 @@ export const InputDemo = () => {
     const [tipoOrden, setTipoOrden] = useState('');
     const [writeValue, setWriteValue] = useState(null);
     const [clienteId, setClienteID] = useState(null);
+    const [tempDireccion, setTempDireccion] = useState('');
 
     const currencyOptions = [
         { label: 'Bolívares', value: 'Bs.' },
@@ -251,6 +252,10 @@ export const InputDemo = () => {
         setCheckboxValue(selectedValue);
     };
 
+    const handleDireccionChange = (event) => {
+        const value = event.target.value;
+        setDireccion(value);
+    }
     const itemTemplate = (option) => {
         return (
             <div className="flex align-items-center">
@@ -304,12 +309,28 @@ export const InputDemo = () => {
         );
     };
 
+    const DeliveryOptions = ({ direccion, handleDireccionChange, dropdownValue, setDropdownValue, dropdownValues }) => {
+        return (
+            <div>
+                <div className="p-field">
+                    <label htmlFor="direccion">Dirección:</label>
+                    <InputText id="direccion" value={direccion} onChange={handleDireccionChange} />
+                </div>
+                <div className="p-field">
+                    <label htmlFor="telefono">Zona</label>
+                    <Dropdown value={dropdownValue} onChange={(e) => setDropdownValue(e.value)} options={dropdownValues} optionLabel="name" placeholder="Select" />
+                </div>
+            </div>
+        );
+    };
+
     const procesarOrden = async () => {
         let tipo_Orden;
         let NumMesa = null;
-
+        let zonaSelected = null;
         if (opciones === 'delivery') {
             tipo_Orden = opciones;
+            zonaSelected = dropdownValue.id
         } else if (mostradorOptions === 'comer-aqui') {
             NumMesa = tableNumber;
             tipo_Orden = mostradorOptions;
@@ -320,16 +341,18 @@ export const InputDemo = () => {
         console.log('test', discount);
         console.log('opcionCambio', opciones);
         console.log('Mostrar orden', mostradorOptions);
-
+        console.log('Lugar', dropdownValue);
         const clienteService = new ClienteService();
         const clienteSelect = await clienteService.getOneClientes(client.cedula);
         const ordenService = new OrdenService();
-        ordenService.getUpdateOrden(orderId, discount, tipo_Orden, clienteSelect.id_cliente, NumMesa);
+        ordenService.getUpdateOrden(orderId, discount, tipo_Orden, clienteSelect.id_cliente, NumMesa, zonaSelected, direccion);
         setWriteValue(null);
         setidOrden('');
         setTotal('0');
         setOrderId('');
         setDataViewValue([]);
+        setDataViewValue(null);
+        setDireccion('');
         setdiscount('');
         setClient(emptyClient);
         setMostradorOptions('');
@@ -397,6 +420,14 @@ export const InputDemo = () => {
         setTelefono(event.target.value);
     };
 
+    const handleTempDireccionChange = (value) => {
+  setTempDireccion(value);
+};  
+
+const handleDireccionBlur = () => {
+  setDireccion(tempDireccion);
+};
+
     const handleSubmit = (event) => {
         event.preventDefault();
         console.log({
@@ -438,20 +469,7 @@ export const InputDemo = () => {
         );
     };
 
-    const DeliveryOptions = ({ direccion, handleDireccionChange, dropdownValue, setDropdownValue, dropdownValues }) => {
-        return (
-            <div>
-                <div className="p-field">
-                    <label htmlFor="direccion">Dirección:</label>
-                    <InputText id="direccion" value={direccion} onChange={handleDireccionChange} />
-                </div>
-                <div className="p-field">
-                    <label htmlFor="telefono">Zona</label>
-                    <Dropdown value={dropdownValue} onChange={(e) => setDropdownValue(e.value)} options={dropdownValues} optionLabel="name" placeholder="Select" />
-                </div>
-            </div>
-        );
-    };
+
 
     const handleOpcionesChange = (event) => {
         setOpciones(event.target.value);
@@ -468,9 +486,7 @@ export const InputDemo = () => {
         setTableNumber('');
     };
 
-    const handleDireccionChange = (event) => {
-        setDireccion(event.target.value);
-    };
+
 
     const handlePayment = () => {
         // Aquí iría la lógica para procesar el pago según el método seleccionado
@@ -558,7 +574,7 @@ export const InputDemo = () => {
                         </div>
                     </div>
                     {opciones === 'mostrador' && <MostradorOptions mostradorOptions={mostradorOptions} handleMostradorOptionsChange={handleMostradorOptionsChange} tableNumber={tableNumber} setTableNumber={setTableNumber} />}
-                    {opciones === 'delivery' && <DeliveryOptions direccion={direccion} handleDireccionChange={handleDireccionChange} dropdownValue={dropdownValue} setDropdownValue={setDropdownValue} dropdownValues={dropdownValues} />}
+                   {opciones === 'delivery' && <DeliveryOptions direccion={direccion} handleDireccionChange={handleDireccionChange} dropdownValue={dropdownValue} setDropdownValue={setDropdownValue} dropdownValues={dropdownValues} />}
                 </div>
             </div>
             {/*<h5>Tipo de orden</h5>
