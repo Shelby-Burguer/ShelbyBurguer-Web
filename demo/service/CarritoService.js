@@ -44,6 +44,25 @@ export class CarritoService {
         return resOrdenCarrito;
     }
 
+        async postProductosOrden(ProductosOrden) {
+
+        let resOrdenCarrito;
+
+        const responseProducto = fetch('http://localhost:10000/carrito/create/ProductoOrdene', {
+            headers: { 'content-type': 'application/json' },
+            method: 'POST',
+            body: JSON.stringify(ProductosOrden)
+        });
+
+        await responseProducto.then((dat) =>
+            dat.json().then((res) => resOrdenCarrito = res
+            )
+        );
+
+        console.log('ResCarrito', resOrdenCarrito);
+        return resOrdenCarrito;
+    }
+
     async getCarrito() {
 
         let resOrdenCarrito;

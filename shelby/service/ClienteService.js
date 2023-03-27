@@ -57,4 +57,13 @@ export class ClienteService {
             return error;
         }
     }
+
+    async getOneClientes(cedula) {
+        return await fetch(`http://${this.ipAddress}:10000/clientes/cedula/`+ cedula, {
+            method: 'GET',
+            headers: { 'Content-Type': 'application/json' }
+        })
+            .then((res) => res.json())
+            .catch((error) => console.log(error));
+    }
 }
