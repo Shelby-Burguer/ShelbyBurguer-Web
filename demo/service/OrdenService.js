@@ -66,5 +66,21 @@ export class OrdenService {
             method: 'DELETE',
         })
     }
+
+    async getAllOrden() {
+
+        let resOrdenCarrito;
+
+        const responseProducto = fetch('http://localhost:10000/orden/all', {
+            headers: { 'Cache-Control': 'no-cache' },
+            method: 'GET'
+        }).then((res) => res.json());
+
+        await responseProducto.then((data) => (resOrdenCarrito = data));
+
+        console.log('ResALLOrden', resOrdenCarrito);
+
+        return resOrdenCarrito;
+    }
 }    
     
