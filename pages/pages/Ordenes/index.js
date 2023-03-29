@@ -31,6 +31,7 @@ import { ClienteService } from '../../../shelby/service/ClienteService';
 import Crud from '../../../shelby/utils/CrudFunctions';
 import { Toast } from 'primereact/toast';
 import { LugarService } from '../../../shelby/service/LugarService';
+import { useRouter } from 'next/router';
 
 export const InputDemo = () => {
     let emptyClient = {
@@ -47,12 +48,22 @@ export const InputDemo = () => {
         { label: 'J', value: 'J' }
     ];
 
+
     const crudObject = Crud();
+    const router = useRouter();
+    let defaultCliente = crudObject.emptyElements.cliente;
+    let defaultDropdown = 'V';
     let defaultLugar = crudObject.emptyElements.lugar;
 
     let cliente = crudObject.element;
     let clientes = crudObject.elements;
+    let lugar = crudObject.element;
+    let lugares = crudObject.elements;
 
+    let _visibleCliente = crudObject.clienteDialogVisible;
+    let _visibleLugar = crudObject.lugarDialogVisible;
+    let _setVisibleLugar = crudObject.setLugarDialogVisible;
+    let _setvisibleCliente = crudObject.setClienteDialogVisible;
     let _setElement = crudObject.setElement;
     let _setElements = crudObject.setElements;
     let _submitted = crudObject.submitted;
@@ -186,9 +197,10 @@ export const InputDemo = () => {
             setTotal(total);
         });
 
+    
         const lugarService = new LugarService();
         let data = await lugarService.getLugaresByTipo('zona');
-        data = crudObject.isArray(data, elementName);
+        data = crudObject.isArray(data, 'cliente');
 
         // Convertir los datos al formato esperado por el Dropdown
         const dropdownData = data.map((item) => ({
@@ -252,10 +264,11 @@ export const InputDemo = () => {
         setCheckboxValue(selectedValue);
     };
 
-    const handleDireccionChange = (event) => {
-        const value = event.target.value;
-        setDireccion(value);
-    }
+        const handleDireccionChange = (event) => {
+            const value = event.target.value;
+            setDireccion(value);
+        }   
+
     const itemTemplate = (option) => {
         return (
             <div className="flex align-items-center">
@@ -309,6 +322,8 @@ export const InputDemo = () => {
         );
     };
 
+    
+
     const DeliveryOptions = ({ direccion, handleDireccionChange, dropdownValue, setDropdownValue, dropdownValues }) => {
         return (
             <div>
@@ -320,6 +335,9 @@ export const InputDemo = () => {
                     <label htmlFor="telefono">Zona</label>
                     <Dropdown value={dropdownValue} onChange={(e) => setDropdownValue(e.value)} options={dropdownValues} optionLabel="name" placeholder="Select" />
                 </div>
+                <div className="flex align-items-center justify-content-between my-3">
+                    <Button label="Nueva Zona" onClick={() => crudObject.openNew('lugar')} />
+                </div>            
             </div>
         );
     };
@@ -330,8 +348,10 @@ export const InputDemo = () => {
         let zonaSelected = null;
         if (opciones === 'delivery') {
             tipo_Orden = opciones;
+            console.log('Vamo a ver', dropdownValue);
             zonaSelected = dropdownValue.id
-        } else if (mostradorOptions === 'comer-aqui') {
+            setTotal()
+        } else if (mostradorOptions === 'Comer Aqui') {
             NumMesa = tableNumber;
             tipo_Orden = mostradorOptions;
         } else {
@@ -357,6 +377,7 @@ export const InputDemo = () => {
         setClient(emptyClient);
         setMostradorOptions('');
         setOpciones('');
+        router.push('http://localhost:3000/pages/Ordenes/gestion/');
     };
 
     const deleteOrder = async () => {
@@ -370,12 +391,14 @@ export const InputDemo = () => {
         setdiscount('');
     };
 
-    const elementName = 'cliente';
+    
 
     const saveCliente = async () => {
+        const elementName = 'cliente';
         _setSubmitted(true);
         console.log('Clientes', clientes);
         console.log('Cliente', cliente);
+        console.log('Esta entrando en cliente?');
         const updatedCedula = crudObject.selectedPrefix + cliente.cedula;
         const clienteService = new ClienteService();
         _setElement((prevElement) => ({ ...prevElement, cedula: updatedCedula }));
@@ -407,10 +430,59 @@ export const InputDemo = () => {
             }
             _setElements(_elements);
             crudObject.setElementDialog(false);
+            _setvisibleCliente(false);
             _setElement(elementName);
             await clienteService.getClientes().then((data) => setClientes(data));
         }
     };
+
+        const saveLugar = async () => {
+        const elementName = 'lugar';
+        _setSubmitted(true);
+        console.log('Esta entrando en cliente?');
+        const lugarService = new LugarService();
+        let _elements = [...lugares];
+        let _element = { ...lugar };
+        console.log('Lugar array', _elements);
+        console.log('Lugar individual', _element);
+        console.log('Lugar individual', elementName);
+        let data = crudObject.addAppendix(_element, elementName);
+        if (lugar.nombre.trim()) {
+            if (lugar.id) {
+                const index = crudObject.findIndexById(lugar.id);
+                const res = await lugarService.actualizarLugar(data[0]);
+                if (res.status >= 200 && res.status < 300) {
+                    _elements[index] = _element;
+                    _toast.current.show({ severity: 'success', summary: 'Successful', detail: 'Lugar Creado', life: 3000 });
+                } else {
+                    _toast.current.show({ severity: 'error', summary: 'Error', detail: 'No se pudo crear el lugar', life: 3000 });
+                }
+            } else {
+                console.log('Llegamos hata aqui', data[0]);
+                const res = await lugarService.crearLugar(data[0]);
+                if (res.status >= 200 && res.status < 300) {
+                    _elements.push(_element);
+                    _toast.current.show({ severity: 'success', summary: 'Successful', detail: 'Lugar Creado', life: 3000 });
+                } else {
+                    _toast.current.show({ severity: 'error', summary: 'Error', detail: 'No se pudo crear el lugar', life: 3000 });
+                }
+            }
+            _setElements(_elements);
+            crudObject.setElementDialog(false);
+            _setElement(elementName);
+            let newdata = await lugarService.getLugaresByTipo('zona');
+            newdata = crudObject.isArray(newdata, 'cliente');
+                    const dropdownData = newdata.map((item) => ({
+            id: item.id_lugar,
+            name: item.nombre_lugar
+        }));
+            _setElements(newdata);
+            setdropdownValues(dropdownData);
+            crudObject.hideDialog
+            _setVisibleLugar(false);
+        }
+    };
+
 
     const handleNumeroMesaChange = (event) => {
         setMostradorOptions(event.target.value);
@@ -445,19 +517,19 @@ const handleDireccionBlur = () => {
                 <div className="grid formgrid">
                     <div className="field col">
                         <div className="p-field-radiobutton">
-                            <label htmlFor="comer-aqui">Comer aquí</label>
-                            <RadioButton inputId="comer-aqui" name="mostradorOptions" value="comer-aqui" onChange={handleMostradorOptionsChange} checked={mostradorOptions === 'comer-aqui'} />
+                            <label htmlFor="Comer Aqui">Comer aquí</label>
+                            <RadioButton inputId="Comer Aqui" name="mostradorOptions" value="Comer Aqui" onChange={handleMostradorOptionsChange} checked={mostradorOptions === 'Comer Aqui'} />
                         </div>
                     </div>
 
                     <div className="field col">
                         <div className="p-field-radiobutton">
-                            <RadioButton inputId="para-llevar" name="mostradorOptions" value="para-llevar" onChange={handleMostradorOptionsChange} checked={mostradorOptions === 'para-llevar'} />
-                            <label htmlFor="para-llevar">Para llevar</label>
+                            <RadioButton inputId="Para llevar" name="mostradorOptions" value="Para llevar" onChange={handleMostradorOptionsChange} checked={mostradorOptions === 'Para llevar'} />
+                            <label htmlFor="Para llevar">Para llevar</label>
                         </div>
                     </div>
                 </div>
-                {mostradorOptions === 'comer-aqui' && (
+                {mostradorOptions === 'Comer Aqui' && (
                     <div className="p-field">
                         <div className="field col">
                             <label htmlFor="numero-mesa">Número de mesa:</label>
@@ -617,13 +689,13 @@ const handleDireccionBlur = () => {
                             <div className="grid formgrid">
                                 <div className="field col">
                                     <div className="p-field-radiobutton">
-                                        <label htmlFor="comer-aqui">Comer aquí</label>
+                                        <label htmlFor="Comer Aqui">Comer aquí</label>
                                         <RadioButton
-                                            inputId="comer-aqui"
+                                            inputId="Comer Aqui"
                                             name="mostradorOptions"
-                                            value="comer-aqui"
+                                            value="Comer Aqui"
                                             onChange={handleMostradorOptionsChange}
-                                            checked={mostradorOptions === 'comer-aqui'}
+                                            checked={mostradorOptions === 'Comer Aqui'}
                                         />
 
                                     </div>
@@ -632,17 +704,17 @@ const handleDireccionBlur = () => {
                                 <div className="field col">
                                     <div className="p-field-radiobutton">
                                         <RadioButton
-                                            inputId="para-llevar"
+                                            inputId="Para llevar"
                                             name="mostradorOptions"
-                                            value="para-llevar"
+                                            value="Para llevar"
                                             onChange={handleMostradorOptionsChange}
-                                            checked={mostradorOptions === 'para-llevar'}
+                                            checked={mostradorOptions === 'Para llevar'}
                                         />
-                                        <label htmlFor="para-llevar">Para llevar</label>
+                                        <label htmlFor="Para llevar">Para llevar</label>
                                     </div>
                                 </div>
                             </div>
-                            {mostradorOptions === 'comer-aqui' && (
+                            {mostradorOptions === 'Comer Aqui' && (
                                 <div className="p-field">
                                     <div className="field col">
                                         <label htmlFor="numero-mesa">Número de mesa:</label>
@@ -760,7 +832,7 @@ const handleDireccionBlur = () => {
                     </div>
                 </div>
             </div> */}
-            <Dialog visible={crudObject.elementDialog} style={{ width: '450px' }} header="Detalle de Cliente" modal className="p-fluid" footer={() => crudObject.elementDialogFooter(saveCliente)} onHide={crudObject.hideDialog}>
+            <Dialog visible={_visibleCliente} style={{ width: '450px' }} header="Detalle de Cliente" modal className="p-fluid" footer={() => crudObject.elementDialogFooter(saveCliente)} onHide={crudObject.hideDialog}>
                 <div className="formgrid grid">
                     <div className="field col">
                         <label htmlFor="cedula">Cédula</label>
@@ -784,6 +856,20 @@ const handleDireccionBlur = () => {
                     <div className="field col">
                         <label htmlFor="telefono">Telefono</label>
                         <InputText id="telefono" value={cliente?.telefono} onChange={(e) => crudObject.onInputChange(e, 'telefono')} />
+                    </div>
+                </div>
+            </Dialog>
+            <Dialog visible={_visibleLugar} style={{ width: '450px' }} header="Detalle de Lugar" modal className="p-fluid" footer={() => crudObject.elementDialogFooter(saveLugar)} onHide={crudObject.hideDialog}>
+                <div className="formgrid grid">
+                    <div className="field col">
+                        <label htmlFor="nombre">Nombre</label>
+                        <InputText id="nombre" value={lugar?.nombre} onChange={(e) => crudObject.onInputChange(e, 'nombre')} required autoFocus className={classNames({ 'p-invalid': _submitted && !lugar?.nombre })} />
+                        {_submitted && !lugar?.nombre && <small className="p-invalid">El nombre es requerido.</small>}
+                        {_submitted && !lugar?.precio && <small className="p-invalid">El precio es requerido.</small>}
+                    </div>
+                    <div className="field col">
+                        <label htmlFor="precio">Precio</label>
+                        <InputNumber id="precio" value={lugar?.precio} onValueChange={(e) => crudObject.onInputNumberChange(e, 'precio')} mode="currency" currency="USD" locale="en-US" />
                     </div>
                 </div>
             </Dialog>
