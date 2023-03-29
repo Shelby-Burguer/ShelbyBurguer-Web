@@ -12,13 +12,12 @@ import { ProductService } from '../../../demo/service/ProductosServiceShelbyBurg
 import { NewProductoService } from '../../../demo/service/ProductoService';
 import { IngredienteService } from '../../../demo/service/IngredienteService';
 import { CarritoService } from '../../../demo/service/CarritoService';
-import { addToCart } from "../../../layout/addToCar";
+import { addToCart } from '../../../layout/addToCar';
 import { InputText } from 'primereact/inputtext';
 import { Toolbar } from 'primereact/toolbar';
 import { Dialog } from 'primereact/dialog';
 import getConfig from 'next/config';
 import { Tag } from 'primereact/tag';
-
 
 const ListDemo = (props) => {
     let emptyProduct = {
@@ -34,7 +33,6 @@ const ListDemo = (props) => {
         id: null,
         costo: ''
     };
-
 
     const [product, setProduct] = useState(emptyProduct);
     const [productAux, setProductAux] = useState(emptyProduct);
@@ -63,7 +61,7 @@ const ListDemo = (props) => {
     const [items, setItems] = useState([]);
     const [carrito, setCarrito] = useState([]);
     const [orderId, setOrderId] = useState(null);
-      
+
     const sortOptions = [
         { label: 'Price High to Low', value: '!price' },
         { label: 'Price Low to High', value: 'price' }
@@ -77,10 +75,10 @@ const ListDemo = (props) => {
         productoServicenew.getProductos();
         setGlobalFilterValue('');
 
-        const myStoredObject = JSON.parse(localStorage.getItem("myKey"));
-        const idbumber = myStoredObject ? myStoredObject.orden_id : null;
-        setOrderId(idbumber)
-        console.log('Este es el id de orden', idbumber);
+        const myStoredObject = JSON.parse(localStorage.getItem('myKey'));
+        const idnumber = myStoredObject ? myStoredObject.orden_id : null;
+        setOrderId(idnumber);
+        console.log('Este es el id de orden', idnumber);
     }, []);
 
     const onFilter = (e) => {
@@ -100,9 +98,9 @@ const ListDemo = (props) => {
         console.log('producto auxiliar', productAux);
         for (let i = 0; i < arr.length; i++) {
             if (arr[i].nombre === nombre && arr[i].tipo === tipo && arr[i].costo === costo) {
-            return arr[i].id;
+                return arr[i].id;
             }
-        }  
+        }
         return null;
     }
 
@@ -118,11 +116,11 @@ const ListDemo = (props) => {
         setDropdownValueAux(dropdownValue);
 
         if (product.nombre.trim()) {
-        let _products = [...dataViewValue];
+            let _products = [...dataViewValue];
 
             if (product.id) {
                 const productoServicenew = new NewProductoService();
-                product.tipo_producto = dropdownValue.name
+                product.tipo_producto = dropdownValue.name;
                 const response = await productoServicenew.updateProducto(product.id, product, picklistTargetValue);
                 const index = findIndexById(product.id);
 
@@ -130,25 +128,24 @@ const ListDemo = (props) => {
                 let arrProteinas = [];
                 for (let j = 0; j < picklistTargetValue.length; j++) {
                     if (picklistTargetValue[j].proteina == 'Si') {
-                            arrProteinas.push(picklistTargetValue[j]);
+                        arrProteinas.push(picklistTargetValue[j]);
                     } else {
-                            arrIngredientes.push(picklistTargetValue[j]);
+                        arrIngredientes.push(picklistTargetValue[j]);
                     }
                 }
 
                 product.ingrediente = arrIngredientes;
-                product.proteina = arrProteinas
+                product.proteina = arrProteinas;
                 _products[index] = product;
-
             } else {
-                console.log('Entre en Save');   
+                console.log('Entre en Save');
                 console.log('Prducto', product);
                 console.log('Prducto', picklistTargetValue);
                 console.log('Tipo de producto', dropdownValue);
                 product.tipo_producto = dropdownValue.name;
                 const productoServicenew = new NewProductoService();
                 const response = await productoServicenew.postProducto(product, picklistTargetValue);
-               
+
                 console.log('response', response);
 
                 let arrIngredientes = [];
@@ -190,7 +187,7 @@ const ListDemo = (props) => {
                 };
 
                 NewProduct.id = response.id;
-                NewProduct.nombre = response.nombre
+                NewProduct.nombre = response.nombre;
                 NewProduct.tipo = dropdownValue.name;
                 NewProduct.costo = response.costo;
                 NewProduct.imagen = response.imagen;
@@ -198,7 +195,7 @@ const ListDemo = (props) => {
                 NewProduct.ingrediente = arrIngredientes;
 
                 console.log('test new product', NewProduct);
-                 _products.push(NewProduct);
+                _products.push(NewProduct);
                 //toast.current.show({ severity: 'success', summary: 'Successful', detail: 'Product Created', life: 3000 });
             }
 
@@ -212,7 +209,7 @@ const ListDemo = (props) => {
     };
 
     const handleAddToCart = () => {
-    addToCart(product, carrito, setCarrito);
+        addToCart(product, carrito, setCarrito);
     };
 
     const saveCarrito = async () => {
@@ -227,15 +224,14 @@ const ListDemo = (props) => {
         setDropdownValueAux(dropdownValue);
         addToCart(product, carrito, setCarrito);
         if (product.nombre.trim()) {
-        let _products = [...dataViewValue];
-        console.log('idOrden', orderId);    
-        const carritoService = new CarritoService();
-        const response = await carritoService.postCarrito(product.id, orderId);
-        
-        //idProducto
-        //idOrden
-        //toast.current.show({ severity: 'success', summary: 'Successful', detail: 'Product Created', life: 3000 });
-    
+            let _products = [...dataViewValue];
+            console.log('idOrden', orderId);
+            const carritoService = new CarritoService();
+            const response = await carritoService.postCarrito(product.id, orderId);
+
+            //idProducto
+            //idOrden
+            //toast.current.show({ severity: 'success', summary: 'Successful', detail: 'Product Created', life: 3000 });
 
             setDataViewValue(_products);
             setcarritoDialog(false);
@@ -251,7 +247,7 @@ const ListDemo = (props) => {
         console.log('id Producto', product.id);
         setDataViewValue(_dataViewValue);
         setDeleteProductDialog(false);
-        setProduct(emptyProduct);        
+        setProduct(emptyProduct);
         const ProductoService = new NewProductoService();
         ProductoService.DeleteProductos(product.id);
         /*toast.current.show({ severity: 'success', summary: 'Successful', detail: 'Product Deleted', life: 3000 });
@@ -264,12 +260,11 @@ const ListDemo = (props) => {
             if (dataViewValue[i].id === id) {
                 index = i;
                 break;
-            }   
+            }
         }
 
         return index;
     };
-
 
     const leftToolbarTemplate = () => {
         return (
@@ -378,7 +373,7 @@ const ListDemo = (props) => {
                 <div className="flex-1 flex flex-column gap-2">
                     <span className="font-bold"> Cantidad</span>
                     <div className="col-12 mb-0 lg:col-11 lg:mb-0">
-                        <InputText id="cantidad" value={item.cantidad} onChange={(e) => onInputChangePickList(e, 'cantidad', item.id)} required  autoFocus className={classNames({ 'p-invalid': submitted && !item.cantidad })}/>
+                        <InputText id="cantidad" value={item.cantidad} onChange={(e) => onInputChangePickList(e, 'cantidad', item.id)} required autoFocus className={classNames({ 'p-invalid': submitted && !item.cantidad })} />
                     </div>
                 </div>
             </div>
@@ -389,22 +384,22 @@ const ListDemo = (props) => {
         const value = e.target.value;
 
         if (picklistSourceValue.some((item) => item.id === itemId)) {
-        setPicklistSourceValue((prevState) => {
-            const newState = [...prevState];
-            const itemIndex = newState.findIndex((item) => item.id === itemId);
-            newState[itemIndex] = { ...newState[itemIndex], [propertyName]: value };
-            return newState;
-        });
+            setPicklistSourceValue((prevState) => {
+                const newState = [...prevState];
+                const itemIndex = newState.findIndex((item) => item.id === itemId);
+                newState[itemIndex] = { ...newState[itemIndex], [propertyName]: value };
+                return newState;
+            });
         } else {
-        setPicklistTargetValue((prevState) => {
-            const newState = [...prevState];
-            const itemIndex = newState.findIndex((item) => item.id === itemId);
-            newState[itemIndex] = { ...newState[itemIndex], [propertyName]: value };
-            return newState;
-        });
+            setPicklistTargetValue((prevState) => {
+                const newState = [...prevState];
+                const itemIndex = newState.findIndex((item) => item.id === itemId);
+                newState[itemIndex] = { ...newState[itemIndex], [propertyName]: value };
+                return newState;
+            });
         }
     };
-    
+
     const onInputChange = (e, name) => {
         const val = (e.target && e.target.value) || '';
         let _product = { ...product };
@@ -414,7 +409,7 @@ const ListDemo = (props) => {
     };
 
     const hideDialog = () => {
-        console.log('Entra?')
+        console.log('Entra?');
         const ingredienteServie = new IngredienteService();
         ingredienteServie.getIngredientes().then((data) => setPicklistSourceValue(data));
         setPicklistTargetValue([]);
@@ -424,8 +419,8 @@ const ListDemo = (props) => {
     };
 
     const openNew = () => {
-        const ingredienteServie = new IngredienteService();
-        ingredienteServie.getIngredientes().then((data) => setPicklistSourceValue(data));
+        const ingredienteService = new IngredienteService();
+        ingredienteService.getIngredientes().then((data) => setPicklistSourceValue(data));
         setProduct(emptyProduct);
         setSubmitted(false);
         setProductDialog(true);
@@ -443,65 +438,63 @@ const ListDemo = (props) => {
     };
 
     const hideDeleteProductDialog = () => {
-    console.log('LLega a eliminar');
+        console.log('LLega a eliminar');
         setSubmitted(false);
         setProductDialog(false);
         setDeleteProductDialog(false);
         setProduct(emptyProduct); // Restablecer el producto cuando se cierre el diálogo
     };
 
-const editProduct = async (product) => {
-  try {
-    const ingredienteServie = new IngredienteService();
-    const data = await ingredienteServie.getIngredientes();
+    const editProduct = async (product) => {
+        try {
+            const ingredienteServie = new IngredienteService();
+            const data = await ingredienteServie.getIngredientes();
 
-    const nuevoTipoProducto = tipoProducto.find(producto => producto.name === product.tipo);
+            const nuevoTipoProducto = tipoProducto.find((producto) => producto.name === product.tipo);
 
-    const picklistTargetValuenew = [      ...product.ingrediente,      ...product.proteina    ];
+            const picklistTargetValuenew = [...product.ingrediente, ...product.proteina];
 
-    const idsSeleccionados = picklistTargetValuenew.map(ingrediente => ingrediente.id);
+            const idsSeleccionados = picklistTargetValuenew.map((ingrediente) => ingrediente.id);
 
-    const picklistSourceValuenew = data.filter(ingrediente => !idsSeleccionados.includes(ingrediente.id));
+            const picklistSourceValuenew = data.filter((ingrediente) => !idsSeleccionados.includes(ingrediente.id));
 
-    setPicklistSourceValue(picklistSourceValuenew);
-    setPicklistTargetValue(picklistTargetValuenew);
-    setDropdownValue(nuevoTipoProducto);
-    setDropdownValueAux(nuevoTipoProducto);
-    setProduct({ ...product });
-    setProductAux({ ...product });
-    setProductDialog(true);
-  } catch (error) {
-    console.log(error);
-  }
-};
+            setPicklistSourceValue(picklistSourceValuenew);
+            setPicklistTargetValue(picklistTargetValuenew);
+            setDropdownValue(nuevoTipoProducto);
+            setDropdownValueAux(nuevoTipoProducto);
+            setProduct({ ...product });
+            setProductAux({ ...product });
+            setProductDialog(true);
+        } catch (error) {
+            console.log(error);
+        }
+    };
 
-const addCarrito = async (product) => {
-  try {
-    const ingredienteServie = new IngredienteService();
-    const data = await ingredienteServie.getIngredientes();
+    const addCarrito = async (product) => {
+        try {
+            const ingredienteServie = new IngredienteService();
+            const data = await ingredienteServie.getIngredientes();
 
-    const nuevoTipoProducto = tipoProducto.find(producto => producto.name === product.tipo);
+            const nuevoTipoProducto = tipoProducto.find((producto) => producto.name === product.tipo);
 
-    const picklistTargetValuenew = [...product.ingrediente, ...product.proteina];
+            const picklistTargetValuenew = [...product.ingrediente, ...product.proteina];
 
-    const idsSeleccionados = picklistTargetValuenew.map(ingrediente => ingrediente.id);
+            const idsSeleccionados = picklistTargetValuenew.map((ingrediente) => ingrediente.id);
 
-    const picklistSourceValuenew = data.filter(ingrediente => !idsSeleccionados.includes(ingrediente.id));
+            const picklistSourceValuenew = data.filter((ingrediente) => !idsSeleccionados.includes(ingrediente.id));
 
-    setPicklistSourceValue(picklistSourceValuenew);
-    setPicklistTargetValue(picklistTargetValuenew);
-    setDropdownValue(nuevoTipoProducto);
-    setDropdownValueAux(nuevoTipoProducto);
-    setProduct({ ...product });
-    setProductAux({ ...product });
-    setcarritoDialog(true);
-    carritOpenNew
-  } catch (error) {
-    console.log(error);
-  }
-};
-
-
+            setPicklistSourceValue(picklistSourceValuenew);
+            setPicklistTargetValue(picklistTargetValuenew);
+            setDropdownValue(nuevoTipoProducto);
+            setDropdownValueAux(nuevoTipoProducto);
+            setProduct({ ...product });
+            setProductAux({ ...product });
+            setcarritoDialog(true);
+            carritOpenNew;
+        } catch (error) {
+            console.log(error);
+        }
+    };
 
     const onSortChange = (event) => {
         const value = event.value;
@@ -609,7 +602,7 @@ const addCarrito = async (product) => {
                             name="demo[]"
                             url="https://primefaces.org/primereact/showcase/upload.php"
                             accept="image/*"
-                            maxFileeSize={1000000}
+                            maxFileSize={1000000}
                             onUpload={onTemplateUpload}
                             onSelect={onTemplateSelect}
                             onError={onTemplateClear}
@@ -660,7 +653,7 @@ const addCarrito = async (product) => {
                         </div>
                         <div className="field col">
                             <h6 htmlFor="Costo">Costo</h6>
-                            <InputText id="costo" value={product.costo} onChange={(e) => onInputChange(e, 'costo')} required autoFocus className={classNames({ 'p-invalid': submitted && !product.costo})} />
+                            <InputText id="costo" value={product.costo} onChange={(e) => onInputChange(e, 'costo')} required autoFocus className={classNames({ 'p-invalid': submitted && !product.costo })} />
                             {submitted && !product.costo && <small className="p-invalid">Name is required.</small>}
                         </div>
                     </div>

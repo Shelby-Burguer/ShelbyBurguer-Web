@@ -17,7 +17,7 @@ import { OrderList } from 'primereact/orderlist';
 import { InputText } from 'primereact/inputtext';
 import { ProductService } from '../demo/service/ProductosServiceShelbyBurguer';
 import { CarritoService } from '../demo/service/CarritoService';
-import  ListDemo  from '../pages/pages/Productos/index';
+import ListDemo from '../pages/pages/Productos/index';
 import { addToCart } from './addToCar';
 import { Column } from 'primereact/column';
 import { useRouter } from 'next/router';
@@ -29,11 +29,11 @@ const AppConfig = (props) => {
     const contextPath = getConfig().publicRuntimeConfig.contextPath;
     const router = useRouter();
 
-    const onConfigButtonClick = async() => {
+    const onConfigButtonClick = async () => {
         setLayoutState((prevState) => ({ ...prevState, configSidebarVisible: true }));
-        const carritoService = new CarritoService()
-        const resProductos = await carritoService.getCarrito()
-        const updatedProductos = resProductos.map(producto => ({ ...producto, cantidad: 1 }));
+        const carritoService = new CarritoService();
+        const resProductos = await carritoService.getCarrito();
+        const updatedProductos = resProductos.map((producto) => ({ ...producto, cantidad: 1 }));
         setDataViewValue(updatedProductos);
 
         let total = 0;
@@ -41,7 +41,6 @@ const AppConfig = (props) => {
             total += parseFloat(producto.costo_producto);
         });
         setTotal(total);
-
     };
 
     const onConfigSidebarHide = () => {
@@ -156,7 +155,6 @@ const AppConfig = (props) => {
     const [orderCount, setOrderCount] = useState(1);
     const [ordenCreada, setOrdenCreada] = useState(false);
 
-
     const sortOptions = [
         { label: 'Price High to Low', value: '!price' },
         { label: 'Price Low to High', value: 'price' }
@@ -198,21 +196,22 @@ const AppConfig = (props) => {
     };
 
     const continuarCarrito = async () => {
-    const carritoService = new CarritoService();
-    await carritoService.DeleteCarrito();
-    setOrderCount(orderCount + 1);
-    setOrdenCreada(false);
-    setOrden(null);
-    setDataViewValue([]);
-    router.push('http://localhost:3000/pages/Ordenes/');
+        const carritoService = new CarritoService();
+        const ipAddress = window.location.host.split(':')[0];
+        await carritoService.DeleteCarrito();
+        setOrderCount(orderCount + 1);
+        setOrdenCreada(false);
+        setOrden(null);
+        setDataViewValue([]);
+        router.push(`http://${ipAddress}:3000/pages/Ordenes/`);
     };
 
     const addCarrito = async () => {
-    setOrdenCreada(true);
-    const IdOrdenService = new CarritoService(); 
-    const idOrden = await IdOrdenService.postOrdenCarrito();
-    setOrden(idOrden.orden_id);
-    localStorage.setItem("myKey", JSON.stringify(idOrden));
+        setOrdenCreada(true);
+        const IdOrdenService = new CarritoService();
+        const idOrden = await IdOrdenService.postOrdenCarrito();
+        setOrden(idOrden.orden_id);
+        localStorage.setItem('myKey', JSON.stringify(idOrden));
     };
 
     const addProductToCarrito = (product) => {
@@ -227,30 +226,27 @@ const AppConfig = (props) => {
     };
 
     const deleteCarrito = async () => {
-    const carritoService = new CarritoService();
-    await carritoService.DeleteCarrito();
-    setDataViewValue([]);
-    setTotal(0);
-
+        const carritoService = new CarritoService();
+        await carritoService.DeleteCarrito();
+        setDataViewValue([]);
+        setTotal(0);
     };
 
     const deleteProductoCarrito = async (producto) => {
-    let _dataViewValue = dataViewValue.filter((val) => val.producto_id !== producto.producto_id);
-    console.log(dataViewValue);
-    console.log(_dataViewValue);
-    console.log(producto.producto_id);
-    setDataViewValue(_dataViewValue);      
-    const carritoService = new CarritoService();
-    await carritoService.DeleteProductoCarrito(producto.producto_id);
+        let _dataViewValue = dataViewValue.filter((val) => val.producto_id !== producto.producto_id);
+        console.log(dataViewValue);
+        console.log(_dataViewValue);
+        console.log(producto.producto_id);
+        setDataViewValue(_dataViewValue);
+        const carritoService = new CarritoService();
+        await carritoService.DeleteProductoCarrito(producto.producto_id);
 
-    let total = 0;
-    _dataViewValue.forEach((producto) => {
-        total += parseFloat(producto.costo_producto);
-    });
-    setTotal(total);
-
+        let total = 0;
+        _dataViewValue.forEach((producto) => {
+            total += parseFloat(producto.costo_producto);
+        });
+        setTotal(total);
     };
-
 
     const dataviewListItem = (data) => {
         return (
@@ -391,60 +387,59 @@ const dataviewListItem = (data) => {
 
     const fechaActual = new Date().toLocaleDateString();
 
-
     return (
-    <>
-        <button className="layout-config-button p-link" type="button" onClick={onConfigButtonClick}>
-        <i className="pi pi-shopping-cart"></i>
-        </button>
+        <>
+            <button className="layout-config-button p-link" type="button" onClick={onConfigButtonClick}>
+                <i className="pi pi-shopping-cart"></i>
+            </button>
 
-        <Sidebar visible={layoutState.configSidebarVisible} onHide={onConfigSidebarHide} position="right" style={{ width: '38rem' }}>
-        {/*<h5>Carrito</h5>
+            <Sidebar visible={layoutState.configSidebarVisible} onHide={onConfigSidebarHide} position="right" style={{ width: '38rem' }}>
+                {/*<h5>Carrito</h5>
                 <ProductList />*/}
-        <div className="grid list-demo">
-            <div className="col-12">
-            <div className="card">
-                <h5>Carrito</h5>
-                <div className="my-3" style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <div>Orden: <span>{ordenCreada ? `${orderCount}` : ""}</span></div>
-                <div>{fechaActual}</div>
-                </div>
-                <DataTable
-                value={dataViewValue}
-                selection={selectedProducts}
-                onSelectionChange={(e) => setSelectedProducts(e.value)}
-                dataKey="id"
-                rows={10}
-                style={{ height: '340px', overflowY: 'scroll' }}
-                className="datatable-responsive"
-                globalFilter={globalFilter}
-                emptyMessage="No products found."
-                >
-                <Column header="Imagen" body={imageBodyTemplate} headerStyle={{ minWidth: '0rem' }}></Column>
-                <Column field="nombre" header="Nombre" body={nombreBodyTemplate} headerStyle={{ minWidth: '0rem' }}></Column>
-                <Column field="cantidad" header="Cantidad" body={cantidadBodyTemplate} headerStyle={{ minWidth: '0rem' }}></Column>
-                <Column field="precio" header="Precio" body={precioBodyTemplate} headerStyle={{ minWidth: '0rem' }}></Column>
-                <Column body={actionBodyTemplate}></Column>
-                </DataTable>
+                <div className="grid list-demo">
+                    <div className="col-12">
+                        <div className="card">
+                            <h5>Carrito</h5>
+                            <div className="my-3" style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                <div>
+                                    Orden: <span>{ordenCreada ? `${orderCount}` : ''}</span>
+                                </div>
+                                <div>{fechaActual}</div>
+                            </div>
+                            <DataTable
+                                value={dataViewValue}
+                                selection={selectedProducts}
+                                onSelectionChange={(e) => setSelectedProducts(e.value)}
+                                dataKey="id"
+                                rows={10}
+                                style={{ height: '340px', overflowY: 'scroll' }}
+                                className="datatable-responsive"
+                                globalFilter={globalFilter}
+                                emptyMessage="No products found."
+                            >
+                                <Column header="Imagen" body={imageBodyTemplate} headerStyle={{ minWidth: '0rem' }}></Column>
+                                <Column field="nombre" header="Nombre" body={nombreBodyTemplate} headerStyle={{ minWidth: '0rem' }}></Column>
+                                <Column field="cantidad" header="Cantidad" body={cantidadBodyTemplate} headerStyle={{ minWidth: '0rem' }}></Column>
+                                <Column field="precio" header="Precio" body={precioBodyTemplate} headerStyle={{ minWidth: '0rem' }}></Column>
+                                <Column body={actionBodyTemplate}></Column>
+                            </DataTable>
 
-                {/*<DataView value={filteredValue || dataViewValue} layout={layout} rows={3} sortOrder={sortOrder} sortField={sortField} itemTemplate={dataviewListItem} style={{ height: '450px', overflowY: 'scroll' }} />*/}
+                            {/*<DataView value={filteredValue || dataViewValue} layout={layout} rows={3} sortOrder={sortOrder} sortField={sortField} itemTemplate={dataviewListItem} style={{ height: '450px', overflowY: 'scroll' }} />*/}
 
-                <div className="carrito-total text-right total-text">
-                Total: {total}
-                </div>
+                            <div className="carrito-total text-right total-text">Total: {total}</div>
 
-                <div className="flex align-items-center justify-content-between my-3">
-                <Button label="Limpiar" className="p-button-danger" onClick={() => deleteCarrito()} />
-                <Button label="Continuar"  onClick={() => continuarCarrito()} />
+                            <div className="flex align-items-center justify-content-between my-3">
+                                <Button label="Limpiar" className="p-button-danger" onClick={() => deleteCarrito()} />
+                                <Button label="Continuar" onClick={() => continuarCarrito()} />
+                            </div>
+                            <div className="p-d-flex p-jc-center p-ai-center">
+                                <Button label="Crear orden" onClick={() => addCarrito()} />
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <div className="p-d-flex p-jc-center p-ai-center">
-                <Button label="Crear orden" onClick={() => addCarrito()} />
-                </div>
-            </div>
-            </div>
-        </div>
-        </Sidebar>
-    </>
+            </Sidebar>
+        </>
     );
 };
 

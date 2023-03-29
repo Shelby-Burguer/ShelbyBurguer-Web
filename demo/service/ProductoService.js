@@ -3,12 +3,13 @@ import getConfig from 'next/config';
 export class NewProductoService {
     constructor() {
         this.contextPath = getConfig().publicRuntimeConfig.contextPath;
+        this.ipAddress = window.location.host.split(':')[0];
     }
 
     async getProductos() {
         let resProduct;
 
-        const responseProducto = fetch('http://localhost:10000/productos/all', {
+        const responseProducto = fetch(`http://${this.ipAddress}:10000/productos/all`, {
             headers: { 'Cache-Control': 'no-cache' },
             method: 'GET'
         }).then((res) => res.json());
@@ -26,11 +27,11 @@ export class NewProductoService {
             let arrProteinas = [];
             baseProducto = { ...producto };
 
-            const responseIngredientes = fetch('http://localhost:10000/ingredienteProducto/all/' + producto.id, {
+            const responseIngredientes = fetch(`http://${this.ipAddress}:10000/ingredienteProducto/all/` + producto.id, {
                 headers: { 'Cache-Control': 'no-cache' },
                 method: 'GET'
             }).then((res) => res.json());
-            
+
             await responseIngredientes.then((data) => (resIngredientes = data));
 
             for (let j = 0; j < resIngredientes.length; j++) {
@@ -93,7 +94,7 @@ export class NewProductoService {
             datosImagen: null
         };
         console.log('Service producto', producto);
-        const responseProducto = fetch('http://localhost:10000/productos/create', {
+        const responseProducto = fetch(`http://${this.ipAddress}:10000/productos/create`, {
             headers: { 'content-type': 'application/json' },
             method: 'POST',
             body: JSON.stringify({
@@ -120,7 +121,7 @@ export class NewProductoService {
             });
         }
 
-        fetch('http://localhost:10000/ingredienteProducto/create', {
+        fetch(`http://${this.ipAddress}:10000/ingredienteProducto/create`, {
             headers: { 'content-type': 'application/json' },
             method: 'POST',
             body: JSON.stringify(ingredienteProducto)
@@ -130,12 +131,10 @@ export class NewProductoService {
     }
 
     DeleteProductos(id) {
-        return fetch('http://localhost:10000/productos/delete/' + id, {
+        return fetch(`http://${this.ipAddress}:10000/productos/delete/` + id, {
             method: 'DELETE'
         });
     }
-
-    
 
     async updateProducto(productoid, producto, ingredientes) {
         let resProduct = {
@@ -153,21 +152,20 @@ export class NewProductoService {
             datosImagen: null
         };
 
-        const responseProducto = fetch('http://localhost:10000/ingredienteProducto/update/'+ productoid , {
+        const responseProducto = fetch(`http://${this.ipAddress}:10000/ingredienteProducto/update/` + productoid, {
             headers: { 'content-type': 'application/json' },
             method: 'PUT',
             body: JSON.stringify({
                 producto: producto,
-                updateIgdtPdt:ingredientes
+                updateIgdtPdt: ingredientes
             })
         });
 
         await responseProducto;
-    
     }
 
     DeleteProductos(id) {
-        return fetch('http://localhost:10000/productos/delete/' + id, {
+        return fetch(`http://${this.ipAddress}:10000/productos/delete/` + id, {
             method: 'DELETE'
         });
     }

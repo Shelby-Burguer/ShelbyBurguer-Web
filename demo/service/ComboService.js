@@ -3,12 +3,13 @@ import getConfig from 'next/config';
 export class NewComboService {
     constructor() {
         this.contextPath = getConfig().publicRuntimeConfig.contextPath;
+        this.ipAddress = window.location.host.split(':')[0];
     }
 
     async getCombos() {
         let resProduct;
 
-        const responseProducto = fetch('http://localhost:10000/combo/all', {
+        const responseProducto = fetch(`http://${this.ipAddress}:10000/combo/all`, {
             headers: { 'Cache-Control': 'no-cache' },
             method: 'GET'
         }).then((res) => res.json());
@@ -18,10 +19,10 @@ export class NewComboService {
         return resProduct;
     }
 
-       async getProductos() {
+    async getProductos() {
         let resProduct;
 
-        const responseProducto = fetch('http://localhost:10000/productos/all', {
+        const responseProducto = fetch(`http://${this.ipAddress}:10000/productos/all`, {
             headers: { 'Cache-Control': 'no-cache' },
             method: 'GET'
         }).then((res) => res.json());
@@ -39,7 +40,7 @@ export class NewComboService {
             let arrProteinas = [];
             baseProducto = { ...producto };
 
-            const responseIngredientes = fetch('http://localhost:10000/ingredienteProducto/all/' + producto.id, {
+            const responseIngredientes = fetch(`http://${this.ipAddress}:10000/ingredienteProducto/all/` + producto.id, {
                 headers: { 'Cache-Control': 'no-cache' },
                 method: 'GET'
             }).then((res) => res.json());
@@ -91,10 +92,9 @@ export class NewComboService {
     }
 
     async postCombo(combo, productos) {
-
         let resCombo;
 
-        const responseProducto = fetch('http://localhost:10000/combo/create', {
+        const responseProducto = fetch(`http://${this.ipAddress}:10000/combo/create`, {
             headers: { 'content-type': 'application/json' },
             method: 'POST',
             body: JSON.stringify({
@@ -105,19 +105,15 @@ export class NewComboService {
             })
         });
 
-        await responseProducto.then((dat) =>
-            dat.json().then((res) => resCombo = {...res}
-            )
-        );
-        
+        await responseProducto.then((dat) => dat.json().then((res) => (resCombo = { ...res })));
+
         return resCombo;
     }
 
     DeleteCombo(id) {
-    console.log('idCombo', id)
-        return fetch('http://localhost:10000/combo/delete/' + id, {
+        console.log('idCombo', id);
+        return fetch(`http://${this.ipAddress}:10000/combo/delete/` + id, {
             method: 'DELETE'
         });
     }
-
 }
