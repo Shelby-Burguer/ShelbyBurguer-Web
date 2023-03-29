@@ -28,6 +28,8 @@ const Crud = () => {
     const [elementDialog, setElementDialog] = useState(false);
     const [deleteElementDialog, setDeleteElementDialog] = useState(false);
     const [deleteElementsDialog, setDeleteElementsDialog] = useState(false);
+    const [clienteDialogVisible, setClienteDialogVisible] = useState(false);
+    const [lugarDialogVisible, setLugarDialogVisible] = useState(false);
     const [element, setElement] = useState(null);
     const [selectedElements, setSelectedElements] = useState(null);
     const [submitted, setSubmitted] = useState(false);
@@ -76,14 +78,20 @@ const Crud = () => {
     };
 
     const openNew = (type) => {
-        setElement(emptyElements[type]);
-        setSubmitted(false);
-        setElementDialog(true);
+    setElement(emptyElements[type]);
+    setSubmitted(false);
+    if (type === 'cliente') {
+        setClienteDialogVisible(true);
+    } else if (type === 'lugar') {
+        setLugarDialogVisible(true);
+    }
     };
 
     const hideDialog = () => {
         setSubmitted(false);
         setElementDialog(false);
+        setClienteDialogVisible(false)
+        setLugarDialogVisible(false);
     };
 
     const hideDeleteElementDialog = () => {
@@ -368,7 +376,11 @@ const Crud = () => {
         header: header,
         elementDialogFooter: elementDialogFooter,
         deleteElementDialogFooter: deleteElementDialogFooter,
-        deleteElementsDialogFooter: deleteElementsDialogFooter
+        deleteElementsDialogFooter: deleteElementsDialogFooter,
+        clienteDialogVisible,
+        lugarDialogVisible,
+        setClienteDialogVisible,
+        setLugarDialogVisible
     };
 };
 

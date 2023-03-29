@@ -47,8 +47,14 @@ const Crud = () => {
     const [totalSize, setTotalSize] = useState(0);
     const fileUploadRef = useRef(null);
     const op2 = useRef(null);
+    const op3 = useRef(null);
+    const op4 = useRef(null);
+    const op5 = useRef(null);
     const [selectedProduct, setSelectedProduct] = useState(null);
     const [selectedClient, setSelectedClient] = useState(null);
+    const [selectedLugar, setSelectedLugar] = useState(null);
+    const [productoClient, setProductoClient] = useState(null);
+    const [ingredienteClient, setIngredienteClient] = useState(null);
 
     useEffect(async() => {
         const ingredienteService = new IngredienteService();
@@ -57,8 +63,14 @@ const Crud = () => {
         
 
         const ordenService = new OrdenService();
-        const result2 = await ordenService.getAllOrden()
-        setProducts(result2);
+        await ordenService.getAllOrden().then((data) => {
+        const updatedProductos = data.map((producto) => ({
+            ...producto,
+            productos: producto.productos.map((p) => ({ ...p, cantidad: 1 })),
+        }));
+        setProducts(updatedProductos);
+        });
+  
     }, []);
 
 
@@ -426,6 +438,23 @@ const Crud = () => {
         op2.current.toggle(event);
     };
 
+    const nombreProductoTemplate = (producto) => {
+    return (
+        <>
+        <span className="p-column-title">Nombre</span>
+        {producto.producto_nombre}
+        </>
+    );
+    };
+
+const cantidadProductoTemplate = (producto) => {
+  return (
+    <>
+      <span className="p-column-title">Cantidad</span>
+      {producto.cantidad}
+    </>
+  );
+};
 
 const nombreClienteTemplate = (cliente) => {
   return (
@@ -437,6 +466,7 @@ const nombreClienteTemplate = (cliente) => {
 };
 
 const cedulaClienteTemplate = (cliente) => {
+
   return (
     <>
       <span className="p-column-title">Cedula</span>
@@ -446,6 +476,7 @@ const cedulaClienteTemplate = (cliente) => {
 };
 
 const telefonoClienteTemplate = (cliente) => {
+
   return (
     <>
       <span className="p-column-title">Cedula</span>
@@ -454,12 +485,107 @@ const telefonoClienteTemplate = (cliente) => {
   );
 };
 
+const nombreDireccionlugarTemplate = (lugar) => {
+  return (
+    <>
+      <span className="p-column-title">Direccion</span>
+      {lugar[0].lugar.nombre}
+    </>
+  );
+};
 
+const nombreZonalugarTemplate = (lugar) => {
+  return (
+    <>
+      <span className="p-column-title">Direccion</span>
+      {lugar[0].lugar.lugarPadre.nombre}
+    </>
+  );
+};
+
+const precioZonalugarTemplate = (lugar) => {
+  return (
+    <>
+      <span className="p-column-title">Direccion</span>
+      {lugar[0].precio_historico}
+    </>
+  );
+};
 
   const showClientDetails = (event, client) => {
     op2.current.toggle(event);
     setSelectedClient(client);
   };
+
+  const showLugarDetails = (event, lugar) => {
+    op3.current.toggle(event);
+    setSelectedLugar(lugar);
+  };
+
+  const showproductosDetails = (event, producto) => {
+    op4.current.toggle(event);
+    setProductoClient(producto);
+  };
+
+  const showIngredientesDetails = (event, ingredientes) => {
+    op5.current.toggle(event);
+    setIngredienteClient(ingredientes);
+  };
+
+  const IngredientesBodyTemplate = (rowData) => {
+     
+  return (
+    <>
+      <Button
+        type="button"
+        label=""
+        onClick={(e) => showIngredientesDetails(e, rowData.productos)}
+        icon="pi pi-pencil"
+        className="p-button-rounded p-button-success mr-2"
+      />
+      <OverlayPanel
+        ref={op5}
+        appendTo={typeof window !== "undefined" ? document.body : null}
+        showCloseIcon
+        id="overlay_panel_ingredientes"
+        style={{ width: "250px" }}
+      >
+        <DataTable value={ingredienteClient} responsiveLayout="scroll">
+          <Column header="Ingredientes" body={cantidadProductoTemplate} sortable headerStyle={{ minWidth: "10rem" }} />
+        </DataTable>
+      </OverlayPanel>
+    </>
+  );
+};
+
+  const productosBodyTemplate = (rowData) => {
+     
+  return (
+    <>
+      <Button
+        type="button"
+        label=""
+        onClick={(e) => showproductosDetails(e, rowData.productos)}
+        icon="pi pi-pencil"
+        className="p-button-rounded p-button-success mr-2"
+      />
+      <OverlayPanel
+        ref={op4}
+        appendTo={typeof window !== "undefined" ? document.body : null}
+        showCloseIcon
+        id="overlay_panel_productos"
+        style={{ width: "550px" }}
+      >
+        <DataTable value={productoClient} responsiveLayout="scroll">
+          <Column header="Cantidad" body={cantidadProductoTemplate} sortable headerStyle={{ minWidth: "10rem" }} />
+          <Column header="Nombre" body={nombreProductoTemplate} headerStyle={{ minWidth: "8rem" }} />
+          <Column header="Ingredientes" body={IngredientesBodyTemplate} sortable headerStyle={{ minWidth: "8rem" }} />
+        </DataTable>
+      </OverlayPanel>
+    </>
+  );
+};
+
 
 const clienteBodyTemplate = (rowData) => {
 
@@ -471,7 +597,7 @@ const clienteBodyTemplate = (rowData) => {
         label=""
         onClick={(e) => showClientDetails(e, rowData.cliente)}
         icon="pi pi-pencil"
-        className="p-button-rounded p-button-success mr-2"
+        className="p-button-rounded p-button-info mr-2"
       />
       <OverlayPanel
         ref={op2}
@@ -490,20 +616,42 @@ const clienteBodyTemplate = (rowData) => {
   );
 };
 
+    const lugarBodyTemplate = (rowData) => {
 
-
-        const lugarBodyTemplate = (rowData) => {
-        return (
-            <>
-                <Button icon="pi pi-pencil" className="p-button-rounded p-button-success mr-2" onClick={() => editProduct(rowData)} />
-            </>
-        );
+    const disabled = rowData.lugar.length === 0;
+    
+    return (
+        <>
+        <Button
+            type="button"
+            label=""
+            onClick={(e) => showLugarDetails(e, rowData.lugar)}
+            icon="pi pi-pencil"
+            className="p-button-rounded p-button-help mr-2"
+            disabled={disabled}
+        />
+        <OverlayPanel
+            ref={op3}
+            appendTo={typeof window !== "undefined" ? document.body : null}
+            showCloseIcon
+            id="overlay_panel"
+            style={{ width: "450px" }}
+        >
+            <DataTable value={[selectedLugar]} responsiveLayout="scroll">
+            <Column header="Direccion" body={nombreDireccionlugarTemplate} headerStyle={{ minWidth: "10rem" }} />
+            <Column header="Zona" body={nombreZonalugarTemplate} sortable headerStyle={{ minWidth: "8rem" }} />
+            <Column header="Precio" body={precioZonalugarTemplate} sortable headerStyle={{ minWidth: "8rem" }} />
+            </DataTable>
+        </OverlayPanel>
+        </>
+    );
     };
+
 
     const pagarBodyTemplate = (rowData) => {
         return (
             <>
-                <Button icon="pi pi-pencil" className="p-button-rounded p-button-success mr-2" onClick={() => editProduct(rowData)} />
+                <Button icon="pi pi-pencil" className="p-button-rounded p-button-secondary mr-2" onClick={() => editProduct(rowData)} />
             </>
         );
     };
@@ -511,7 +659,7 @@ const clienteBodyTemplate = (rowData) => {
     const estadochangeBodyTemplate = (rowData) => {
         return (
             <>
-                <Button icon="pi pi-pencil" className="p-button-rounded p-button-success mr-2" onClick={() => editProduct(rowData)} />
+                <Button icon="pi pi-pencil" className="p-button-rounded p-button-danger mr-2" onClick={() => editProduct(rowData)} />
             </>
         );
     };
@@ -565,15 +713,15 @@ const clienteBodyTemplate = (rowData) => {
                         header={header}
                         responsiveLayout="scroll"
                     >
-                        <Column selectionMode="multiple" headerStyle={{ width: '4rem' }}></Column>
                         <Column field="nombre" header="Numero de orden" sortable body={numeroBodyTemplate} headerStyle={{ minWidth: '10rem' }}></Column>
                         <Column field="unidad" header="Fecha de orden" sortable body={fechaBodyTemplate} headerStyle={{ minWidth: '10rem' }}></Column>
                         <Column field="unidad" header="Hora de orden" sortable body={horaBodyTemplate} headerStyle={{ minWidth: '10rem' }}></Column>
                         <Column field="unidad" header="Tipo de orden" sortable body={tipoBodyTemplate} headerStyle={{ minWidth: '10rem' }}></Column>
                         <Column field="unidad" header="Estado de orden" sortable body={estadoBodyTemplate} headerStyle={{ minWidth: '10rem' }}></Column>
-                        <Column field="unidad" header="Confirmacion de orden" sortable body={confirmacionPagoBodyTemplate} headerStyle={{ minWidth: '10rem' }}></Column>
+                        <Column field="unidad" header="Confirmacion de pago" sortable body={confirmacionPagoBodyTemplate} headerStyle={{ minWidth: '10rem' }}></Column>
                         <Column field="unidad" header="Descuento" sortable body={descuentoBodyTemplate} headerStyle={{ minWidth: '10rem' }}></Column>
                         <Column field="unidad" header="Numero de mesa" sortable body={numeroMesaBodyTemplate} headerStyle={{ minWidth: '10rem' }}></Column>
+                        <Column header="Productos" body={productosBodyTemplate} headerStyle={{ minWidth: '4rem' }}></Column>
                         <Column header="Cliente" body={clienteBodyTemplate} headerStyle={{ minWidth: '4rem' }}></Column>
                         <Column header="Zona" body={lugarBodyTemplate} headerStyle={{ minWidth: '4rem' }}></Column>
                         <Column header="Pago" body={pagarBodyTemplate} headerStyle={{ minWidth: '4rem' }}></Column>

@@ -31,6 +31,7 @@ import { ClienteService } from '../../../shelby/service/ClienteService';
 import Crud from '../../../shelby/utils/CrudFunctions';
 import { Toast } from 'primereact/toast';
 import { LugarService } from '../../../shelby/service/LugarService';
+import { useRouter } from 'next/router';
 
 export const InputDemo = () => {
     let emptyClient = {
@@ -47,7 +48,9 @@ export const InputDemo = () => {
         { label: 'J', value: 'J' }
     ];
 
+
     const crudObject = Crud();
+    const router = useRouter();
     let defaultCliente = crudObject.emptyElements.cliente;
     let defaultDropdown = 'V';
     let defaultLugar = crudObject.emptyElements.lugar;
@@ -57,6 +60,10 @@ export const InputDemo = () => {
     let lugar = crudObject.element;
     let lugares = crudObject.elements;
 
+    let _visibleCliente = crudObject.clienteDialogVisible;
+    let _visibleLugar = crudObject.lugarDialogVisible;
+    let _setVisibleLugar = crudObject.setLugarDialogVisible;
+    let _setvisibleCliente = crudObject.setClienteDialogVisible;
     let _setElement = crudObject.setElement;
     let _setElements = crudObject.setElements;
     let _submitted = crudObject.submitted;
@@ -344,7 +351,7 @@ export const InputDemo = () => {
             console.log('Vamo a ver', dropdownValue);
             zonaSelected = dropdownValue.id
             setTotal()
-        } else if (mostradorOptions === 'comer-aqui') {
+        } else if (mostradorOptions === 'Comer Aqui') {
             NumMesa = tableNumber;
             tipo_Orden = mostradorOptions;
         } else {
@@ -370,6 +377,7 @@ export const InputDemo = () => {
         setClient(emptyClient);
         setMostradorOptions('');
         setOpciones('');
+        router.push('http://localhost:3000/pages/Ordenes/gestion/');
     };
 
     const deleteOrder = async () => {
@@ -422,6 +430,7 @@ export const InputDemo = () => {
             }
             _setElements(_elements);
             crudObject.setElementDialog(false);
+            _setvisibleCliente(false);
             _setElement(elementName);
             await clienteService.getClientes().then((data) => setClientes(data));
         }
@@ -469,6 +478,8 @@ export const InputDemo = () => {
         }));
             _setElements(newdata);
             setdropdownValues(dropdownData);
+            crudObject.hideDialog
+            _setVisibleLugar(false);
         }
     };
 
@@ -506,19 +517,19 @@ const handleDireccionBlur = () => {
                 <div className="grid formgrid">
                     <div className="field col">
                         <div className="p-field-radiobutton">
-                            <label htmlFor="comer-aqui">Comer aquí</label>
-                            <RadioButton inputId="comer-aqui" name="mostradorOptions" value="comer-aqui" onChange={handleMostradorOptionsChange} checked={mostradorOptions === 'comer-aqui'} />
+                            <label htmlFor="Comer Aqui">Comer aquí</label>
+                            <RadioButton inputId="Comer Aqui" name="mostradorOptions" value="Comer Aqui" onChange={handleMostradorOptionsChange} checked={mostradorOptions === 'Comer Aqui'} />
                         </div>
                     </div>
 
                     <div className="field col">
                         <div className="p-field-radiobutton">
-                            <RadioButton inputId="para-llevar" name="mostradorOptions" value="para-llevar" onChange={handleMostradorOptionsChange} checked={mostradorOptions === 'para-llevar'} />
-                            <label htmlFor="para-llevar">Para llevar</label>
+                            <RadioButton inputId="Para llevar" name="mostradorOptions" value="Para llevar" onChange={handleMostradorOptionsChange} checked={mostradorOptions === 'Para llevar'} />
+                            <label htmlFor="Para llevar">Para llevar</label>
                         </div>
                     </div>
                 </div>
-                {mostradorOptions === 'comer-aqui' && (
+                {mostradorOptions === 'Comer Aqui' && (
                     <div className="p-field">
                         <div className="field col">
                             <label htmlFor="numero-mesa">Número de mesa:</label>
@@ -678,13 +689,13 @@ const handleDireccionBlur = () => {
                             <div className="grid formgrid">
                                 <div className="field col">
                                     <div className="p-field-radiobutton">
-                                        <label htmlFor="comer-aqui">Comer aquí</label>
+                                        <label htmlFor="Comer Aqui">Comer aquí</label>
                                         <RadioButton
-                                            inputId="comer-aqui"
+                                            inputId="Comer Aqui"
                                             name="mostradorOptions"
-                                            value="comer-aqui"
+                                            value="Comer Aqui"
                                             onChange={handleMostradorOptionsChange}
-                                            checked={mostradorOptions === 'comer-aqui'}
+                                            checked={mostradorOptions === 'Comer Aqui'}
                                         />
 
                                     </div>
@@ -693,17 +704,17 @@ const handleDireccionBlur = () => {
                                 <div className="field col">
                                     <div className="p-field-radiobutton">
                                         <RadioButton
-                                            inputId="para-llevar"
+                                            inputId="Para llevar"
                                             name="mostradorOptions"
-                                            value="para-llevar"
+                                            value="Para llevar"
                                             onChange={handleMostradorOptionsChange}
-                                            checked={mostradorOptions === 'para-llevar'}
+                                            checked={mostradorOptions === 'Para llevar'}
                                         />
-                                        <label htmlFor="para-llevar">Para llevar</label>
+                                        <label htmlFor="Para llevar">Para llevar</label>
                                     </div>
                                 </div>
                             </div>
-                            {mostradorOptions === 'comer-aqui' && (
+                            {mostradorOptions === 'Comer Aqui' && (
                                 <div className="p-field">
                                     <div className="field col">
                                         <label htmlFor="numero-mesa">Número de mesa:</label>
@@ -821,7 +832,7 @@ const handleDireccionBlur = () => {
                     </div>
                 </div>
             </div> */}
-            <Dialog visible={crudObject.elementDialog} style={{ width: '450px' }} header="Detalle de Cliente" modal className="p-fluid" footer={() => crudObject.elementDialogFooter(saveCliente)} onHide={crudObject.hideDialog}>
+            <Dialog visible={_visibleCliente} style={{ width: '450px' }} header="Detalle de Cliente" modal className="p-fluid" footer={() => crudObject.elementDialogFooter(saveCliente)} onHide={crudObject.hideDialog}>
                 <div className="formgrid grid">
                     <div className="field col">
                         <label htmlFor="cedula">Cédula</label>
@@ -848,7 +859,7 @@ const handleDireccionBlur = () => {
                     </div>
                 </div>
             </Dialog>
-            <Dialog visible={crudObject.elementDialog} style={{ width: '450px' }} header="Detalle de Lugar" modal className="p-fluid" footer={() => crudObject.elementDialogFooter(saveLugar)} onHide={crudObject.hideDialog}>
+            <Dialog visible={_visibleLugar} style={{ width: '450px' }} header="Detalle de Lugar" modal className="p-fluid" footer={() => crudObject.elementDialogFooter(saveLugar)} onHide={crudObject.hideDialog}>
                 <div className="formgrid grid">
                     <div className="field col">
                         <label htmlFor="nombre">Nombre</label>
