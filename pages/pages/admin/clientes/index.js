@@ -37,6 +37,8 @@ const ClientePage = () => {
 
     const saveCliente = async () => {
         _setSubmitted(true);
+                console.log('Clientes',clientes);
+        console.log('Cliente',cliente);
         const updatedCedula = crudObject.selectedPrefix + cliente.cedula;
         const clienteService = new ClienteService();
         _setElement((prevElement) => ({ ...prevElement, cedula: updatedCedula }));
@@ -56,9 +58,11 @@ const ClientePage = () => {
             } else {
                 const res = await clienteService.crearCliente(data[0]);
                 if (res.status >= 200 && res.status < 300) {
+                    console.log('Resultado de toast if', _toast.current)
                     _elements.push(_element);
                     _toast.current.show({ severity: 'success', summary: 'Successful', detail: 'Cliente Creado', life: 3000 });
                 } else {
+                    console.log('Resultado de toast else', _toast.current)
                     _toast.current.show({ severity: 'error', summary: 'Error', detail: 'No se pudo crear el cliente', life: 3000 });
                 }
             }
@@ -114,6 +118,7 @@ const ClientePage = () => {
             let data = await clienteService.getClientes();
             data = crudObject.isArray(data, elementName);
             _setElements(data);
+            console.log(data);
         };
         fetchData();
     }, []);

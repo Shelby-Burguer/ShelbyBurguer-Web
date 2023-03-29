@@ -16,6 +16,7 @@ export class LugarService {
     }
 
     async crearLugar(data) {
+        console.log('Llega bien la estructura?', data)
         try {
             const response = await fetch(`http://${this.ipAddress}:10000/lugares/`, {
                 method: 'POST',

@@ -576,68 +576,6 @@ const ListDemo = (props) => {
                         <Button label="Agregar" icon="pi pi-shopping-cart" onClick={() => addCarrito(data)} />
                     </div>
                 </div>
-                <Dialog visible={productDialog} style={{ width: '800px' }} header="Ingrese producto" modal className="p-fluid" footer={productDialogFooter} onHide={hideDialog}>
-                    <div className="field">{product.fileImage && <img src={`${contextPath}/demo/images/product/${product.fileImage}`} alt={product.fileImage} width="150" className="mt-0 mx-auto mb-5 block shadow-2" />}</div>
-                    <div className="field">
-                        <h6 htmlFor="nombre">Nombre</h6>
-                        <InputText id="nombre" value={product.nombre} onChange={(e) => onInputChange(e, 'nombre')} required autoFocus className={classNames({ 'p-invalid': submitted && !product.nombre })} />
-                        {submitted && !product.nombre && <small className="p-invalid">Name is required.</small>}
-                    </div>
-
-                    <div className="formgrid grid">
-                        <div className="field col">
-                            <h6>Tipo de producto</h6>
-                            <Dropdown value={dropdownValue} onChange={(e) => setDropdownValue(e.value)} options={tipoProducto} optionLabel="name" placeholder="Select" />
-                        </div>
-                        <div className="field col">
-                            <h6 htmlFor="costo">Costo</h6>
-                            <InputText id="costo" value={product.costo} onChange={(e) => onInputChange(e, 'costo')} required autoFocus className={classNames({ 'p-invalid': submitted && !product.costo })} />
-                            {submitted && !product.costo && <small className="p-invalid">Name is required.</small>}
-                        </div>
-                    </div>
-                    <div className="card">
-                        <h6>Agregar imagen</h6>
-                        <FileUpload
-                            ref={fileUploadRef}
-                            name="demo[]"
-                            url="https://primefaces.org/primereact/showcase/upload.php"
-                            accept="image/*"
-                            maxFileSize={1000000}
-                            onUpload={onTemplateUpload}
-                            onSelect={onTemplateSelect}
-                            onError={onTemplateClear}
-                            onClear={onTemplateClear}
-                            onTemplateRemove={onTemplateRemove}
-                            headerTemplate={headerTemplate}
-                            itemTemplate={itemTemplateFile}
-                            emptyTemplate={emptyTemplate}
-                            footer={productDialogFooter}
-                            chooseOptions={chooseOptions}
-                            cancelOptions={cancelOptions}
-                        />
-                    </div>
-
-                    <div className="col-12 xl:col-13">
-                        <div className="card">
-                            <h6>Seleccione el ingrediente</h6>
-                            <PickList
-                                source={picklistSourceValue}
-                                target={picklistTargetValue}
-                                sourceHeader="Ingredientes"
-                                targetHeader="Ingrediente seleccionado"
-                                itemTemplate={itemTemplatePickList}
-                                onChange={(e) => {
-                                    setPicklistSourceValue(e.source);
-                                    setPicklistTargetValue(e.target);
-                                }}
-                                sourceStyle={{ height: '200px' }}
-                                targetStyle={{ height: '200px' }}
-                                filter
-                                filterBy="name"
-                            ></PickList>
-                        </div>
-                    </div>
-                </Dialog>
                 <Dialog visible={carritoDialog} style={{ width: '800px' }} header="Modificaciones" modal className="p-fluid" footer={carritotDialogFooter} onHide={carritoHideDialog}>
                     {<img src={`${contextPath}/demo/images/product/16891a7a-52f8-4bc6-8176-00a5ae0b1c0a.jpg`} alt={product.nombre_imagen} width="150" className="mt-0 mx-auto mb-5 block shadow-2" />}
                     <div className="field">
@@ -718,7 +656,68 @@ const ListDemo = (props) => {
                     <DataView value={filteredValue || dataViewValue} layout={layout} paginator rows={9} sortOrder={sortOrder} sortField={sortField} itemTemplate={itemTemplate} header={dataViewHeader}></DataView>
                 </div>
             </div>
+            <Dialog visible={productDialog} style={{ width: '800px' }} header="Ingrese producto" modal className="p-fluid" footer={productDialogFooter} onHide={hideDialog}>
+                <div className="field">{product.fileImage && <img src={`${contextPath}/demo/images/product/${product.fileImage}`} alt={product.fileImage} width="150" className="mt-0 mx-auto mb-5 block shadow-2" />}</div>
+                <div className="field">
+                    <h6 htmlFor="nombre">Nombre</h6>
+                    <InputText id="nombre" value={product.nombre} onChange={(e) => onInputChange(e, 'nombre')} required autoFocus className={classNames({ 'p-invalid': submitted && !product.nombre })} />
+                    {submitted && !product.nombre && <small className="p-invalid">Name is required.</small>}
+                </div>
 
+                <div className="formgrid grid">
+                    <div className="field col">
+                        <h6>Tipo de producto</h6>
+                        <Dropdown value={dropdownValue} onChange={(e) => setDropdownValue(e.value)} options={tipoProducto} optionLabel="name" placeholder="Select" />
+                    </div>
+                    <div className="field col">
+                        <h6 htmlFor="costo">Costo</h6>
+                        <InputText id="costo" value={product.costo} onChange={(e) => onInputChange(e, 'costo')} required autoFocus className={classNames({ 'p-invalid': submitted && !product.costo })} />
+                        {submitted && !product.costo && <small className="p-invalid">Name is required.</small>}
+                    </div>
+                </div>
+                <div className="card">
+                    <h6>Agregar imagen</h6>
+                    <FileUpload
+                        ref={fileUploadRef}
+                        name="demo[]"
+                        url="https://primefaces.org/primereact/showcase/upload.php"
+                        accept="image/*"
+                        maxFileeSize={1000000}
+                        onUpload={onTemplateUpload}
+                        onSelect={onTemplateSelect}
+                        onError={onTemplateClear}
+                        onClear={onTemplateClear}
+                        onTemplateRemove={onTemplateRemove}
+                        headerTemplate={headerTemplate}
+                        itemTemplate={itemTemplateFile}
+                        emptyTemplate={emptyTemplate}
+                        footer={productDialogFooter}
+                        chooseOptions={chooseOptions}
+                        cancelOptions={cancelOptions}
+                    />
+                </div>
+
+                <div className="col-12 xl:col-13">
+                    <div className="card">
+                        <h6>Seleccione el ingrediente</h6>
+                        <PickList
+                            source={picklistSourceValue}
+                            target={picklistTargetValue}
+                            sourceHeader="Ingredientes"
+                            targetHeader="Ingrediente seleccionado"
+                            itemTemplate={itemTemplatePickList}
+                            onChange={(e) => {
+                                setPicklistSourceValue(e.source);
+                                setPicklistTargetValue(e.target);
+                            }}
+                            sourceStyle={{ height: '200px' }}
+                            targetStyle={{ height: '200px' }}
+                            filter
+                            filterBy="name"
+                        ></PickList>
+                    </div>
+                </div>
+            </Dialog>
             <Dialog visible={deleteProductDialog} style={{ width: '450px' }} header="Confirm" modal footer={deleteProductDialogFooter} onHide={hideDeleteProductDialog}>
                 <div className="justify-content-center">
                     <i className="pi pi-exclamation-triangle mr-3" style={{ fontSize: '2rem' }} />
