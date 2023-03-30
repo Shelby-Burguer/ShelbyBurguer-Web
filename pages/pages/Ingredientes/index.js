@@ -426,7 +426,7 @@ const Crud = () => {
                         </div>
                         <div className="field">
                             <h6 htmlFor="unidad">Unidad</h6>
-                            <InputText id="unidad" value={product.unidad} onChange={(e) => onInputChange(e, 'unidad')} required autoFocus className={classNames({ 'p-invalid': submitted && !product.unidad })} />
+                            <InputText id="unidad" value={product.unidad} onChange={(e) => onInputChange(e, 'unidad')} required className={classNames({ 'p-invalid': submitted && !product.unidad })} />
                             {submitted && !product.unidad && <small className="p-invalid">Name is required.</small>}
                         </div>
                         <div>
