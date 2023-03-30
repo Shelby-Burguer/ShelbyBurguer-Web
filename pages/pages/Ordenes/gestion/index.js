@@ -20,6 +20,7 @@ import { Tooltip } from 'primereact/tooltip';
 import { ProgressBar } from 'primereact/progressbar';
 import { Tag } from 'primereact/tag';
 import { OverlayPanel } from 'primereact/overlaypanel';
+import { Dropdown } from 'primereact/dropdown';
 
 const Crud = () => {
     let emptyProduct = {
@@ -34,7 +35,8 @@ const Crud = () => {
 
     const [products, setProducts] = useState(null);
     const [file, setfile] = useState(null); 
-    const [productDialog, setProductDialog] = useState(false);
+    const [EstadoDialog, setEstadoDialog] = useState(false);
+    const [pagoDialog, setPagoDialog] = useState(false);
     const [deleteProductDialog, setDeleteProductDialog] = useState(false);
     const [deleteProductsDialog, setDeleteProductsDialog] = useState(false);
     const [product, setProduct] = useState(emptyProduct);
@@ -55,6 +57,16 @@ const Crud = () => {
     const [selectedLugar, setSelectedLugar] = useState(null);
     const [productoClient, setProductoClient] = useState(null);
     const [ingredienteClient, setIngredienteClient] = useState(null);
+    const [dropdownValue, setDropdownValue] = useState(null);
+    const [infoEstado, setInfoEstado] = useState(null);
+    const [tipoProducto, setTipoProducto] = useState(null);
+    const [paymentMethod, setPaymentMethod] = useState('');
+    const [electronicPaymentMethod, setElectronicPaymentMethod] = useState('');
+    const [currency, setCurrency] = useState('VES');
+    const [serialNumber, setSerialNumber] = useState('');
+    const [denomination, setDenomination] = useState(0);
+    const [referenceNumber, setReferenceNumber] = useState('');
+    const [email, setEmail] = useState('');
 
     useEffect(async() => {
         const ingredienteService = new IngredienteService();
@@ -70,10 +82,34 @@ const Crud = () => {
         }));
         setProducts(updatedProductos);
         });
-  
+
+        ordenService.getAllEstados().then((data) => {
+         const dropdownData = data.map((item) => ({
+            name: item.nombre_estado
+        }));
+        setInfoEstado(data);
+        setTipoProducto(dropdownData);
+        });
+
     }, []);
 
+    const paymentOptions = [
+        { label: 'Pago Electrónico', value: 'electronico' },
+        { label: 'Pago en Efectivo', value: 'efectivo' },
+        { label: 'Zelle', value: 'zelle' }
+    ];
 
+    const electronicPaymentOptions = [
+        { label: 'Transferencia', value: 'transferencia' },
+        { label: 'Pago Móvil', value: 'pago-movil' },
+        { label: 'Tarjeta', value: 'tarjeta' }
+    ];
+
+    const currencyOptions = [
+        { label: 'Bolívares', value: 'Bs.' },
+        { label: 'Dólares', value: 'USD' },
+        { label: 'Euros', value: 'EUR' }
+    ];
 
    /* const formatCurrency = (value) => {
         return value.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
@@ -88,12 +124,13 @@ const Crud = () => {
     const openNew = () => {
         setProduct(emptyProduct);
         setSubmitted(false);
-        setProductDialog(true);
+        setEstadoDialog(true);
     };
 
     const hideDialog = () => {
         setSubmitted(false);
-        setProductDialog(false);
+        setEstadoDialog(false);
+        setPagoDialog(false);
     };
 
     const hideDeleteProductDialog = () => {
@@ -138,14 +175,20 @@ const Crud = () => {
                 toast.current.show({ severity: 'success', summary: 'Successful', detail: 'Product Created', life: 3000 });
             }
             setProducts(_products);
-            setProductDialog(false);
+            setEstadoDialog(false);
             setProduct(emptyProduct);
         }
     };
 
     const editProduct = (product) => {
         setProduct({ ...product });
-         setProductDialog(true);
+         setEstadoDialog(true);
+    };
+
+    
+    const pagoEstado = (product) => {
+        setProduct({ ...product });
+         setPagoDialog(true);
     };
 
     const confirmDeleteProduct = (product) => {
@@ -205,6 +248,12 @@ const Crud = () => {
         toast.current.show({ severity: 'success', summary: 'Successful', detail: 'Products Deleted', life: 3000 });
     };
 
+    const changeEstado = (estado) => {
+        //const estadoSeleccion = infoEstado.find(dropdownValue.nombre_estado)
+        console.log('Test select', selectedProducts)
+  
+    };
+
     const onCategoryChange = (e) => {
         let _product = { ...product };
         _product['category'] = e.value;
@@ -227,9 +276,6 @@ const Crud = () => {
         setProduct(_product);
     };
 
-    const onUpload = () => {
-        toast.current.show({severity: 'info', summary: 'Success', detail: 'File Uploaded'});
-    }
 
     const onTemplateSelect = (e) => {
         let _totalSize = totalSize;
@@ -402,7 +448,7 @@ const Crud = () => {
         return (
             <>
                 <span className="p-column-title">Unidad</span>
-                {rowData.unidad}
+               <span className={`product-badge status-${rowData.estado[0].estado.nombre_estado.toLowerCase()}`}>{rowData.estado[0].estado.nombre_estado}</span>
             </>
         );
     };
@@ -651,7 +697,7 @@ const clienteBodyTemplate = (rowData) => {
     const pagarBodyTemplate = (rowData) => {
         return (
             <>
-                <Button icon="pi pi-pencil" className="p-button-rounded p-button-secondary mr-2" onClick={() => editProduct(rowData)} />
+                <Button icon="pi pi-pencil" className="p-button-rounded p-button-secondary mr-2" onClick={() => pagoEstado(rowData)} />
             </>
         );
     };
@@ -667,6 +713,18 @@ const clienteBodyTemplate = (rowData) => {
     const header = (
         <div className="flex flex-column md:flex-row md:justify-content-between md:align-items-center">
             <h5 className="m-0">Gestion Ordenes</h5>
+        </div>
+    );
+
+    const headerEstado = (
+        <div className="flex flex-column md:flex-row md:justify-content-between md:align-items-center">
+            <h5 className="m-0">Historial de estado</h5>
+        </div>
+    );
+
+    const headerPago = (
+        <div className="flex flex-column md:flex-row md:justify-content-between md:align-items-center">
+            <h5 className="m-0">Historial de Pago</h5>
         </div>
     );
 
@@ -728,31 +786,105 @@ const clienteBodyTemplate = (rowData) => {
                         <Column header="Cambio estado" body={estadochangeBodyTemplate} headerStyle={{ minWidth: '4rem' }}></Column>
                     </DataTable>
 
-                    <Dialog visible={productDialog} style={{ width: '550px' }} header="Detalle de Ingredientes" modal className="p-fluid" footer={productDialogFooter} onHide={hideDialog}>
-                        <div className="field">
-                            <h6 htmlFor="nombre">Nombre</h6>
-                            <InputText id="nombre" value={product.nombre} onChange={(e) => onInputChange(e, 'nombre')} required autoFocus className={classNames({ 'p-invalid': submitted && !product.nombre })} />
-                            {submitted && !product.nombre && <small className="p-invalid">Name is required.</small>}
-                        </div>
-                        <div className="field">
-                            <h6 htmlFor="unidad">Unidad</h6>
-                            <InputText id="unidad" value={product.unidad} onChange={(e) => onInputChange(e, 'unidad')} required autoFocus className={classNames({ 'p-invalid': submitted && !product.unidad })} />
-                            {submitted && !product.unidad && <small className="p-invalid">Name is required.</small>}
-                        </div>
-                        <div>
-                            <Tooltip target=".custom-choose-btn" content="Choose" position="bottom" />
-                            <Tooltip target=".custom-upload-btn" content="Upload" position="bottom" />
-                            <Tooltip target=".custom-cancel-btn" content="Clear" position="bottom" />
-
-                            <div className="card">
-
-                                <h6>Agregar imagen</h6>
-                                <FileUpload ref={fileUploadRef} name="demo[]" url="https://primefaces.org/primereact/showcase/upload.php" accept="image/*" maxFileeSize={1000000}
-                                    onUpload={onTemplateUpload} onSelect={onTemplateSelect} onError={onTemplateClear} onClear={onTemplateClear} onTemplateRemove= {onTemplateRemove}
-                                    headerTemplate={headerTemplate} itemTemplate={itemTemplate} emptyTemplate={emptyTemplate} footer={productDialogFooter}
-                                    chooseOptions={chooseOptions} cancelOptions={cancelOptions}/>
+                    <Dialog visible={EstadoDialog} style={{ width: '550px' }} header="Cambio de estado" modal className="p-fluid" onHide={hideDialog}>
+                        <div className="formgrid grid">
+                            <div className="field col">
+                                <h6>Estado</h6>
+                                <Dropdown value={dropdownValue} onChange={(e) => setDropdownValue(e.value)} options={tipoProducto} optionLabel="name" placeholder="Select" />
+                            </div>
+                            <div className="field col flex align-items-center justify-content-between" style={{flexDirection: 'column'}}>
+                                <h6 htmlFor="costo"></h6>
+                                <Button label="Nuevo" icon="pi pi-plus" className="p-button-success mr-2" onClick={() => changeEstado(selectedProducts)} />
                             </div>
                         </div>
+                        <DataTable
+                        ref={dt}
+                        value={products}
+                        selection={selectedProducts}
+                        onSelectionChange={(e) => setSelectedProducts(e.value)}
+                        dataKey="id"
+                        className="datatable-responsive"
+                        globalFilter={globalFilter}
+                        emptyMessage="No products found."
+                        header={headerEstado}
+                        responsiveLayout="scroll"
+                    >
+                        <Column field="nombre" header="Nombre de estado" sortable headerStyle={{ minWidth: '10rem' }}></Column>
+                        <Column field="unidad" header="Momento de cambio" sortable headerStyle={{ minWidth: '10rem' }}></Column>
+                    </DataTable>
+                    </Dialog>
+
+                    <Dialog visible={pagoDialog} style={{ width: '550px' }} header="Métodos de pago" modal className="p-fluid" onHide={hideDialog}>
+                    <div className="">
+                       
+                                <div>
+                                    <div className="field">
+                                    <Dropdown value={paymentMethod} options={paymentOptions} onChange={(e) => setPaymentMethod(e.value)} placeholder="Seleccione" />
+                                    </div>
+                                    {paymentMethod === "electronico" && (
+
+                                        <label>
+                                        <div className="formgrid grid"></div>
+                                            <div className="field col">
+                                                <label htmlFor="tipo_de_pago_electrónico"> Tipo de pago electrónico</label>
+                                                <Dropdown value={electronicPaymentMethod} options={electronicPaymentOptions} onChange={(e) => setElectronicPaymentMethod(e.value)} placeholder="Seleccione" />
+                                            </div>
+                                            <div className="field col">
+                                                <label htmlFor="numero_de_referencia">Número de referencia</label>
+                                                <InputText type="text" value={referenceNumber} onChange={(e) => setReferenceNumber(e.target.value)} />
+                                            </div>
+                                        </label>
+
+                                    )}
+                                    {paymentMethod === "efectivo" && (
+                                    <>
+                                
+                                        <div className="formgrid grid"></div>
+                                        <div className="field col">
+                                        <label htmlFor="moneda">Moneda</label>
+                                        <Dropdown value={currency} options={currencyOptions} onChange={(e) => setCurrency(e.value)} placeholder="Seleccione" />
+                                        </div>
+                                        
+                                        <div className="field col">
+                                        <label htmlFor="numero_de_serie">Número de serie (opcional)</label>
+                                        <InputText type="text" value={serialNumber} onChange={(e) => setSerialNumber(e.target.value)} />
+                                        </div>
+                                    
+                                        <div className="field col">
+                                        <label htmlFor="numero_de_serie">Denominación</label>
+                                        <InputText type="text" value={denomination} onChange={(e) => setDenomination(e.target.value)} />
+                                        </div>                
+
+                                    </>
+                                    )}
+                                    {paymentMethod === "zelle" && (
+                                        <div className="field col">
+                                        <label htmlFor="correo_electrónico">Correo electrónico</label>
+                                        <InputText type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+                                        </div>
+                                
+                                    )}
+                                </div>
+                        <div className="field col flex align-items-center justify-content-between">
+                                <h6 htmlFor="costo"></h6>
+                                <Button label="Nuevo" icon="pi pi-plus" className="p-button-success mr-2" onClick={openNew} />
+                            </div>
+                        </div>
+                        <DataTable
+                        ref={dt}
+                        value={products}
+                        selection={selectedProducts}
+                        onSelectionChange={(e) => setSelectedProducts(e.value)}
+                        dataKey="id"
+                        className="datatable-responsive"
+                        globalFilter={globalFilter}
+                        emptyMessage="No products found."
+                        header={headerPago}
+                        responsiveLayout="scroll"
+                    >
+                        <Column field="nombre" header="Nombre de Pago" sortable  headerStyle={{ minWidth: '10rem' }}></Column>
+                        <Column field="unidad" header="Momento de pago" sortable  headerStyle={{ minWidth: '10rem' }}></Column>
+                    </DataTable>
                     </Dialog>
 
                     <Dialog visible={deleteProductDialog} style={{ width: '450px' }} header="Confirm" modal footer={deleteProductDialogFooter} onHide={hideDeleteProductDialog}>

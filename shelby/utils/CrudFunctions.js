@@ -80,6 +80,7 @@ const Crud = () => {
     const openNew = (type) => {
     setElement(emptyElements[type]);
     setSubmitted(false);
+    setElementDialog(true);
     if (type === 'cliente') {
         setClienteDialogVisible(true);
     } else if (type === 'lugar') {
