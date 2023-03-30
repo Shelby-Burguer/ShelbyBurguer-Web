@@ -17,6 +17,8 @@ const LugarPage = () => {
     let lugar = crudObject.element;
     let lugares = crudObject.elements;
 
+    let _visibleLugar = crudObject.lugarDialogVisible;
+    let _setVisibleLugar = crudObject.setLugarDialogVisible;
     let _setElement = crudObject.setElement;
     let _setElements = crudObject.setElements;
     let _submitted = crudObject.submitted;
@@ -53,6 +55,7 @@ const LugarPage = () => {
             }
             _setElements(_elements);
             crudObject.setElementDialog(false);
+            _setVisibleLugar(false)
             _setElement(elementName);
         }
     };
@@ -138,7 +141,7 @@ const LugarPage = () => {
                         <Column body={crudObject.actionBodyTemplate} headerStyle={{ minWidth: '10rem' }}></Column>
                     </DataTable>
 
-                    <Dialog visible={crudObject.elementDialog} style={{ width: '450px' }} header="Detalle de Lugar" modal className="p-fluid" footer={() => crudObject.elementDialogFooter(saveLugar)} onHide={crudObject.hideDialog}>
+                    <Dialog visible={_visibleLugar} style={{ width: '450px' }} header="Detalle de Lugar" modal className="p-fluid" footer={() => crudObject.elementDialogFooter(saveLugar)} onHide={crudObject.hideDialog}>
                         <div className="formgrid grid">
                             <div className="field col">
                                 <label htmlFor="nombre">Nombre</label>

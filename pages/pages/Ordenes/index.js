@@ -779,59 +779,6 @@ const handleDireccionBlur = () => {
                     </div>
                 </div>
             </div>
-            {/*<div className="col-12 md:col-6">
-                <div className="card">
-                    <div>
-                        <h5>Métodos de pago:</h5>
-                        <div className="field">
-                        <Dropdown value={paymentMethod} options={paymentOptions} onChange={(e) => setPaymentMethod(e.value)} placeholder="Seleccione" />
-                        </div>
-                        {paymentMethod === "electronico" && (
-
-                            <label>
-                            <div className="formgrid grid"></div>
-                                <div className="field col">
-                                    <label htmlFor="tipo_de_pago_electrónico"> Tipo de pago electrónico</label>
-                                    <Dropdown value={electronicPaymentMethod} options={electronicPaymentOptions} onChange={(e) => setElectronicPaymentMethod(e.value)} placeholder="Seleccione" />
-                                </div>
-                                <div className="field col">
-                                    <label htmlFor="numero_de_referencia">Número de referencia</label>
-                                    <InputText type="text" value={referenceNumber} onChange={(e) => setReferenceNumber(e.target.value)} />
-                                </div>
-                            </label>
-
-                        )}
-                        {paymentMethod === "efectivo" && (
-                        <>
-                    
-                            <div className="formgrid grid"></div>
-                            <div className="field col">
-                            <label htmlFor="moneda">Moneda</label>
-                            <Dropdown value={currency} options={currencyOptions} onChange={(e) => setCurrency(e.value)} placeholder="Seleccione" />
-                            </div>
-                            
-                            <div className="field col">
-                            <label htmlFor="numero_de_serie">Número de serie (opcional)</label>
-                            <InputText type="text" value={serialNumber} onChange={(e) => setSerialNumber(e.target.value)} />
-                            </div>
-                        
-                            <div className="field col">
-                            <label htmlFor="numero_de_serie">Denominación</label>
-                            <InputText type="text" value={denomination} onChange={(e) => setDenomination(e.target.value)} />
-                            </div>                
-
-                        </>
-                        )}
-                        {paymentMethod === "zelle" && (
-                            <div className="field col">
-                            <label htmlFor="correo_electrónico">Correo electrónico</label>
-                            <InputText type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
-                            </div>
-                      
-                        )}
-                    </div>
-                </div>
-            </div> */}
             <Dialog visible={_visibleCliente} style={{ width: '450px' }} header="Detalle de Cliente" modal className="p-fluid" footer={() => crudObject.elementDialogFooter(saveCliente)} onHide={crudObject.hideDialog}>
                 <div className="formgrid grid">
                     <div className="field col">

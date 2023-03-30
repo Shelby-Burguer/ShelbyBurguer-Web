@@ -79,4 +79,20 @@ export class OrdenService {
 
         return resOrdenCarrito;
     }
+
+    async getAllEstados() {
+
+        let resOrdenCarrito;
+
+        const responseProducto = fetch(`http://${this.ipAddress}:10000/orden/estados/All`, {
+            headers: { 'Cache-Control': 'no-cache' },
+            method: 'GET'
+        }).then((res) => res.json());
+
+        await responseProducto.then((data) => (resOrdenCarrito = data));
+
+        console.log('ResALLOrden', resOrdenCarrito);
+
+        return resOrdenCarrito;
+    }
 }
