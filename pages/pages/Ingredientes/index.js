@@ -18,6 +18,7 @@ import Router from 'next/router';
 import { Tooltip } from 'primereact/tooltip';
 import { ProgressBar } from 'primereact/progressbar';
 import { Tag } from 'primereact/tag';
+import { Dropdown } from 'primereact/dropdown';
 
 const Crud = () => {
     let emptyProduct = {
@@ -30,9 +31,16 @@ const Crud = () => {
         fileImage: ''
     };
 
+    const dropdownValues = [
+        { name: 'Unidad', code: 'u' },
+        { name: 'Gramos', code: 'gr' },
+        { name: 'No Aplica', code: 'na' }
+    ];
+
     const [products, setProducts] = useState(null);
     const [file, setfile] = useState(null);
     const [productDialog, setProductDialog] = useState(false);
+    const [dropdownValue, setDropdownValue] = useState(null);
     const [deleteProductDialog, setDeleteProductDialog] = useState(false);
     const [deleteProductsDialog, setDeleteProductsDialog] = useState(false);
     const [product, setProduct] = useState(emptyProduct);
@@ -58,6 +66,7 @@ const Crud = () => {
 
     const openNew = () => {
         setProduct(emptyProduct);
+        setDropdownValue(null);
         setSubmitted(false);
         setProductDialog(true);
     };
@@ -78,38 +87,39 @@ const Crud = () => {
     const saveProduct = async () => {
         setSubmitted(true);
         if (product.nombre.trim()) {
-            let _products = [...products];
-            let _product = { ...product };
+            if (product.unidad.trim()) {
+                let _products = [...products];
+                let _product = { ...product };
+                if (product.id) {
+                    const index = findIndexById(product.id);
+                    _products[index] = _product;
+                    const ingredienteService = new IngredienteService();
+                    ingredienteService.updateIngredientes(_product);
+                    toast.current.show({ severity: 'success', summary: 'Successful', detail: 'Product Updated', life: 3000 });
+                } else {
+                    const ingredienteService = new IngredienteService();
+                    const response = await ingredienteService.postIngredientes(_product, file);
+                    _product = { ...response };
+                    console.log('Imagen file', _product.fileImage);
+                    console.log('ImagenURL', _product.urlImage);
+                    console.log('ImagenName', _product.nombreImage);
+                    //console.log('test',_product.image.objectURL)
+                    /*const test  = new FileReader();
+                     test.readAsDataURL(response.image);
+                     test.addEventListener('load', () => {
+                        const res = test.result;
+                        _product.image = res.toString();
+                        console.log('resultado',_product.image);
+                     })
+                     */
 
-            if (product.id) {
-                const index = findIndexById(product.id);
-                _products[index] = _product;
-                const ingredienteService = new IngredienteService();
-                ingredienteService.updateIngredientes(_product);
-                toast.current.show({ severity: 'success', summary: 'Successful', detail: 'Product Updated', life: 3000 });
-            } else {
-                const ingredienteService = new IngredienteService();
-                const response = await ingredienteService.postIngredientes(_product, file);
-                _product = { ...response };
-                console.log('Imagen file', _product.fileImage);
-                console.log('ImagenURL', _product.urlImage);
-                console.log('ImagenName', _product.nombreImage);
-                //console.log('test',_product.image.objectURL)
-                /*const test  = new FileReader();
-                 test.readAsDataURL(response.image);
-                 test.addEventListener('load', () => {
-                    const res = test.result;
-                    _product.image = res.toString();
-                    console.log('resultado',_product.image);
-                 })
-                 */
-
-                _products.push(_product);
-                toast.current.show({ severity: 'success', summary: 'Successful', detail: 'Product Created', life: 3000 });
+                    _products.push(_product);
+                    toast.current.show({ severity: 'success', summary: 'Successful', detail: 'Product Created', life: 3000 });
+                }
+                setProducts(_products);
+                setProductDialog(false);
+                setProduct(emptyProduct);
             }
-            setProducts(_products);
-            setProductDialog(false);
-            setProduct(emptyProduct);
         }
     };
 
@@ -165,7 +175,6 @@ const Crud = () => {
 
     /*Para eliminar todos los seleccionados en checkbox*/
     const deleteSelectedProducts = () => {
-        console.log('Delete Select Product', selectedProducts);
         let _products = products.filter((val) => !selectedProducts.includes(val));
         const ingredienteService = new IngredienteService();
         ingredienteService.DeleteIngredientes(selectedProducts[0].id);
@@ -187,6 +196,12 @@ const Crud = () => {
         _product[`${name}`] = val;
 
         setProduct(_product);
+    };
+
+    const onDropdownChange = (event) => {
+        const selectedValue = event.target.value;
+        setDropdownValue(selectedValue);
+        setProduct((prevState) => ({ ...prevState, unidad: selectedValue.name }));
     };
 
     const onInputNumberChange = (e, name) => {
@@ -422,12 +437,12 @@ const Crud = () => {
                         <div className="field">
                             <h6 htmlFor="nombre">Nombre</h6>
                             <InputText id="nombre" value={product.nombre} onChange={(e) => onInputChange(e, 'nombre')} required autoFocus className={classNames({ 'p-invalid': submitted && !product.nombre })} />
-                            {submitted && !product.nombre && <small className="p-invalid">Name is required.</small>}
+                            {submitted && !product.nombre && <small className="p-invalid">El nombre es requerido.</small>}
                         </div>
                         <div className="field">
                             <h6 htmlFor="unidad">Unidad</h6>
-                            <InputText id="unidad" value={product.unidad} onChange={(e) => onInputChange(e, 'unidad')} required className={classNames({ 'p-invalid': submitted && !product.unidad })} />
-                            {submitted && !product.unidad && <small className="p-invalid">Name is required.</small>}
+                            <Dropdown value={dropdownValue} onChange={onDropdownChange} options={dropdownValues} optionLabel="name" placeholder="Selecciona" required className={classNames({ 'p-invalid': submitted && !product.unidad })} />
+                            {submitted && !product.unidad && <small className="p-invalid">La Unidad es requerida.</small>}
                         </div>
                         <div>
                             <Tooltip target=".custom-choose-btn" content="Choose" position="bottom" />
