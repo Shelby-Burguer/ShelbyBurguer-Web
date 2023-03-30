@@ -30,7 +30,7 @@ const Crud = () => {
         nombreImage: '',
         objectURL: '',
         urlImage: '',
-        fileImage: '',
+        fileImage: ''
     };
 
     const [products, setProducts] = useState(null);
@@ -68,19 +68,18 @@ const Crud = () => {
     const [referenceNumber, setReferenceNumber] = useState('');
     const [email, setEmail] = useState('');
 
-    useEffect(async() => {
+    useEffect(async () => {
         const ingredienteService = new IngredienteService();
         const result = await ingredienteService.getIngredientes();
         console.log('test', result);
-        
 
         const ordenService = new OrdenService();
         await ordenService.getAllOrden().then((data) => {
-        const updatedProductos = data.map((producto) => ({
-            ...producto,
-            productos: producto.productos.map((p) => ({ ...p, cantidad: 1 })),
-        }));
-        setProducts(updatedProductos);
+            const updatedProductos = data.map((producto) => ({
+                ...producto,
+                productos: producto.productos.map((p) => ({ ...p, cantidad: 1 }))
+            }));
+            setProducts(updatedProductos);
         });
 
         ordenService.getAllEstados().then((data) => {
@@ -115,7 +114,6 @@ const Crud = () => {
         return value.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
     };*/
 
-
     const onProductSelect = (event) => {
         op2.current.hide();
         toast.current.show({ severity: 'info', summary: 'Product Selected', detail: event.data.name, life: 3000 });
@@ -141,8 +139,7 @@ const Crud = () => {
         setDeleteProductsDialog(false);
     };
 
-
-    const saveProduct = async() => {
+    const saveProduct = async () => {
         setSubmitted(true);
         if (product.nombre.trim()) {
             let _products = [...products];
@@ -155,15 +152,14 @@ const Crud = () => {
                 ingredienteService.updateIngredientes(_product);
                 toast.current.show({ severity: 'success', summary: 'Successful', detail: 'Product Updated', life: 3000 });
             } else {
-                
                 const ingredienteService = new IngredienteService();
                 const response = await ingredienteService.postIngredientes(_product, file);
-                 _product = { ...response };
-                 console.log('Imagen file', _product.fileImage);
-                 console.log('ImagenURL', _product.urlImage);
-                 console.log('ImagenName', _product.nombreImage);
-                 //console.log('test',_product.image.objectURL)
-                 /*const test  = new FileReader();
+                _product = { ...response };
+                console.log('Imagen file', _product.fileImage);
+                console.log('ImagenURL', _product.urlImage);
+                console.log('ImagenName', _product.nombreImage);
+                //console.log('test',_product.image.objectURL)
+                /*const test  = new FileReader();
                  test.readAsDataURL(response.image);
                  test.addEventListener('load', () => {
                     const res = test.result;
@@ -171,7 +167,7 @@ const Crud = () => {
                     console.log('resultado',_product.image);
                  })
                  */
-                 _products.push(_product);
+                _products.push(_product);
                 toast.current.show({ severity: 'success', summary: 'Successful', detail: 'Product Created', life: 3000 });
             }
             setProducts(_products);
@@ -196,7 +192,7 @@ const Crud = () => {
         setDeleteProductDialog(true);
     };
 
-    /*Para eliminar solo el que tiene el boton*/ 
+    /*Para eliminar solo el que tiene el boton*/
     const deleteProduct = () => {
         let _products = products.filter((val) => val.id !== product.id);
         setProducts(_products);
@@ -213,7 +209,7 @@ const Crud = () => {
             if (products[i].id === id) {
                 index = i;
                 break;
-            }   
+            }
         }
 
         return index;
@@ -235,16 +231,16 @@ const Crud = () => {
     const confirmDeleteSelected = () => {
         setDeleteProductsDialog(true);
     };
-    
-    /*Para eliminar todos los seleccionados en checkbox*/ 
+
+    /*Para eliminar todos los seleccionados en checkbox*/
     const deleteSelectedProducts = () => {
-        console.log('Delete Select Product',selectedProducts);
+        console.log('Delete Select Product', selectedProducts);
         let _products = products.filter((val) => !selectedProducts.includes(val));
         const ingredienteService = new IngredienteService();
         ingredienteService.DeleteIngredientes(selectedProducts[0].id);
         setProducts(_products);
         setDeleteProductsDialog(false);
-        setSelectedProducts(null);    
+        setSelectedProducts(null);
         toast.current.show({ severity: 'success', summary: 'Successful', detail: 'Products Deleted', life: 3000 });
     };
 
@@ -276,44 +272,43 @@ const Crud = () => {
         setProduct(_product);
     };
 
-
     const onTemplateSelect = (e) => {
         let _totalSize = totalSize;
-        Object.keys(e.files).forEach(file => {
+        Object.keys(e.files).forEach((file) => {
             _totalSize += file.size;
         });
 
         setTotalSize(_totalSize);
-    }
+    };
 
     const onTemplateUpload = (e) => {
         let _totalSize = 0;
-        e.files.forEach(file => {
-            _totalSize += (file.size || 0);
+        e.files.forEach((file) => {
+            _totalSize += file.size || 0;
         });
 
         setTotalSize(_totalSize);
-        toast.current.show({severity: 'info', summary: 'Success', detail: 'File Uploaded'});
-    }
+        toast.current.show({ severity: 'info', summary: 'Success', detail: 'File Uploaded' });
+    };
 
     const onTemplateClear = () => {
         setTotalSize(0);
-    }
+    };
 
     const onTemplateRemove = (file, callback) => {
         setTotalSize(totalSize - file.size);
         callback();
-    }
+    };
 
-     const headerTemplate = (options) => {
+    const headerTemplate = (options) => {
         const { className, chooseButton, cancelButton } = options;
         return (
-            <div className={className} style={{backgroundColor: 'transparent', display: 'flex', alignItems: 'center'}}>
-                {chooseButton}       
+            <div className={className} style={{ backgroundColor: 'transparent', display: 'flex', alignItems: 'center' }}>
+                {chooseButton}
                 {cancelButton}
             </div>
         );
-    }
+    };
 
     /*var saveBlob = (function () {
     var a = document.createElement("a");
@@ -329,29 +324,24 @@ const Crud = () => {
     }());*/
 
     function saveBlob(blob, fileName) {
-    var a = document.createElement("a");
-    document.body.appendChild(a);
-    a.style = "display: none";
+        var a = document.createElement('a');
+        document.body.appendChild(a);
+        a.style = 'display: none';
 
-    var url = window.URL.createObjectURL(blob);
-    a.href = url;
-    a.download = fileName;
-    a.click();
-    window.URL.revokeObjectURL(url);
-    };
-
-
+        var url = window.URL.createObjectURL(blob);
+        a.href = url;
+        a.download = fileName;
+        a.click();
+        window.URL.revokeObjectURL(url);
+    }
 
     const itemTemplate = (file, props) => {
-    console.log('Original File', file);
+        console.log('Original File', file);
 
-
-
-
-    setfile(file);
+        setfile(file);
         return (
             <div className="flex align-items-center flex-wrap">
-                <div className="flex align-items-center" style={{width: '40%'}}>
+                <div className="flex align-items-center" style={{ width: '40%' }}>
                     <img alt={file.name} role="presentation" src={file.objectURL} width={100} />
                     <span className="flex flex-column text-left ml-3">
                         {file.name}
@@ -359,41 +349,40 @@ const Crud = () => {
                     </span>
                 </div>
                 <Tag value={props.formatSize} severity="warning" className="px-3 py-2 ml-auto" />
-                
             </div>
-        )
-    }
+        );
+    };
 
     const emptyTemplate = () => {
         return (
             <div className="flex align-items-center flex-column">
-                <i className="pi pi-image mt-1 p-5" style={{'fontSize': '4em', borderRadius: '50%', backgroundColor: 'var(--surface-b)', color: 'var(--surface-d)'}}></i>
-                <span style={{'fontSize': '1.2em', color: 'var(--text-color-secondary)'}} className="my-4">Arrastre y suelte la imagen aqui</span>
+                <i className="pi pi-image mt-1 p-5" style={{ fontSize: '4em', borderRadius: '50%', backgroundColor: 'var(--surface-b)', color: 'var(--surface-d)' }}></i>
+                <span style={{ fontSize: '1.2em', color: 'var(--text-color-secondary)' }} className="my-4">
+                    Arrastre y suelte la imagen aqui
+                </span>
             </div>
-        )
-    }
+        );
+    };
 
     const chooseOptions = {
-        label: 'Archivo', 
+        label: 'Archivo',
         icon: 'pi pi-fw pi-plus'
     };
 
-
     const cancelOptions = {
-        label: 'Cancelar', 
-        icon: 'pi pi-times', 
+        label: 'Cancelar',
+        icon: 'pi pi-times',
         className: 'p-button-danger'
     };
-    
 
     const leftToolbarTemplate = () => {
         return (
             <React.Fragment>
                 <div className="my-2">
-                 <span className="block mt-2 md:mt-0 p-input-icon-left">
+                    <span className="block mt-2 md:mt-0 p-input-icon-left">
                         <i className="pi pi-search" />
                         <InputText type="search" onInput={(e) => setGlobalFilter(e.target.value)} placeholder="Buscar..." />
-                 </span>
+                    </span>
                 </div>
             </React.Fragment>
         );
@@ -485,214 +474,156 @@ const Crud = () => {
     };
 
     const nombreProductoTemplate = (producto) => {
-    return (
-        <>
-        <span className="p-column-title">Nombre</span>
-        {producto.producto_nombre}
-        </>
-    );
+        return (
+            <>
+                <span className="p-column-title">Nombre</span>
+                {producto.producto_nombre}
+            </>
+        );
     };
 
-const cantidadProductoTemplate = (producto) => {
-  return (
-    <>
-      <span className="p-column-title">Cantidad</span>
-      {producto.cantidad}
-    </>
-  );
-};
+    const cantidadProductoTemplate = (producto) => {
+        return (
+            <>
+                <span className="p-column-title">Cantidad</span>
+                {producto.cantidad}
+            </>
+        );
+    };
 
-const nombreClienteTemplate = (cliente) => {
-  return (
-    <>
-      <span className="p-column-title">Nombre</span>
-      {cliente.nombre_cliente}
-    </>
-  );
-};
+    const nombreClienteTemplate = (cliente) => {
+        return (
+            <>
+                <span className="p-column-title">Nombre</span>
+                {cliente.nombre_cliente}
+            </>
+        );
+    };
 
-const cedulaClienteTemplate = (cliente) => {
+    const cedulaClienteTemplate = (cliente) => {
+        return (
+            <>
+                <span className="p-column-title">Cedula</span>
+                {cliente.cedula_cliente}
+            </>
+        );
+    };
 
-  return (
-    <>
-      <span className="p-column-title">Cedula</span>
-      {cliente.cedula_cliente}
-    </>
-  );
-};
+    const telefonoClienteTemplate = (cliente) => {
+        return (
+            <>
+                <span className="p-column-title">Cedula</span>
+                {cliente.telefono_cliente}
+            </>
+        );
+    };
 
-const telefonoClienteTemplate = (cliente) => {
+    const nombreDireccionlugarTemplate = (lugar) => {
+        return (
+            <>
+                <span className="p-column-title">Direccion</span>
+                {lugar[0].lugar.nombre}
+            </>
+        );
+    };
 
-  return (
-    <>
-      <span className="p-column-title">Cedula</span>
-      {cliente.telefono_cliente}
-    </>
-  );
-};
+    const nombreZonalugarTemplate = (lugar) => {
+        return (
+            <>
+                <span className="p-column-title">Direccion</span>
+                {lugar[0].lugar.lugarPadre.nombre}
+            </>
+        );
+    };
 
-const nombreDireccionlugarTemplate = (lugar) => {
-  return (
-    <>
-      <span className="p-column-title">Direccion</span>
-      {lugar[0].lugar.nombre}
-    </>
-  );
-};
+    const precioZonalugarTemplate = (lugar) => {
+        return (
+            <>
+                <span className="p-column-title">Direccion</span>
+                {lugar[0].precio_historico}
+            </>
+        );
+    };
 
-const nombreZonalugarTemplate = (lugar) => {
-  return (
-    <>
-      <span className="p-column-title">Direccion</span>
-      {lugar[0].lugar.lugarPadre.nombre}
-    </>
-  );
-};
+    const showClientDetails = (event, client) => {
+        op2.current.toggle(event);
+        setSelectedClient(client);
+    };
 
-const precioZonalugarTemplate = (lugar) => {
-  return (
-    <>
-      <span className="p-column-title">Direccion</span>
-      {lugar[0].precio_historico}
-    </>
-  );
-};
+    const showLugarDetails = (event, lugar) => {
+        op3.current.toggle(event);
+        setSelectedLugar(lugar);
+    };
 
-  const showClientDetails = (event, client) => {
-    op2.current.toggle(event);
-    setSelectedClient(client);
-  };
+    const showproductosDetails = (event, producto) => {
+        op4.current.toggle(event);
+        setProductoClient(producto);
+    };
 
-  const showLugarDetails = (event, lugar) => {
-    op3.current.toggle(event);
-    setSelectedLugar(lugar);
-  };
+    const showIngredientesDetails = (event, ingredientes) => {
+        op5.current.toggle(event);
+        setIngredienteClient(ingredientes);
+    };
 
-  const showproductosDetails = (event, producto) => {
-    op4.current.toggle(event);
-    setProductoClient(producto);
-  };
+    const IngredientesBodyTemplate = (rowData) => {
+        return (
+            <>
+                <Button type="button" label="" onClick={(e) => showIngredientesDetails(e, rowData.productos)} icon="pi pi-pencil" className="p-button-rounded p-button-success mr-2" />
+                <OverlayPanel ref={op5} appendTo={typeof window !== 'undefined' ? document.body : null} showCloseIcon id="overlay_panel_ingredientes" style={{ width: '250px' }}>
+                    <DataTable value={ingredienteClient} responsiveLayout="scroll">
+                        <Column header="Ingredientes" body={cantidadProductoTemplate} sortable headerStyle={{ minWidth: '10rem' }} />
+                    </DataTable>
+                </OverlayPanel>
+            </>
+        );
+    };
 
-  const showIngredientesDetails = (event, ingredientes) => {
-    op5.current.toggle(event);
-    setIngredienteClient(ingredientes);
-  };
+    const productosBodyTemplate = (rowData) => {
+        return (
+            <>
+                <Button type="button" label="" onClick={(e) => showproductosDetails(e, rowData.productos)} icon="pi pi-pencil" className="p-button-rounded p-button-success mr-2" />
+                <OverlayPanel ref={op4} appendTo={typeof window !== 'undefined' ? document.body : null} showCloseIcon id="overlay_panel_productos" style={{ width: '550px' }}>
+                    <DataTable value={productoClient} responsiveLayout="scroll">
+                        <Column header="Cantidad" body={cantidadProductoTemplate} sortable headerStyle={{ minWidth: '10rem' }} />
+                        <Column header="Nombre" body={nombreProductoTemplate} headerStyle={{ minWidth: '8rem' }} />
+                        <Column header="Ingredientes" body={IngredientesBodyTemplate} sortable headerStyle={{ minWidth: '8rem' }} />
+                    </DataTable>
+                </OverlayPanel>
+            </>
+        );
+    };
 
-  const IngredientesBodyTemplate = (rowData) => {
-     
-  return (
-    <>
-      <Button
-        type="button"
-        label=""
-        onClick={(e) => showIngredientesDetails(e, rowData.productos)}
-        icon="pi pi-pencil"
-        className="p-button-rounded p-button-success mr-2"
-      />
-      <OverlayPanel
-        ref={op5}
-        appendTo={typeof window !== "undefined" ? document.body : null}
-        showCloseIcon
-        id="overlay_panel_ingredientes"
-        style={{ width: "250px" }}
-      >
-        <DataTable value={ingredienteClient} responsiveLayout="scroll">
-          <Column header="Ingredientes" body={cantidadProductoTemplate} sortable headerStyle={{ minWidth: "10rem" }} />
-        </DataTable>
-      </OverlayPanel>
-    </>
-  );
-};
-
-  const productosBodyTemplate = (rowData) => {
-     
-  return (
-    <>
-      <Button
-        type="button"
-        label=""
-        onClick={(e) => showproductosDetails(e, rowData.productos)}
-        icon="pi pi-pencil"
-        className="p-button-rounded p-button-success mr-2"
-      />
-      <OverlayPanel
-        ref={op4}
-        appendTo={typeof window !== "undefined" ? document.body : null}
-        showCloseIcon
-        id="overlay_panel_productos"
-        style={{ width: "550px" }}
-      >
-        <DataTable value={productoClient} responsiveLayout="scroll">
-          <Column header="Cantidad" body={cantidadProductoTemplate} sortable headerStyle={{ minWidth: "10rem" }} />
-          <Column header="Nombre" body={nombreProductoTemplate} headerStyle={{ minWidth: "8rem" }} />
-          <Column header="Ingredientes" body={IngredientesBodyTemplate} sortable headerStyle={{ minWidth: "8rem" }} />
-        </DataTable>
-      </OverlayPanel>
-    </>
-  );
-};
-
-
-const clienteBodyTemplate = (rowData) => {
-
-
-  return (
-    <>
-      <Button
-        type="button"
-        label=""
-        onClick={(e) => showClientDetails(e, rowData.cliente)}
-        icon="pi pi-pencil"
-        className="p-button-rounded p-button-info mr-2"
-      />
-      <OverlayPanel
-        ref={op2}
-        appendTo={typeof window !== "undefined" ? document.body : null}
-        showCloseIcon
-        id="overlay_panel"
-        style={{ width: "450px" }}
-      >
-        <DataTable value={[selectedClient]} responsiveLayout="scroll">
-          <Column header="Nombre" body={nombreClienteTemplate} headerStyle={{ minWidth: "10rem" }} />
-          <Column header="Cedula" body={cedulaClienteTemplate} sortable headerStyle={{ minWidth: "8rem" }} />
-          <Column header="Telefono" body={telefonoClienteTemplate} sortable headerStyle={{ minWidth: "8rem" }} />
-        </DataTable>
-      </OverlayPanel>
-    </>
-  );
-};
+    const clienteBodyTemplate = (rowData) => {
+        return (
+            <>
+                <Button type="button" label="" onClick={(e) => showClientDetails(e, rowData.cliente)} icon="pi pi-pencil" className="p-button-rounded p-button-info mr-2" />
+                <OverlayPanel ref={op2} appendTo={typeof window !== 'undefined' ? document.body : null} showCloseIcon id="overlay_panel" style={{ width: '450px' }}>
+                    <DataTable value={[selectedClient]} responsiveLayout="scroll">
+                        <Column header="Nombre" body={nombreClienteTemplate} headerStyle={{ minWidth: '10rem' }} />
+                        <Column header="Cedula" body={cedulaClienteTemplate} sortable headerStyle={{ minWidth: '8rem' }} />
+                        <Column header="Telefono" body={telefonoClienteTemplate} sortable headerStyle={{ minWidth: '8rem' }} />
+                    </DataTable>
+                </OverlayPanel>
+            </>
+        );
+    };
 
     const lugarBodyTemplate = (rowData) => {
+        const disabled = rowData.lugar.length === 0;
 
-    const disabled = rowData.lugar.length === 0;
-    
-    return (
-        <>
-        <Button
-            type="button"
-            label=""
-            onClick={(e) => showLugarDetails(e, rowData.lugar)}
-            icon="pi pi-pencil"
-            className="p-button-rounded p-button-help mr-2"
-            disabled={disabled}
-        />
-        <OverlayPanel
-            ref={op3}
-            appendTo={typeof window !== "undefined" ? document.body : null}
-            showCloseIcon
-            id="overlay_panel"
-            style={{ width: "450px" }}
-        >
-            <DataTable value={[selectedLugar]} responsiveLayout="scroll">
-            <Column header="Direccion" body={nombreDireccionlugarTemplate} headerStyle={{ minWidth: "10rem" }} />
-            <Column header="Zona" body={nombreZonalugarTemplate} sortable headerStyle={{ minWidth: "8rem" }} />
-            <Column header="Precio" body={precioZonalugarTemplate} sortable headerStyle={{ minWidth: "8rem" }} />
-            </DataTable>
-        </OverlayPanel>
-        </>
-    );
+        return (
+            <>
+                <Button type="button" label="" onClick={(e) => showLugarDetails(e, rowData.lugar)} icon="pi pi-pencil" className="p-button-rounded p-button-help mr-2" disabled={disabled} />
+                <OverlayPanel ref={op3} appendTo={typeof window !== 'undefined' ? document.body : null} showCloseIcon id="overlay_panel" style={{ width: '450px' }}>
+                    <DataTable value={[selectedLugar]} responsiveLayout="scroll">
+                        <Column header="Direccion" body={nombreDireccionlugarTemplate} headerStyle={{ minWidth: '10rem' }} />
+                        <Column header="Zona" body={nombreZonalugarTemplate} sortable headerStyle={{ minWidth: '8rem' }} />
+                        <Column header="Precio" body={precioZonalugarTemplate} sortable headerStyle={{ minWidth: '8rem' }} />
+                    </DataTable>
+                </OverlayPanel>
+            </>
+        );
     };
-
 
     const pagarBodyTemplate = (rowData) => {
         return (
