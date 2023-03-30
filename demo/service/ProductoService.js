@@ -18,8 +18,8 @@ export class NewProductoService {
 
         let arrFinalProduct = [];
 
-        for (let i = 0; i < resProduct.length; i++) {
-            let producto = resProduct[i];
+        for (const element of resProduct) {
+            let producto = element;
 
             let baseProducto;
             let resIngredientes;
@@ -34,8 +34,8 @@ export class NewProductoService {
 
             await responseIngredientes.then((data) => (resIngredientes = data));
 
-            for (let j = 0; j < resIngredientes.length; j++) {
-                let ingrediente = resIngredientes[j];
+            for (const element of resIngredientes) {
+                let ingrediente = element;
 
                 let newIngrediente = {
                     id: null,

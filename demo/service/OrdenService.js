@@ -3,13 +3,13 @@ import getConfig from 'next/config';
 export class OrdenService {
     constructor() {
         this.contextPath = getConfig().publicRuntimeConfig.contextPath;
+        this.ipAddress = window.location.host.split(':')[0];
     }
 
     async getProductoOrden(id) {
-
         let resOrdenCarrito;
 
-        const responseProducto = fetch('http://localhost:10000/orden/all/'+ id, {
+        const responseProducto = fetch(`http://${this.ipAddress}:10000/orden/all/` + id, {
             headers: { 'Cache-Control': 'no-cache' },
             method: 'GET'
         }).then((res) => res.json());
@@ -22,10 +22,9 @@ export class OrdenService {
     }
 
     async getOrden(id) {
-
         let resOrden;
 
-        const responseProducto = fetch('http://localhost:10000/orden/one/'+ id, {
+        const responseProducto = fetch(`http://${this.ipAddress}:10000/orden/one/` + id, {
             headers: { 'Cache-Control': 'no-cache' },
             method: 'GET'
         }).then((res) => res.json());
@@ -37,22 +36,21 @@ export class OrdenService {
         return resOrden;
     }
 
-        async getUpdateOrden(id, descuento, tipo_orden, clienteId, numMesa, lugarId, direccion) {
-
+    async getUpdateOrden(id, descuento, tipo_orden, clienteId, numMesa, lugarId, direccion) {
         let resOrden;
 
-        const responseProducto = fetch('http://localhost:10000/orden/update/'+ id, {
+        const responseProducto = fetch(`http://${this.ipAddress}:10000/orden/update/` + id, {
             headers: { 'content-type': 'application/json' },
             method: 'PUT',
             body: JSON.stringify({
-            descuento: descuento,
-            tipo_orden: tipo_orden,
-            cliente_id: clienteId,
-            numero_mesa: numMesa,
-            lugar_id: lugarId,
-            direccion: direccion
+                descuento: descuento,
+                tipo_orden: tipo_orden,
+                cliente_id: clienteId,
+                numero_mesa: numMesa,
+                lugar_id: lugarId,
+                direccion: direccion
             })
-        })
+        });
 
         await responseProducto.then((data) => (resOrden = data));
 
@@ -62,16 +60,15 @@ export class OrdenService {
     }
 
     DeleteOrden(id) {
-        return fetch('http://localhost:10000/orden/delete/'+ id, {
-            method: 'DELETE',
-        })
+        return fetch(`http://${this.ipAddress}:10000/orden/delete/` + id, {
+            method: 'DELETE'
+        });
     }
 
     async getAllOrden() {
-
         let resOrdenCarrito;
 
-        const responseProducto = fetch('http://localhost:10000/orden/all', {
+        const responseProducto = fetch(`http://${this.ipAddress}:10000/orden/all`, {
             headers: { 'Cache-Control': 'no-cache' },
             method: 'GET'
         }).then((res) => res.json());
@@ -82,5 +79,4 @@ export class OrdenService {
 
         return resOrdenCarrito;
     }
-}    
-    
+}
