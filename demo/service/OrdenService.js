@@ -98,5 +98,28 @@ export class OrdenService {
 
         return resOrdenCarrito;
     }
+
+        async postEstadoOrden(idEstado, idOrden) {
+
+        let resOrdenCarrito;
+
+        const responseProducto = fetch('http://localhost:10000/orden/ordenEstado/create', {
+            headers: { 'content-type': 'application/json' },
+            method: 'POST',
+            body: JSON.stringify({
+            orden_id: idOrden,
+            estado_id: idEstado
+            })
+        });
+
+        await responseProducto.then((dat) =>
+            dat.json().then((res) => resOrdenCarrito = res
+            )
+        );
+      
+        return resOrdenCarrito;
+    }
+
+    
 }    
     

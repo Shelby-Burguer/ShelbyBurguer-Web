@@ -21,6 +21,7 @@ import { ProgressBar } from 'primereact/progressbar';
 import { Tag } from 'primereact/tag';
 import { OverlayPanel } from 'primereact/overlaypanel';
 import { Dropdown } from 'primereact/dropdown';
+import moment from 'moment';
 
 const Crud = () => {
     let emptyProduct = {
@@ -40,11 +41,13 @@ const Crud = () => {
     const [deleteProductDialog, setDeleteProductDialog] = useState(false);
     const [deleteProductsDialog, setDeleteProductsDialog] = useState(false);
     const [product, setProduct] = useState(emptyProduct);
+    const [idOrden, setIdorden] = useState(null);
     const [selectedProducts, setSelectedProducts] = useState(null);
     const [submitted, setSubmitted] = useState(false);
     const [globalFilter, setGlobalFilter] = useState(null);
     const toast = useRef(null);
     const dt = useRef(null);
+    const dtEstado = useRef(null);
     const contextPath = getConfig().publicRuntimeConfig.contextPath;
     const [totalSize, setTotalSize] = useState(0);
     const fileUploadRef = useRef(null);
@@ -180,8 +183,9 @@ const Crud = () => {
         }
     };
 
-    const editProduct = (product) => {
-        setProduct({ ...product });
+    const showEstado = (orden) => {
+        console.log('Test orden', orden)
+        setIdorden(orden);
          setEstadoDialog(true);
     };
 
@@ -248,10 +252,27 @@ const Crud = () => {
         toast.current.show({ severity: 'success', summary: 'Successful', detail: 'Products Deleted', life: 3000 });
     };
 
-    const changeEstado = (estado) => {
-        //const estadoSeleccion = infoEstado.find(dropdownValue.nombre_estado)
-        console.log('Test select', selectedProducts)
-  
+    const changeEstado = async() => {
+        const estadoEnProceso = infoEstado.find((estado) => estado.nombre_estado === dropdownValue.name);
+        const ordenService = new OrdenService();
+        await ordenService.postEstadoOrden(estadoEnProceso.estado_id, idOrden.orden_id);
+
+        await ordenService.getAllOrden().then((data) => {
+        const updatedProductos = data.map((producto) => ({
+            ...producto,
+            productos: producto.productos.map((p) => ({ ...p, cantidad: 1 })),
+        }));
+        setProducts(updatedProductos);
+        });
+
+        ordenService.getAllEstados().then((data) => {
+         const dropdownData = data.map((item) => ({
+            name: item.nombre_estado
+        }));
+        setInfoEstado(data);
+        setTipoProducto(dropdownData);
+        });
+
     };
 
     const onCategoryChange = (e) => {
@@ -445,10 +466,21 @@ const Crud = () => {
     };
 
     const estadoBodyTemplate = (rowData) => {
+
+    const ultimaActualizacion = rowData.estado.reduce((ultima, actual) => {
+    const fechaActual = moment(actual.fecha_historial, 'D/M/YYYY H:m:s');
+    if (!ultima || fechaActual.isAfter(ultima.fecha)) {
+        return { fecha: fechaActual, registro: actual };
+    } else {
+        return ultima;
+    }
+    }, null);
+
+    const nombreEstado = ultimaActualizacion.registro.estado.nombre_estado;
         return (
             <>
                 <span className="p-column-title">Unidad</span>
-               <span className={`product-badge status-${rowData.estado[0].estado.nombre_estado.toLowerCase()}`}>{rowData.estado[0].estado.nombre_estado}</span>
+              <span className={`product-badge status-${nombreEstado.toLowerCase()}`}>{nombreEstado}</span>
             </>
         );
     };
@@ -632,6 +664,34 @@ const precioZonalugarTemplate = (lugar) => {
   );
 };
 
+const dialogEstadoBodyTemplate = (rowData) => {
+     
+  return (
+    <>
+      <Button
+        type="button"
+        label=""
+        onClick={(e) => showproductosDetails(e, rowData.productos)}
+        icon="pi pi-pencil"
+        className="p-button-rounded p-button-success mr-2"
+      />
+      <OverlayPanel
+        ref={op4}
+        appendTo={typeof window !== "undefined" ? document.body : null}
+        showCloseIcon
+        id="overlay_panel_productos"
+        style={{ width: "550px" }}
+      >
+        <DataTable value={productoClient} responsiveLayout="scroll">
+          <Column header="Cantidad" body={cantidadProductoTemplate} sortable headerStyle={{ minWidth: "10rem" }} />
+          <Column header="Nombre" body={nombreProductoTemplate} headerStyle={{ minWidth: "8rem" }} />
+          <Column header="Ingredientes" body={IngredientesBodyTemplate} sortable headerStyle={{ minWidth: "8rem" }} />
+        </DataTable>
+      </OverlayPanel>
+    </>
+  );
+};
+
 
 const clienteBodyTemplate = (rowData) => {
 
@@ -702,10 +762,59 @@ const clienteBodyTemplate = (rowData) => {
         );
     };
 
-    const estadochangeBodyTemplate = (rowData) => {
+
+        const estadoMultBodyTemplate = (rowData) => {
         return (
             <>
-                <Button icon="pi pi-pencil" className="p-button-rounded p-button-danger mr-2" onClick={() => editProduct(rowData)} />
+                <span className="p-column-title">Unidad</span>
+                    {rowData.estado.nombre_estado}
+            </>
+        );
+    };
+
+    const estadoMomentoBodyTemplate = (rowData) => {
+        return (
+            <>
+                <span className="p-column-title">Unidad</span>
+                    {rowData.fecha_historial}
+            </>
+        );
+    };
+
+    const estadochangeBodyTemplate = (rowData) => {
+    const test = rowData.estado 
+        return (
+            <>
+            <Button icon="pi pi-pencil" className="p-button-rounded p-button-danger mr-2" onClick={() => showEstado(rowData)} />
+
+            <Dialog visible={EstadoDialog} style={{ width: '550px' }} header="Cambio de estado" modal className="p-fluid" onHide={hideDialog}>
+                        <div className="formgrid grid">
+                            <div className="field col">
+                                <h6>Estado</h6>
+                                <Dropdown value={dropdownValue} onChange={(e) => setDropdownValue(e.value)} options={tipoProducto} optionLabel="name" placeholder="Select" />
+                            </div>
+                            <div className="field col flex align-items-center justify-content-between" style={{flexDirection: 'column'}}>
+                                <h6 htmlFor="costo"></h6>
+                                <Button label="Nuevo" icon="pi pi-plus" className="p-button-success mr-2" onClick={() => changeEstado()} />
+                            </div>
+                        </div>
+                        <DataTable
+                        ref={dtEstado}
+                        value={idOrden && idOrden.estado ? idOrden.estado : []}
+                        selection={selectedProducts}
+                        onSelectionChange={(e) => setSelectedProducts(e.value)}
+                        dataKey="id"
+                        className="datatable-responsive"
+                        globalFilter={globalFilter}
+                        emptyMessage="No products found."
+                        header={headerEstado}
+                        responsiveLayout="scroll"
+                    >
+                        <Column field="nombre" header="Nombre de estado" body= {estadoMultBodyTemplate} sortable headerStyle={{ minWidth: '10rem' }}></Column>
+                        <Column field="unidad" header="Momento de cambio" body= {estadoMomentoBodyTemplate} sortable headerStyle={{ minWidth: '10rem' }}></Column>
+                    </DataTable>
+                    </Dialog>
+
             </>
         );
     };
@@ -785,35 +894,6 @@ const clienteBodyTemplate = (rowData) => {
                         <Column header="Pago" body={pagarBodyTemplate} headerStyle={{ minWidth: '4rem' }}></Column>
                         <Column header="Cambio estado" body={estadochangeBodyTemplate} headerStyle={{ minWidth: '4rem' }}></Column>
                     </DataTable>
-
-                    <Dialog visible={EstadoDialog} style={{ width: '550px' }} header="Cambio de estado" modal className="p-fluid" onHide={hideDialog}>
-                        <div className="formgrid grid">
-                            <div className="field col">
-                                <h6>Estado</h6>
-                                <Dropdown value={dropdownValue} onChange={(e) => setDropdownValue(e.value)} options={tipoProducto} optionLabel="name" placeholder="Select" />
-                            </div>
-                            <div className="field col flex align-items-center justify-content-between" style={{flexDirection: 'column'}}>
-                                <h6 htmlFor="costo"></h6>
-                                <Button label="Nuevo" icon="pi pi-plus" className="p-button-success mr-2" onClick={() => changeEstado(selectedProducts)} />
-                            </div>
-                        </div>
-                        <DataTable
-                        ref={dt}
-                        value={products}
-                        selection={selectedProducts}
-                        onSelectionChange={(e) => setSelectedProducts(e.value)}
-                        dataKey="id"
-                        className="datatable-responsive"
-                        globalFilter={globalFilter}
-                        emptyMessage="No products found."
-                        header={headerEstado}
-                        responsiveLayout="scroll"
-                    >
-                        <Column field="nombre" header="Nombre de estado" sortable headerStyle={{ minWidth: '10rem' }}></Column>
-                        <Column field="unidad" header="Momento de cambio" sortable headerStyle={{ minWidth: '10rem' }}></Column>
-                    </DataTable>
-                    </Dialog>
-
                     <Dialog visible={pagoDialog} style={{ width: '550px' }} header="Métodos de pago" modal className="p-fluid" onHide={hideDialog}>
                     <div className="">
                        
