@@ -18,6 +18,7 @@ import Router from 'next/router';
 import { Tooltip } from 'primereact/tooltip';
 import { ProgressBar } from 'primereact/progressbar';
 import { Tag } from 'primereact/tag';
+import { Dropdown } from 'primereact/dropdown';
 
 const Crud = () => {
     let emptyProduct = {
@@ -27,12 +28,19 @@ const Crud = () => {
         nombreImage: '',
         objectURL: '',
         urlImage: '',
-        fileImage: '',
+        fileImage: ''
     };
 
+    const dropdownValues = [
+        { name: 'Unidad', code: 'u' },
+        { name: 'Gramos', code: 'gr' },
+        { name: 'No Aplica', code: 'na' }
+    ];
+
     const [products, setProducts] = useState(null);
-    const [file, setfile] = useState(null); 
+    const [file, setfile] = useState(null);
     const [productDialog, setProductDialog] = useState(false);
+    const [dropdownValue, setDropdownValue] = useState(null);
     const [deleteProductDialog, setDeleteProductDialog] = useState(false);
     const [deleteProductsDialog, setDeleteProductsDialog] = useState(false);
     const [product, setProduct] = useState(emptyProduct);
@@ -44,23 +52,21 @@ const Crud = () => {
     const contextPath = getConfig().publicRuntimeConfig.contextPath;
     const [totalSize, setTotalSize] = useState(0);
     const fileUploadRef = useRef(null);
-    
-    useEffect(async() => {
+
+    useEffect(async () => {
         const ingredienteService = new IngredienteService();
         const result = await ingredienteService.getIngredientes();
         console.log('test', result);
         setProducts(result);
-
     }, []);
 
-
-
-   /* const formatCurrency = (value) => {
+    /* const formatCurrency = (value) => {
         return value.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
     };*/
 
     const openNew = () => {
         setProduct(emptyProduct);
+        setDropdownValue(null);
         setSubmitted(false);
         setProductDialog(true);
     };
@@ -78,49 +84,48 @@ const Crud = () => {
         setDeleteProductsDialog(false);
     };
 
-
-    const saveProduct = async() => {
+    const saveProduct = async () => {
         setSubmitted(true);
         if (product.nombre.trim()) {
-            let _products = [...products];
-            let _product = { ...product };
+            if (product.unidad.trim()) {
+                let _products = [...products];
+                let _product = { ...product };
+                if (product.id) {
+                    const index = findIndexById(product.id);
+                    _products[index] = _product;
+                    const ingredienteService = new IngredienteService();
+                    ingredienteService.updateIngredientes(_product);
+                    toast.current.show({ severity: 'success', summary: 'Successful', detail: 'Product Updated', life: 3000 });
+                } else {
+                    const ingredienteService = new IngredienteService();
+                    const response = await ingredienteService.postIngredientes(_product, file);
+                    _product = { ...response };
+                    console.log('Imagen file', _product.fileImage);
+                    console.log('ImagenURL', _product.urlImage);
+                    console.log('ImagenName', _product.nombreImage);
+                    //console.log('test',_product.image.objectURL)
+                    /*const test  = new FileReader();
+                     test.readAsDataURL(response.image);
+                     test.addEventListener('load', () => {
+                        const res = test.result;
+                        _product.image = res.toString();
+                        console.log('resultado',_product.image);
+                     })
+                     */
 
-            if (product.id) {
-                const index = findIndexById(product.id);
-                _products[index] = _product;
-                const ingredienteService = new IngredienteService();
-                ingredienteService.updateIngredientes(_product);
-                toast.current.show({ severity: 'success', summary: 'Successful', detail: 'Product Updated', life: 3000 });
-            } else {
-                
-                const ingredienteService = new IngredienteService();
-                const response = await ingredienteService.postIngredientes(_product, file);
-                 _product = { ...response };
-                 console.log('Imagen file', _product.fileImage);
-                 console.log('ImagenURL', _product.urlImage);
-                 console.log('ImagenName', _product.nombreImage);
-                 //console.log('test',_product.image.objectURL)
-                 /*const test  = new FileReader();
-                 test.readAsDataURL(response.image);
-                 test.addEventListener('load', () => {
-                    const res = test.result;
-                    _product.image = res.toString();
-                    console.log('resultado',_product.image);
-                 })
-                 */
-                 
-                 _products.push(_product);
-                toast.current.show({ severity: 'success', summary: 'Successful', detail: 'Product Created', life: 3000 });
+                    _products.push(_product);
+                    toast.current.show({ severity: 'success', summary: 'Successful', detail: 'Product Created', life: 3000 });
+                }
+                setProducts(_products);
+                setProductDialog(false);
+                setProduct(emptyProduct);
             }
-            setProducts(_products);
-            setProductDialog(false);
-            setProduct(emptyProduct);
         }
     };
 
     const editProduct = (product) => {
         setProduct({ ...product });
-         setProductDialog(true);
+        setProductDialog(true);
     };
 
     const confirmDeleteProduct = (product) => {
@@ -128,7 +133,7 @@ const Crud = () => {
         setDeleteProductDialog(true);
     };
 
-    /*Para eliminar solo el que tiene el boton*/ 
+    /*Para eliminar solo el que tiene el boton*/
     const deleteProduct = () => {
         let _products = products.filter((val) => val.id !== product.id);
         setProducts(_products);
@@ -145,7 +150,7 @@ const Crud = () => {
             if (products[i].id === id) {
                 index = i;
                 break;
-            }   
+            }
         }
 
         return index;
@@ -167,16 +172,15 @@ const Crud = () => {
     const confirmDeleteSelected = () => {
         setDeleteProductsDialog(true);
     };
-    
-    /*Para eliminar todos los seleccionados en checkbox*/ 
+
+    /*Para eliminar todos los seleccionados en checkbox*/
     const deleteSelectedProducts = () => {
-        console.log('Delete Select Product',selectedProducts);
         let _products = products.filter((val) => !selectedProducts.includes(val));
         const ingredienteService = new IngredienteService();
         ingredienteService.DeleteIngredientes(selectedProducts[0].id);
         setProducts(_products);
         setDeleteProductsDialog(false);
-        setSelectedProducts(null);    
+        setSelectedProducts(null);
         toast.current.show({ severity: 'success', summary: 'Successful', detail: 'Products Deleted', life: 3000 });
     };
 
@@ -194,6 +198,12 @@ const Crud = () => {
         setProduct(_product);
     };
 
+    const onDropdownChange = (event) => {
+        const selectedValue = event.target.value;
+        setDropdownValue(selectedValue);
+        setProduct((prevState) => ({ ...prevState, unidad: selectedValue.name }));
+    };
+
     const onInputNumberChange = (e, name) => {
         const val = e.value || 0;
         let _product = { ...product };
@@ -203,46 +213,46 @@ const Crud = () => {
     };
 
     const onUpload = () => {
-        toast.current.show({severity: 'info', summary: 'Success', detail: 'File Uploaded'});
-    }
+        toast.current.show({ severity: 'info', summary: 'Success', detail: 'File Uploaded' });
+    };
 
     const onTemplateSelect = (e) => {
         let _totalSize = totalSize;
-        Object.keys(e.files).forEach(file => {
+        Object.keys(e.files).forEach((file) => {
             _totalSize += file.size;
         });
 
         setTotalSize(_totalSize);
-    }
+    };
 
     const onTemplateUpload = (e) => {
         let _totalSize = 0;
-        e.files.forEach(file => {
-            _totalSize += (file.size || 0);
+        e.files.forEach((file) => {
+            _totalSize += file.size || 0;
         });
 
         setTotalSize(_totalSize);
-        toast.current.show({severity: 'info', summary: 'Success', detail: 'File Uploaded'});
-    }
+        toast.current.show({ severity: 'info', summary: 'Success', detail: 'File Uploaded' });
+    };
 
     const onTemplateClear = () => {
         setTotalSize(0);
-    }
+    };
 
     const onTemplateRemove = (file, callback) => {
         setTotalSize(totalSize - file.size);
         callback();
-    }
+    };
 
-     const headerTemplate = (options) => {
+    const headerTemplate = (options) => {
         const { className, chooseButton, cancelButton } = options;
         return (
-            <div className={className} style={{backgroundColor: 'transparent', display: 'flex', alignItems: 'center'}}>
-                {chooseButton}       
+            <div className={className} style={{ backgroundColor: 'transparent', display: 'flex', alignItems: 'center' }}>
+                {chooseButton}
                 {cancelButton}
             </div>
         );
-    }
+    };
 
     /*var saveBlob = (function () {
     var a = document.createElement("a");
@@ -258,29 +268,24 @@ const Crud = () => {
     }());*/
 
     function saveBlob(blob, fileName) {
-    var a = document.createElement("a");
-    document.body.appendChild(a);
-    a.style = "display: none";
+        var a = document.createElement('a');
+        document.body.appendChild(a);
+        a.style = 'display: none';
 
-    var url = window.URL.createObjectURL(blob);
-    a.href = url;
-    a.download = fileName;
-    a.click();
-    window.URL.revokeObjectURL(url);
-    };
-
-
+        var url = window.URL.createObjectURL(blob);
+        a.href = url;
+        a.download = fileName;
+        a.click();
+        window.URL.revokeObjectURL(url);
+    }
 
     const itemTemplate = (file, props) => {
-    console.log('Original File', file);
+        console.log('Original File', file);
 
-
-
-
-    setfile(file);
+        setfile(file);
         return (
             <div className="flex align-items-center flex-wrap">
-                <div className="flex align-items-center" style={{width: '40%'}}>
+                <div className="flex align-items-center" style={{ width: '40%' }}>
                     <img alt={file.name} role="presentation" src={file.objectURL} width={100} />
                     <span className="flex flex-column text-left ml-3">
                         {file.name}
@@ -288,41 +293,40 @@ const Crud = () => {
                     </span>
                 </div>
                 <Tag value={props.formatSize} severity="warning" className="px-3 py-2 ml-auto" />
-                
             </div>
-        )
-    }
+        );
+    };
 
     const emptyTemplate = () => {
         return (
             <div className="flex align-items-center flex-column">
-                <i className="pi pi-image mt-1 p-5" style={{'fontSize': '4em', borderRadius: '50%', backgroundColor: 'var(--surface-b)', color: 'var(--surface-d)'}}></i>
-                <span style={{'fontSize': '1.2em', color: 'var(--text-color-secondary)'}} className="my-4">Arrastre y suelte la imagen aqui</span>
+                <i className="pi pi-image mt-1 p-5" style={{ fontSize: '4em', borderRadius: '50%', backgroundColor: 'var(--surface-b)', color: 'var(--surface-d)' }}></i>
+                <span style={{ fontSize: '1.2em', color: 'var(--text-color-secondary)' }} className="my-4">
+                    Arrastre y suelte la imagen aqui
+                </span>
             </div>
-        )
-    }
+        );
+    };
 
     const chooseOptions = {
-        label: 'Archivo', 
+        label: 'Archivo',
         icon: 'pi pi-fw pi-plus'
     };
 
-
     const cancelOptions = {
-        label: 'Cancelar', 
-        icon: 'pi pi-times', 
+        label: 'Cancelar',
+        icon: 'pi pi-times',
         className: 'p-button-danger'
     };
-    
 
     const leftToolbarTemplate = () => {
         return (
             <React.Fragment>
                 <div className="my-2">
-                 <span className="block mt-2 md:mt-0 p-input-icon-left">
+                    <span className="block mt-2 md:mt-0 p-input-icon-left">
                         <i className="pi pi-search" />
                         <InputText type="search" onInput={(e) => setGlobalFilter(e.target.value)} placeholder="Buscar..." />
-                 </span>
+                    </span>
                 </div>
             </React.Fragment>
         );
@@ -359,7 +363,7 @@ const Crud = () => {
         return (
             <>
                 <span className="p-column-title">Image</span>
-                <img src={`${contextPath}/demo/images/combo/Verduras_y_frutas.jpg`} alt={rowData.nombreImage} className="shadow-2" width="100" />
+                <img src={`${contextPath}/demo/images/ingredientes/${rowData.nombreImage}`} alt={rowData.nombreImage} className="shadow-2" width="100" />
             </>
         );
     };
@@ -433,12 +437,12 @@ const Crud = () => {
                         <div className="field">
                             <h6 htmlFor="nombre">Nombre</h6>
                             <InputText id="nombre" value={product.nombre} onChange={(e) => onInputChange(e, 'nombre')} required autoFocus className={classNames({ 'p-invalid': submitted && !product.nombre })} />
-                            {submitted && !product.nombre && <small className="p-invalid">Name is required.</small>}
+                            {submitted && !product.nombre && <small className="p-invalid">El nombre es requerido.</small>}
                         </div>
                         <div className="field">
                             <h6 htmlFor="unidad">Unidad</h6>
-                            <InputText id="unidad" value={product.unidad} onChange={(e) => onInputChange(e, 'unidad')} required autoFocus className={classNames({ 'p-invalid': submitted && !product.unidad })} />
-                            {submitted && !product.unidad && <small className="p-invalid">Name is required.</small>}
+                            <Dropdown value={dropdownValue} onChange={onDropdownChange} options={dropdownValues} optionLabel="name" placeholder="Selecciona" required className={classNames({ 'p-invalid': submitted && !product.unidad })} />
+                            {submitted && !product.unidad && <small className="p-invalid">La Unidad es requerida.</small>}
                         </div>
                         <div>
                             <Tooltip target=".custom-choose-btn" content="Choose" position="bottom" />
@@ -446,12 +450,25 @@ const Crud = () => {
                             <Tooltip target=".custom-cancel-btn" content="Clear" position="bottom" />
 
                             <div className="card">
-
                                 <h6>Agregar imagen</h6>
-                                <FileUpload ref={fileUploadRef} name="demo[]" url="https://primefaces.org/primereact/showcase/upload.php" accept="image/*" maxFileeSize={1000000}
-                                    onUpload={onTemplateUpload} onSelect={onTemplateSelect} onError={onTemplateClear} onClear={onTemplateClear} onTemplateRemove= {onTemplateRemove}
-                                    headerTemplate={headerTemplate} itemTemplate={itemTemplate} emptyTemplate={emptyTemplate} footer={productDialogFooter}
-                                    chooseOptions={chooseOptions} cancelOptions={cancelOptions}/>
+                                <FileUpload
+                                    ref={fileUploadRef}
+                                    name="demo[]"
+                                    url="https://primefaces.org/primereact/showcase/upload.php"
+                                    accept="image/*"
+                                    maxFileSize={1000000}
+                                    onUpload={onTemplateUpload}
+                                    onSelect={onTemplateSelect}
+                                    onError={onTemplateClear}
+                                    onClear={onTemplateClear}
+                                    onTemplateRemove={onTemplateRemove}
+                                    headerTemplate={headerTemplate}
+                                    itemTemplate={itemTemplate}
+                                    emptyTemplate={emptyTemplate}
+                                    footer={productDialogFooter}
+                                    chooseOptions={chooseOptions}
+                                    cancelOptions={cancelOptions}
+                                />
                             </div>
                         </div>
                     </Dialog>

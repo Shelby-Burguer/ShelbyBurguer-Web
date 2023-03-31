@@ -48,9 +48,9 @@ export const InputDemo = () => {
         { label: 'J', value: 'J' }
     ];
 
-
     const crudObject = Crud();
     const router = useRouter();
+    const ipAddress = window.location.host.split(':')[0];
     let defaultCliente = crudObject.emptyElements.cliente;
     let defaultDropdown = 'V';
     let defaultLugar = crudObject.emptyElements.lugar;
@@ -197,7 +197,6 @@ export const InputDemo = () => {
             setTotal(total);
         });
 
-    
         const lugarService = new LugarService();
         let data = await lugarService.getLugaresByTipo('zona');
         data = crudObject.isArray(data, 'cliente');
@@ -264,10 +263,10 @@ export const InputDemo = () => {
         setCheckboxValue(selectedValue);
     };
 
-        const handleDireccionChange = (event) => {
-            const value = event.target.value;
-            setDireccion(value);
-        }   
+    const handleDireccionChange = (event) => {
+        const value = event.target.value;
+        setDireccion(value);
+    };
 
     const itemTemplate = (option) => {
         return (
@@ -322,8 +321,6 @@ export const InputDemo = () => {
         );
     };
 
-    
-
     const DeliveryOptions = ({ direccion, handleDireccionChange, dropdownValue, setDropdownValue, dropdownValues }) => {
         return (
             <div>
@@ -337,7 +334,7 @@ export const InputDemo = () => {
                 </div>
                 <div className="flex align-items-center justify-content-between my-3">
                     <Button label="Nueva Zona" onClick={() => crudObject.openNew('lugar')} />
-                </div>            
+                </div>
             </div>
         );
     };
@@ -349,8 +346,8 @@ export const InputDemo = () => {
         if (opciones === 'delivery') {
             tipo_Orden = opciones;
             console.log('Vamo a ver', dropdownValue);
-            zonaSelected = dropdownValue.id
-            setTotal()
+            zonaSelected = dropdownValue.id;
+            setTotal();
         } else if (mostradorOptions === 'Comer Aqui') {
             NumMesa = tableNumber;
             tipo_Orden = mostradorOptions;
@@ -377,7 +374,7 @@ export const InputDemo = () => {
         setClient(emptyClient);
         setMostradorOptions('');
         setOpciones('');
-        router.push('http://localhost:3000/pages/Ordenes/gestion/');
+        router.push(`http://${ipAddress}:3000/pages/Ordenes/gestion/`);
     };
 
     const deleteOrder = async () => {
@@ -390,8 +387,6 @@ export const InputDemo = () => {
         setDataViewValue([]);
         setdiscount('');
     };
-
-    
 
     const saveCliente = async () => {
         const elementName = 'cliente';
@@ -436,7 +431,7 @@ export const InputDemo = () => {
         }
     };
 
-        const saveLugar = async () => {
+    const saveLugar = async () => {
         const elementName = 'lugar';
         _setSubmitted(true);
         console.log('Esta entrando en cliente?');
@@ -472,17 +467,16 @@ export const InputDemo = () => {
             _setElement(elementName);
             let newdata = await lugarService.getLugaresByTipo('zona');
             newdata = crudObject.isArray(newdata, 'cliente');
-                    const dropdownData = newdata.map((item) => ({
-            id: item.id_lugar,
-            name: item.nombre_lugar
-        }));
+            const dropdownData = newdata.map((item) => ({
+                id: item.id_lugar,
+                name: item.nombre_lugar
+            }));
             _setElements(newdata);
             setdropdownValues(dropdownData);
-            crudObject.hideDialog
+            crudObject.hideDialog;
             _setVisibleLugar(false);
         }
     };
-
 
     const handleNumeroMesaChange = (event) => {
         setMostradorOptions(event.target.value);
@@ -493,12 +487,12 @@ export const InputDemo = () => {
     };
 
     const handleTempDireccionChange = (value) => {
-  setTempDireccion(value);
-};  
+        setTempDireccion(value);
+    };
 
-const handleDireccionBlur = () => {
-  setDireccion(tempDireccion);
-};
+    const handleDireccionBlur = () => {
+        setDireccion(tempDireccion);
+    };
 
     const handleSubmit = (event) => {
         event.preventDefault();
@@ -541,8 +535,6 @@ const handleDireccionBlur = () => {
         );
     };
 
-
-
     const handleOpcionesChange = (event) => {
         setOpciones(event.target.value);
         setMostradorOptions('');
@@ -557,8 +549,6 @@ const handleDireccionBlur = () => {
         setTipoOrden(event.target.value);
         setTableNumber('');
     };
-
-
 
     const handlePayment = () => {
         // Aquí iría la lógica para procesar el pago según el método seleccionado
@@ -646,7 +636,7 @@ const handleDireccionBlur = () => {
                         </div>
                     </div>
                     {opciones === 'mostrador' && <MostradorOptions mostradorOptions={mostradorOptions} handleMostradorOptionsChange={handleMostradorOptionsChange} tableNumber={tableNumber} setTableNumber={setTableNumber} />}
-                   {opciones === 'delivery' && <DeliveryOptions direccion={direccion} handleDireccionChange={handleDireccionChange} dropdownValue={dropdownValue} setDropdownValue={setDropdownValue} dropdownValues={dropdownValues} />}
+                    {opciones === 'delivery' && <DeliveryOptions direccion={direccion} handleDireccionChange={handleDireccionChange} dropdownValue={dropdownValue} setDropdownValue={setDropdownValue} dropdownValues={dropdownValues} />}
                 </div>
             </div>
             {/*<h5>Tipo de orden</h5>

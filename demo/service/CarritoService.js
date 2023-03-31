@@ -3,71 +3,58 @@ import getConfig from 'next/config';
 export class CarritoService {
     constructor() {
         this.contextPath = getConfig().publicRuntimeConfig.contextPath;
+        this.ipAddress = window.location.host.split(':')[0];
     }
 
     async postOrdenCarrito() {
-
         let resOrdenCarrito;
 
-        const responseProducto = fetch('http://localhost:10000/orden/create', {
+        const responseProducto = fetch(`http://${this.ipAddress}:10000/orden/create`, {
             headers: { 'content-type': 'application/json' },
-            method: 'POST',
+            method: 'POST'
         });
 
-        await responseProducto.then((dat) =>
-            dat.json().then((res) => resOrdenCarrito = res
-            )
-        );
-      
+        await responseProducto.then((dat) => dat.json().then((res) => (resOrdenCarrito = res)));
+
         return resOrdenCarrito;
     }
 
     async postCarrito(idProducto, idOrden) {
-
         let resOrdenCarrito;
 
-        const responseProducto = fetch('http://localhost:10000/carrito/create', {
+        const responseProducto = fetch(`http://${this.ipAddress}:10000/carrito/create`, {
             headers: { 'content-type': 'application/json' },
             method: 'POST',
             body: JSON.stringify({
-                idProducto:idProducto,
+                idProducto: idProducto,
                 idOrden: idOrden
-
             })
         });
 
-        await responseProducto.then((dat) =>
-            dat.json().then((res) => resOrdenCarrito = res
-            )
-        );
+        await responseProducto.then((dat) => dat.json().then((res) => (resOrdenCarrito = res)));
         console.log('ResCarrito', resOrdenCarrito);
         return resOrdenCarrito;
     }
 
-        async postProductosOrden(ProductosOrden) {
-
+    async postProductosOrden(ProductosOrden) {
         let resOrdenCarrito;
 
-        const responseProducto = fetch('http://localhost:10000/carrito/create/ProductoOrdene', {
+        const responseProducto = fetch(`http://${this.ipAddress}:10000/carrito/create/ProductoOrdene`, {
             headers: { 'content-type': 'application/json' },
             method: 'POST',
             body: JSON.stringify(ProductosOrden)
         });
 
-        await responseProducto.then((dat) =>
-            dat.json().then((res) => resOrdenCarrito = res
-            )
-        );
+        await responseProducto.then((dat) => dat.json().then((res) => (resOrdenCarrito = res)));
 
         console.log('ResCarrito', resOrdenCarrito);
         return resOrdenCarrito;
     }
 
     async getCarrito() {
-
         let resOrdenCarrito;
 
-        const responseProducto = fetch('http://localhost:10000/carrito/all', {
+        const responseProducto = fetch(`http://${this.ipAddress}:10000/carrito/all`, {
             headers: { 'Cache-Control': 'no-cache' },
             method: 'GET'
         }).then((res) => res.json());
@@ -80,15 +67,14 @@ export class CarritoService {
     }
 
     DeleteCarrito() {
-        return fetch('http://localhost:10000/carrito/delete', {
+        return fetch(`http://${this.ipAddress}:10000/carrito/delete`, {
             method: 'DELETE'
         });
     }
 
     DeleteProductoCarrito(idProducto) {
-        return fetch('http://localhost:10000/carrito/delete/'+ idProducto, {
+        return fetch(`http://${this.ipAddress}:10000/carrito/delete/` + idProducto, {
             method: 'DELETE'
         });
     }
-
 }
