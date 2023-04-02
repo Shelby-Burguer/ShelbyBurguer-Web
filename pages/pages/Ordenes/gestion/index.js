@@ -70,6 +70,7 @@ const Crud = () => {
     const [denomination, setDenomination] = useState(0);
     const [referenceNumber, setReferenceNumber] = useState('');
     const [email, setEmail] = useState('');
+    const [pagos, setPagos] = useState(null);
 
     useEffect(async () => {
         const ingredienteService = new IngredienteService();
@@ -92,6 +93,10 @@ const Crud = () => {
         setInfoEstado(data);
         setTipoProducto(dropdownData);
         });
+
+   
+        
+
 
     }, []);
 
@@ -128,10 +133,53 @@ const Crud = () => {
         setEstadoDialog(true);
     };
 
+
+    const addPago = async() => {
+   
+        if(paymentMethod === "electronico"){
+        
+        let pago = {
+        numero_referencia: referenceNumber,
+        tipo_pago: electronicPaymentMethod
+        };
+
+        const ordenService = new OrdenService();
+        await ordenService.postOrdenPago(idOrden.orden_id, pago, paymentMethod);
+  
+        } else if (paymentMethod ===  "efectivo"){
+
+        let pago = {
+        numero_serie: serialNumber,
+        denominacion: denomination,
+        tipo_pago:currency  
+        };
+
+        const ordenService = new OrdenService();
+        await ordenService.postOrdenPago(idOrden.orden_id, pago, paymentMethod);
+       
+        } else {
+        let pago = {
+        correo_electronico: email
+        }
+        const ordenService = new OrdenService();
+        await ordenService.postOrdenPago(idOrden.orden_id, pago,  paymentMethod);
+        }
+     
+        setPaymentMethod('');
+        setReferenceNumber('');
+        setElectronicPaymentMethod('');
+        setSerialNumber('');
+        setDenomination(0);
+        setCurrency('VES');
+        setEmail('');
+
+    };
+
     const hideDialog = () => {
         setSubmitted(false);
         setEstadoDialog(false);
         setPagoDialog(false);
+        
     };
 
     const hideDeleteProductDialog = () => {
@@ -185,10 +233,13 @@ const Crud = () => {
          setEstadoDialog(true);
     };
 
-    
-    const pagoEstado = (product) => {
-        setProduct({ ...product });
-         setPagoDialog(true);
+    const pagoOrden = async(orden) => {
+        const ordenService = new OrdenService();
+        const pagos = await ordenService.getAllPagosOrden(orden.orden_id)
+        setPagos(pagos);
+        setIdorden(orden);
+        setPagoDialog(true);
+
     };
 
     const confirmDeleteProduct = (product) => {
@@ -249,6 +300,8 @@ const Crud = () => {
     };
 
     const changeEstado = async() => {
+
+        console.log('llega aqui')
         const estadoEnProceso = infoEstado.find((estado) => estado.nombre_estado === dropdownValue.name);
         const ordenService = new OrdenService();
         await ordenService.postEstadoOrden(estadoEnProceso.estado_id, idOrden.orden_id);
@@ -525,6 +578,24 @@ const Crud = () => {
         );
     };
 
+    const fechaPagoTemplate = (pago) => {
+        return (
+            <>
+                <span className="p-column-title">Cantidad</span>
+                {pago.fecha_historial}
+            </>
+        );
+    };
+
+    const nombrePagoTemplate = (pago) => {
+        return (
+            <>
+                <span className="p-column-title">Cantidad</span>
+                {pago.tipo_pago}
+            </>
+        );
+    };
+
     const nombreClienteTemplate = (cliente) => {
         return (
             <>
@@ -731,7 +802,8 @@ const clienteBodyTemplate = (rowData) => {
     const pagarBodyTemplate = (rowData) => {
         return (
             <>
-                <Button icon="pi pi-pencil" className="p-button-rounded p-button-secondary mr-2" onClick={() => pagoEstado(rowData)} />
+                <Button icon="pi pi-pencil" className="p-button-rounded p-button-secondary mr-2" onClick={() => pagoOrden(rowData)} />           
+            
             </>
         );
     };
@@ -756,7 +828,7 @@ const clienteBodyTemplate = (rowData) => {
     };
 
     const estadochangeBodyTemplate = (rowData) => {
-    const test = rowData.estado 
+
         return (
             <>
             <Button icon="pi pi-pencil" className="p-button-rounded p-button-danger mr-2" onClick={() => showEstado(rowData)} />
@@ -870,13 +942,11 @@ const clienteBodyTemplate = (rowData) => {
                     </DataTable>
                     <Dialog visible={pagoDialog} style={{ width: '550px' }} header="Métodos de pago" modal className="p-fluid" onHide={hideDialog}>
                     <div className="">
-                       
                                 <div>
                                     <div className="field">
                                     <Dropdown value={paymentMethod} options={paymentOptions} onChange={(e) => setPaymentMethod(e.value)} placeholder="Seleccione" />
                                     </div>
                                     {paymentMethod === "electronico" && (
-
                                         <label>
                                         <div className="formgrid grid"></div>
                                             <div className="field col">
@@ -888,11 +958,9 @@ const clienteBodyTemplate = (rowData) => {
                                                 <InputText type="text" value={referenceNumber} onChange={(e) => setReferenceNumber(e.target.value)} />
                                             </div>
                                         </label>
-
                                     )}
                                     {paymentMethod === "efectivo" && (
                                     <>
-                                
                                         <div className="formgrid grid"></div>
                                         <div className="field col">
                                         <label htmlFor="moneda">Moneda</label>
@@ -915,18 +983,16 @@ const clienteBodyTemplate = (rowData) => {
                                         <div className="field col">
                                         <label htmlFor="correo_electrónico">Correo electrónico</label>
                                         <InputText type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
-                                        </div>
-                                
+                                        </div>  
                                     )}
                                 </div>
                         <div className="field col flex align-items-center justify-content-between">
-                                <h6 htmlFor="costo"></h6>
-                                <Button label="Nuevo" icon="pi pi-plus" className="p-button-success mr-2" onClick={openNew} />
+                                <Button label="Agregar" icon="pi pi-plus" className="p-button-success mr-2" onClick={() => addPago()} />
                             </div>
                         </div>
                         <DataTable
                         ref={dt}
-                        value={products}
+                        value={pagos}
                         selection={selectedProducts}
                         onSelectionChange={(e) => setSelectedProducts(e.value)}
                         dataKey="id"
@@ -936,10 +1002,11 @@ const clienteBodyTemplate = (rowData) => {
                         header={headerPago}
                         responsiveLayout="scroll"
                     >
-                        <Column field="nombre" header="Nombre de Pago" sortable  headerStyle={{ minWidth: '10rem' }}></Column>
-                        <Column field="unidad" header="Momento de pago" sortable  headerStyle={{ minWidth: '10rem' }}></Column>
+                        <Column field="nombre" header="Nombre de Pago" sortable body={nombrePagoTemplate} headerStyle={{ minWidth: '10rem' }}></Column>
+                        <Column field="unidad" header="Momento de pago" body={fechaPagoTemplate} sortable  headerStyle={{ minWidth: '10rem' }}></Column>
                     </DataTable>
                     </Dialog>
+
 
                     <Dialog visible={deleteProductDialog} style={{ width: '450px' }} header="Confirm" modal footer={deleteProductDialogFooter} onHide={hideDeleteProductDialog}>
                         <div className="flex align-items-center justify-content-center">

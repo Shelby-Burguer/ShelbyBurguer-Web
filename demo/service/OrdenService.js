@@ -117,6 +117,44 @@ export class OrdenService {
         return resOrdenCarrito;
     }
 
+    async postOrdenPago(id, pago, tipo_pago) {
+        console.log(id, pago, tipo_pago)
+        let resOrdenCarrito;
+
+        const responseProducto = fetch(`http://${this.ipAddress}:10000/orden/ordenPago/create/`+ id, {
+            headers: { 'content-type': 'application/json' },
+            method: 'POST',
+            body: JSON.stringify({
+            tipo_pago: tipo_pago,
+            pagoElectronico: pago,
+            pagoEfectivo: pago ,
+            zelle: pago,
+            })
+        });
+
+        await responseProducto.then((dat) =>
+            dat.json().then((res) => resOrdenCarrito = res
+            )
+        );
+      
+        return resOrdenCarrito;
+    }
+
+    async getAllPagosOrden(id) {
+        let resOrdenCarrito;
+
+        const responseProducto = fetch(`http://${this.ipAddress}:10000/orden/pagos/All/`+ id, {
+            headers: { 'Cache-Control': 'no-cache' },
+            method: 'GET'
+        }).then((res) => res.json());
+
+        await responseProducto.then((data) => (resOrdenCarrito = data));
+
+        console.log('ResALLOrden', resOrdenCarrito);
+
+        return resOrdenCarrito;
+    }
+
     
 }    
     
