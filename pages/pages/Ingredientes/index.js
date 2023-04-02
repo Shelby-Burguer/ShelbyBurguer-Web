@@ -4,19 +4,13 @@ import { Column } from 'primereact/column';
 import { DataTable } from 'primereact/datatable';
 import { Dialog } from 'primereact/dialog';
 import { FileUpload } from 'primereact/fileupload';
-import { InputNumber } from 'primereact/inputnumber';
 import { InputText } from 'primereact/inputtext';
-import { InputTextarea } from 'primereact/inputtextarea';
-import { RadioButton } from 'primereact/radiobutton';
-import { Rating } from 'primereact/rating';
 import { Toast } from 'primereact/toast';
 import { Toolbar } from 'primereact/toolbar';
 import { classNames } from 'primereact/utils';
 import React, { useEffect, useRef, useState } from 'react';
 import { IngredienteService } from '../../../demo/service/IngredienteService';
-import Router from 'next/router';
 import { Tooltip } from 'primereact/tooltip';
-import { ProgressBar } from 'primereact/progressbar';
 import { Tag } from 'primereact/tag';
 import { Dropdown } from 'primereact/dropdown';
 
@@ -28,7 +22,8 @@ const Crud = () => {
         nombreImage: '',
         objectURL: '',
         urlImage: '',
-        fileImage: ''
+        fileImage: '',
+        proteina: ''
     };
 
     const dropdownValues = [
@@ -37,9 +32,15 @@ const Crud = () => {
         { name: 'No Aplica', code: 'na' }
     ];
 
+    const proteinaValues = [
+        { name: 'Si', code: 's' },
+        { name: 'No', code: 'n' }
+    ];
+
     const [products, setProducts] = useState(null);
     const [file, setfile] = useState(null);
     const [productDialog, setProductDialog] = useState(false);
+    const [proteinaDropValue, setProteinaDropValue] = useState(null);
     const [dropdownValue, setDropdownValue] = useState(null);
     const [deleteProductDialog, setDeleteProductDialog] = useState(false);
     const [deleteProductsDialog, setDeleteProductsDialog] = useState(false);
@@ -67,6 +68,7 @@ const Crud = () => {
     const openNew = () => {
         setProduct(emptyProduct);
         setDropdownValue(null);
+        setProteinaDropValue({ name: 'No', code: 'n' });
         setSubmitted(false);
         setProductDialog(true);
     };
@@ -112,7 +114,6 @@ const Crud = () => {
                         console.log('resultado',_product.image);
                      })
                      */
-
                     _products.push(_product);
                     toast.current.show({ severity: 'success', summary: 'Successful', detail: 'Product Created', life: 3000 });
                 }
@@ -202,6 +203,12 @@ const Crud = () => {
         const selectedValue = event.target.value;
         setDropdownValue(selectedValue);
         setProduct((prevState) => ({ ...prevState, unidad: selectedValue.name }));
+    };
+
+    const onProteinaDropChange = (event) => {
+        const selectedValue = event.target.value;
+        setProteinaDropValue(selectedValue);
+        setProduct((prevState) => ({ ...prevState, proteina: selectedValue.name }));
     };
 
     const onInputNumberChange = (e, name) => {
@@ -359,6 +366,15 @@ const Crud = () => {
         );
     };
 
+    const proteinaBodyTemplate = (rowData) => {
+        return (
+            <>
+                <span className="p-column-title">Proteina</span>
+                {rowData.proteina}
+            </>
+        );
+    };
+
     const imageBodyTemplate = (rowData) => {
         return (
             <>
@@ -427,9 +443,10 @@ const Crud = () => {
                         responsiveLayout="scroll"
                     >
                         <Column selectionMode="multiple" headerStyle={{ width: '4rem' }}></Column>
+                        <Column header="Image" body={imageBodyTemplate}></Column>
                         <Column field="nombre" header="Nombre" sortable body={nombreBodyTemplate} headerStyle={{ minWidth: '10rem' }}></Column>
                         <Column field="unidad" header="Unidad" sortable body={unidadBodyTemplate} headerStyle={{ minWidth: '10rem' }}></Column>
-                        <Column header="Image" body={imageBodyTemplate}></Column>
+                        <Column field="proteina" header="Proteina" sortable body={proteinaBodyTemplate} headerStyle={{ minWidth: '10rem' }}></Column>
                         <Column body={actionBodyTemplate} headerStyle={{ minWidth: '10rem' }}></Column>
                     </DataTable>
 
@@ -443,6 +460,11 @@ const Crud = () => {
                             <h6 htmlFor="unidad">Unidad</h6>
                             <Dropdown value={dropdownValue} onChange={onDropdownChange} options={dropdownValues} optionLabel="name" placeholder="Selecciona" required className={classNames({ 'p-invalid': submitted && !product.unidad })} />
                             {submitted && !product.unidad && <small className="p-invalid">La Unidad es requerida.</small>}
+                        </div>
+                        <div className="field">
+                            <h6 htmlFor="proteina">Proteina</h6>
+                            <Dropdown value={proteinaDropValue} onChange={onProteinaDropChange} options={proteinaValues} optionLabel="name" placeholder="Selecciona" required className={classNames({ 'p-invalid': submitted && !product.proteina })} />
+                            {submitted && !product.proteina && <small className="p-invalid">La Proteina es requerida.</small>}
                         </div>
                         <div>
                             <Tooltip target=".custom-choose-btn" content="Choose" position="bottom" />

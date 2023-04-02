@@ -14,7 +14,8 @@ export class IngredienteService {
             unidad: '',
             objectURL: '',
             nombreImagen: '',
-            datosImagen: null
+            datosImagen: null,
+            proteina: ''
         };
 
         const responseBody = fetch(`http://${this.ipAddress}:10000/ingrediente/all`, {
@@ -26,8 +27,8 @@ export class IngredienteService {
         console.log('vamo a ver', resProduct);
         let testresProduct = [];
         let claves = Object.keys(resProduct);
-        for (let i = 0; i < claves.length; i++) {
-            let clave = claves[i];
+        for (const element of claves) {
+            let clave = element;
 
             const blobtest = new Blob([resProduct[clave].datosImagen], { type: 'image/png' });
 
@@ -64,7 +65,8 @@ export class IngredienteService {
             method: 'PATCH',
             body: JSON.stringify({
                 nombre: data.nombre,
-                unidad: data.unidad
+                unidad: data.unidad,
+                proteina: data.proteina
             }),
             responseType: 'json'
         });
@@ -77,7 +79,8 @@ export class IngredienteService {
             unidad: '',
             nombreImage: '',
             urlImage: '',
-            fileImage: ''
+            fileImage: '',
+            proteina: ''
         };
 
         let resImg = {
@@ -91,13 +94,14 @@ export class IngredienteService {
             body: JSON.stringify({
                 nombre: data.nombre,
                 unidad: data.unidad,
+                proteina: data.proteina,
                 objectURL: file.objectURL
             })
         });
 
         await responseBody.then((dat) =>
             dat.json().then((res) => {
-                (resProduct.id = res.id), (resProduct.nombre = res.nombre), (resProduct.unidad = res.unidad), (resProduct.urlImage = res.objectURL);
+                (resProduct.id = res.id), (resProduct.nombre = res.nombre), (resProduct.unidad = res.unidad), (resProduct.urlImage = res.objectURL), (resProduct.proteina = res.proteina);
             })
         );
 
