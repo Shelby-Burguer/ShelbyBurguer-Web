@@ -55,8 +55,12 @@ const Crud = () => {
     const op3 = useRef(null);
     const op4 = useRef(null);
     const op5 = useRef(null);
+    const op6 = useRef(null);
+    const op7 = useRef(null);
+    const op8 = useRef(null);
     const [selectedProduct, setSelectedProduct] = useState(null);
     const [selectedClient, setSelectedClient] = useState(null);
+    const [detallePago, setDetallePago] = useState(null);
     const [selectedLugar, setSelectedLugar] = useState(null);
     const [productoClient, setProductoClient] = useState(null);
     const [ingredienteClient, setIngredienteClient] = useState(null);
@@ -69,8 +73,9 @@ const Crud = () => {
     const [serialNumber, setSerialNumber] = useState('');
     const [denomination, setDenomination] = useState(0);
     const [referenceNumber, setReferenceNumber] = useState('');
+    const [monto, setMonto] = useState('');
     const [email, setEmail] = useState('');
-    const [pagos, setPagos] = useState(null);
+    const [pagos, setPagos] = useState([]);
 
     useEffect(async () => {
         const ingredienteService = new IngredienteService();
@@ -144,27 +149,27 @@ const Crud = () => {
         };
 
         const ordenService = new OrdenService();
-        await ordenService.postOrdenPago(idOrden.orden_id, pago, paymentMethod);
+        await ordenService.postOrdenPago(idOrden.orden_id, pago, paymentMethod, monto);
   
         } else if (paymentMethod ===  "efectivo"){
 
         let pago = {
         numero_serie: serialNumber,
         denominacion: denomination,
-        tipo_pago:currency  
+        tipo_pago:currency
         };
 
         const ordenService = new OrdenService();
-        await ordenService.postOrdenPago(idOrden.orden_id, pago, paymentMethod);
+        await ordenService.postOrdenPago(idOrden.orden_id, pago, paymentMethod, monto);
        
         } else {
         let pago = {
         correo_electronico: email
         }
         const ordenService = new OrdenService();
-        await ordenService.postOrdenPago(idOrden.orden_id, pago,  paymentMethod);
+        await ordenService.postOrdenPago(idOrden.orden_id, pago,  paymentMethod, monto);
         }
-     
+        setMonto('')
         setPaymentMethod('');
         setReferenceNumber('');
         setElectronicPaymentMethod('');
@@ -235,7 +240,9 @@ const Crud = () => {
 
     const pagoOrden = async(orden) => {
         const ordenService = new OrdenService();
+        console.log('Estos son los pagos', orden)
         const pagos = await ordenService.getAllPagosOrden(orden.orden_id)
+        
         setPagos(pagos);
         setIdorden(orden);
         setPagoDialog(true);
@@ -301,7 +308,6 @@ const Crud = () => {
 
     const changeEstado = async() => {
 
-        console.log('llega aqui')
         const estadoEnProceso = infoEstado.find((estado) => estado.nombre_estado === dropdownValue.name);
         const ordenService = new OrdenService();
         await ordenService.postEstadoOrden(estadoEnProceso.estado_id, idOrden.orden_id);
@@ -547,6 +553,17 @@ const Crud = () => {
         );
     };
 
+    const TotalBodyTemplate = (rowData) => {
+    return (
+    <>
+      <span className="p-column-title">
+        <span >Unidad</span>
+      </span>
+      <span style={{ fontWeight: "bold", fontSize: "1.1em" }}>{rowData.total_orden}$</span>
+    </>
+    );
+    };
+
     const numeroMesaBodyTemplate = (rowData) => {
         return (
             <>
@@ -587,6 +604,15 @@ const Crud = () => {
         );
     };
 
+    const montoPagoTemplate = (pago) => {
+        return (
+            <>
+                <span className="p-column-title">Cantidad</span>
+                {pago.monto}$
+            </>
+        );
+    };
+
     const nombrePagoTemplate = (pago) => {
         return (
             <>
@@ -601,6 +627,70 @@ const Crud = () => {
             <>
                 <span className="p-column-title">Nombre</span>
                 {cliente.nombre_cliente}
+            </>
+        );
+    };
+
+    const correoBodyTemplate = (cliente) => {
+        return (
+            <>
+                <span className="p-column-title">Nombre</span>
+                {cliente.correo_electronico}
+            </>
+        );
+    };
+
+    const numeroReferenciaBodyTemplate = (cliente) => {
+        return (
+            <>
+                <span className="p-column-title">Nombre</span>
+                {cliente.numero_referencia}
+            </>
+        );
+    };
+
+    
+    const tipoElectronicoBodyTemplate = (cliente) => {
+        return (
+            <>
+                <span className="p-column-title">Nombre</span>
+                {cliente.tipo_electronico}
+            </>
+        );
+    };
+
+    const tipoEfectivoBodyTemplate = (cliente) => {
+        return (
+            <>
+                <span className="p-column-title">Nombre</span>
+                {cliente.tipo_efectivo}
+            </>
+        );
+    };
+
+    const montoPagoClienteTemplate = (cliente) => {
+        return (
+            <>
+                <span className="p-column-title">Cedula</span>
+                Bs.{cliente.monto}
+            </>
+        );
+    };
+
+    const denominacionPagoClienteTemplate = (cliente) => {
+        return (
+            <>
+                <span className="p-column-title">Cedula</span>
+                {cliente.denominacion}
+            </>
+        );
+    };
+
+    const numeroRefPagoClienteTemplate = (cliente) => {
+        return (
+            <>
+                <span className="p-column-title">Cedula</span>
+                {cliente.numero_serie}
             </>
         );
     };
@@ -645,7 +735,7 @@ const Crud = () => {
         return (
             <>
                 <span className="p-column-title">Direccion</span>
-                {lugar[0].precio_historico}
+                {lugar[0].precio_historico}$
             </>
         );
     };
@@ -653,6 +743,19 @@ const Crud = () => {
     const showClientDetails = (event, client) => {
         op2.current.toggle(event);
         setSelectedClient(client);
+    };
+
+    const showPagosDetails = (event, pago) => {
+        if (pago.tipo_pago === "electrónico"){
+        op6.current.toggle(event);
+        } else if (pago.tipo_pago === "efectivo"){
+        op7.current.toggle(event);
+        } else { 
+        op8.current.toggle(event);
+        }
+        setDetallePago(pago);
+        console.log("Datos",detallePago )
+        
     };
 
     const showLugarDetails = (event, lugar) => {
@@ -753,6 +856,141 @@ const dialogEstadoBodyTemplate = (rowData) => {
 };
 
 
+const detalleoldPagosBodyTemplate = (rowData) => {
+
+
+  return (
+    <>
+      <Button
+        type="button"
+        label=""
+        onClick={(e) => showPagosDetails(e, rowData)}
+        icon="pi pi-pencil"
+        className="p-button-rounded p-button-info mr-2"
+      />
+      <OverlayPanel
+        ref={op6}
+        appendTo={typeof window !== "undefined" ? document.body : null}
+        showCloseIcon
+        id="overlay_panel"
+        style={{ width: "450px" }}
+      >
+        <DataTable value={[detallePago]} responsiveLayout="scroll">
+          <Column header="Numero de referencia" body={numeroReferenciaBodyTemplate} headerStyle={{ minWidth: "10rem" }} />
+          <Column header="Tipo de pago Electronico" body={tipoElectronicoBodyTemplate} sortable headerStyle={{ minWidth: "8rem" }} />
+          <Column header="Monto" body={montoPagoClienteTemplate} sortable headerStyle={{ minWidth: "8rem" }} />
+        </DataTable>
+      </OverlayPanel>
+            <OverlayPanel
+        ref={op7}
+        appendTo={typeof window !== "undefined" ? document.body : null}
+        showCloseIcon
+        id="overlay_panel"
+        style={{ width: "450px" }}
+      >
+       <DataTable value={[detallePago]} responsiveLayout="scroll">
+          <Column header="Tipo modeda" body={tipoEfectivoBodyTemplate} headerStyle={{ minWidth: "10rem" }} />
+          <Column header="Monto" body={montoPagoClienteTemplate} sortable headerStyle={{ minWidth: "8rem" }} />
+          <Column header="Denominacion" body={denominacionPagoClienteTemplate} sortable headerStyle={{ minWidth: "8rem" }} />
+          <Column header="Denominacion" body={numeroRefPagoClienteTemplate} sortable headerStyle={{ minWidth: "8rem" }} />
+        </DataTable>
+      </OverlayPanel>
+      <OverlayPanel
+        ref={op8}
+        appendTo={typeof window !== "undefined" ? document.body : null}
+        showCloseIcon
+        id="overlay_panel"
+        style={{ width: "450px" }}
+      >
+       <DataTable value={[detallePago]} responsiveLayout="scroll">
+          <Column header="Zelle" body={correoBodyTemplate} headerStyle={{ minWidth: "10rem" }} />
+        </DataTable>
+      </OverlayPanel>
+    </>
+  );
+};
+
+const detallePagosBodyTemplate = (rowData) => {
+  return (
+    <>
+      <Button
+        type="button"
+        label=""
+        onClick={(e) => showPagosDetails(e, rowData)}
+        icon="pi pi-pencil"
+        className="p-button-rounded p-button-info mr-2"
+      />
+      {detallePago && (
+        <OverlayPanel
+          ref={op6}
+          appendTo={typeof window !== "undefined" ? document.body : null}
+          showCloseIcon
+          id="overlay_panel"
+          style={{ width: "450px" }}
+          visible
+        >
+          {detallePago.tipo_pago ? (
+            <DataTable value={[detallePago]} responsiveLayout="scroll">
+              {detallePago.tipo_pago === "electronico" && (
+                <>
+                  <Column
+                    header="Nombre"
+                    body={nombreClienteTemplate}
+                    headerStyle={{ minWidth: "10rem" }}
+                  />
+                  <Column
+                    header="Cedula"
+                    body={cedulaClienteTemplate}
+                    sortable
+                    headerStyle={{ minWidth: "8rem" }}
+                  />
+                  <Column
+                    header="Telefono"
+                    body={telefonoClienteTemplate}
+                    sortable
+                    headerStyle={{ minWidth: "8rem" }}
+                  />
+                </>
+              )}
+              {detallePago.tipo_pago === "efectivo" && (
+                <>
+                  <Column header="Banco" field="banco" />
+                  <Column header="Numero de referencia" field="num_referencia" />
+                </>
+              )}
+              {detallePago.tipo_pago === "Zelle" && (
+                <>
+                  <Column
+                    header="Nombre"
+                    body={correoBodyTemplate}
+                    headerStyle={{ minWidth: "10rem" }}
+                  />
+                  <Column
+                    header="Cedula"
+                    body={cedulaClienteTemplate}
+                    sortable
+                    headerStyle={{ minWidth: "8rem" }}
+                  />
+                  <Column
+                    header="Telefono"
+                    body={telefonoClienteTemplate}
+                    sortable
+                    headerStyle={{ minWidth: "8rem" }}
+                  />
+                </>
+              )}
+            </DataTable>
+          ) : (
+            <div>Cargando...</div>
+          )}
+        </OverlayPanel>
+      )}
+    </>
+  );
+};
+
+
+
 const clienteBodyTemplate = (rowData) => {
 
 
@@ -804,6 +1042,88 @@ const clienteBodyTemplate = (rowData) => {
             <>
                 <Button icon="pi pi-pencil" className="p-button-rounded p-button-secondary mr-2" onClick={() => pagoOrden(rowData)} />           
             
+                <Dialog visible={pagoDialog} style={{ width: '550px' }} header="Métodos de pago" modal className="p-fluid" onHide={hideDialog}>
+                    <div className="">
+                                <div>
+                                    <div className="field">
+                                    <Dropdown value={paymentMethod} options={paymentOptions} onChange={(e) => setPaymentMethod(e.value)} placeholder="Seleccione" />
+                                    </div>
+                                    {paymentMethod === "electronico" && (
+                                        <label>
+                                        <div className="formgrid grid"></div>
+                                            <div className="field col">
+                                                <label htmlFor="tipo_de_pago_electrónico"> Tipo de pago electrónico</label>
+                                                <Dropdown value={electronicPaymentMethod} options={electronicPaymentOptions} onChange={(e) => setElectronicPaymentMethod(e.value)} placeholder="Seleccione" />
+                                            </div>
+                                            <div className="field col">
+                                                <label htmlFor="numero_de_referencia">Número de referencia</label>
+                                                <InputText type="text" value={referenceNumber} onChange={(e) => setReferenceNumber(e.target.value)} />
+                                            </div>
+                                            <div className="field col">
+                                                <label htmlFor="monto">Monto</label>
+                                                <InputText type="text" value={monto} onChange={(e) => setMonto(e.target.value)} />
+                                            </div>
+                                        </label>
+                                    )}
+                                    {paymentMethod === "efectivo" && (
+                                    <>
+                                        <div className="formgrid grid"></div>
+                                        <div className="field col">
+                                        <label htmlFor="moneda">Moneda</label>
+                                        <Dropdown value={currency} options={currencyOptions} onChange={(e) => setCurrency(e.value)} placeholder="Seleccione" />
+                                        </div>
+                                        
+                                        <div className="field col">
+                                        <label htmlFor="numero_de_serie">Número de serie (opcional)</label>
+                                        <InputText type="text" value={serialNumber} onChange={(e) => setSerialNumber(e.target.value)} />
+                                        </div>
+                                    
+                                        <div className="field col">
+                                        <label htmlFor="numero_de_serie">Denominación</label>
+                                        <InputText type="text" value={denomination} onChange={(e) => setDenomination(e.target.value)} />
+                                        </div>      
+                                        <div className="field col">
+                                                <label htmlFor="monto">Monto</label>
+                                                <InputText type="text" value={monto} onChange={(e) => setMonto(e.target.value)} />
+                                        </div>          
+
+                                    </>
+                                    )}
+                                    {paymentMethod === "zelle" && (
+                                        <div className="field col">
+                                        <label htmlFor="correo_electrónico">Correo electrónico</label>
+                                        <InputText type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+                                        <div className="field col">
+                                        <label htmlFor="monto">Monto</label>
+                                         <InputText type="text" value={monto} onChange={(e) => setMonto(e.target.value)} />
+                                         </div>
+                                        </div>  
+                                        
+                                    )}
+                                </div>
+                        <div className="field col flex align-items-center justify-content-between">
+                                <Button label="Agregar" icon="pi pi-plus" className="p-button-success mr-2" onClick={() => addPago()} />
+                            </div>
+                        </div>
+                        <DataTable
+                        ref={dt}
+                        value={pagos ? pagos : []}
+                        selection={selectedProducts}
+                        onSelectionChange={(e) => setSelectedProducts(e.value)}
+                        dataKey="id"
+                        className="datatable-responsive"
+                        globalFilter={globalFilter}
+                        emptyMessage={pagos ? "No products found." : "No payments found."}
+                        header={headerPago}
+                        responsiveLayout="scroll"
+                    >
+                        <Column field="nombre" header="Nombre de Pago" sortable body={nombrePagoTemplate} headerStyle={{ minWidth: '10rem' }}></Column>
+                        <Column field="unidad" header="Momento de pago" body={fechaPagoTemplate} sortable  headerStyle={{ minWidth: '10rem' }}></Column>
+                        <Column field="unidad" header="Monto" body={montoPagoTemplate} sortable  headerStyle={{ minWidth: '10rem' }}></Column>
+                        <Column header="Cliente" body={detalleoldPagosBodyTemplate} headerStyle={{ minWidth: '4rem' }}></Column>
+                    </DataTable>
+                    </Dialog>
+
             </>
         );
     };
@@ -934,80 +1254,13 @@ const clienteBodyTemplate = (rowData) => {
                         <Column field="unidad" header="Confirmacion de pago" sortable body={confirmacionPagoBodyTemplate} headerStyle={{ minWidth: '10rem' }}></Column>
                         <Column field="unidad" header="Descuento" sortable body={descuentoBodyTemplate} headerStyle={{ minWidth: '10rem' }}></Column>
                         <Column field="unidad" header="Numero de mesa" sortable body={numeroMesaBodyTemplate} headerStyle={{ minWidth: '10rem' }}></Column>
+                        <Column field="unidad" header="Total" sortable body={TotalBodyTemplate} headerStyle={{ minWidth: '10rem' }}></Column>
                         <Column header="Productos" body={productosBodyTemplate} headerStyle={{ minWidth: '4rem' }}></Column>
                         <Column header="Cliente" body={clienteBodyTemplate} headerStyle={{ minWidth: '4rem' }}></Column>
                         <Column header="Zona" body={lugarBodyTemplate} headerStyle={{ minWidth: '4rem' }}></Column>
                         <Column header="Pago" body={pagarBodyTemplate} headerStyle={{ minWidth: '4rem' }}></Column>
                         <Column header="Cambio estado" body={estadochangeBodyTemplate} headerStyle={{ minWidth: '4rem' }}></Column>
                     </DataTable>
-                    <Dialog visible={pagoDialog} style={{ width: '550px' }} header="Métodos de pago" modal className="p-fluid" onHide={hideDialog}>
-                    <div className="">
-                                <div>
-                                    <div className="field">
-                                    <Dropdown value={paymentMethod} options={paymentOptions} onChange={(e) => setPaymentMethod(e.value)} placeholder="Seleccione" />
-                                    </div>
-                                    {paymentMethod === "electronico" && (
-                                        <label>
-                                        <div className="formgrid grid"></div>
-                                            <div className="field col">
-                                                <label htmlFor="tipo_de_pago_electrónico"> Tipo de pago electrónico</label>
-                                                <Dropdown value={electronicPaymentMethod} options={electronicPaymentOptions} onChange={(e) => setElectronicPaymentMethod(e.value)} placeholder="Seleccione" />
-                                            </div>
-                                            <div className="field col">
-                                                <label htmlFor="numero_de_referencia">Número de referencia</label>
-                                                <InputText type="text" value={referenceNumber} onChange={(e) => setReferenceNumber(e.target.value)} />
-                                            </div>
-                                        </label>
-                                    )}
-                                    {paymentMethod === "efectivo" && (
-                                    <>
-                                        <div className="formgrid grid"></div>
-                                        <div className="field col">
-                                        <label htmlFor="moneda">Moneda</label>
-                                        <Dropdown value={currency} options={currencyOptions} onChange={(e) => setCurrency(e.value)} placeholder="Seleccione" />
-                                        </div>
-                                        
-                                        <div className="field col">
-                                        <label htmlFor="numero_de_serie">Número de serie (opcional)</label>
-                                        <InputText type="text" value={serialNumber} onChange={(e) => setSerialNumber(e.target.value)} />
-                                        </div>
-                                    
-                                        <div className="field col">
-                                        <label htmlFor="numero_de_serie">Denominación</label>
-                                        <InputText type="text" value={denomination} onChange={(e) => setDenomination(e.target.value)} />
-                                        </div>                
-
-                                    </>
-                                    )}
-                                    {paymentMethod === "zelle" && (
-                                        <div className="field col">
-                                        <label htmlFor="correo_electrónico">Correo electrónico</label>
-                                        <InputText type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
-                                        </div>  
-                                    )}
-                                </div>
-                        <div className="field col flex align-items-center justify-content-between">
-                                <Button label="Agregar" icon="pi pi-plus" className="p-button-success mr-2" onClick={() => addPago()} />
-                            </div>
-                        </div>
-                        <DataTable
-                        ref={dt}
-                        value={pagos}
-                        selection={selectedProducts}
-                        onSelectionChange={(e) => setSelectedProducts(e.value)}
-                        dataKey="id"
-                        className="datatable-responsive"
-                        globalFilter={globalFilter}
-                        emptyMessage="No products found."
-                        header={headerPago}
-                        responsiveLayout="scroll"
-                    >
-                        <Column field="nombre" header="Nombre de Pago" sortable body={nombrePagoTemplate} headerStyle={{ minWidth: '10rem' }}></Column>
-                        <Column field="unidad" header="Momento de pago" body={fechaPagoTemplate} sortable  headerStyle={{ minWidth: '10rem' }}></Column>
-                    </DataTable>
-                    </Dialog>
-
-
                     <Dialog visible={deleteProductDialog} style={{ width: '450px' }} header="Confirm" modal footer={deleteProductDialogFooter} onHide={hideDeleteProductDialog}>
                         <div className="flex align-items-center justify-content-center">
                             <i className="pi pi-exclamation-triangle mr-3" style={{ fontSize: '2rem' }} />

@@ -140,6 +140,9 @@ export const InputDemo = () => {
     const [writeValue, setWriteValue] = useState(null);
     const [clienteId, setClienteID] = useState(null);
     const [tempDireccion, setTempDireccion] = useState('');
+    const [zonaDropdown, setZonaDropdown] = useState(null);
+    const [zonalugares, setZonalugares] = useState(null);
+    const [selectedZone, setSelectedZone] = useState(null);
 
     const currencyOptions = [
         { label: 'Bolívares', value: 'Bs.' },
@@ -200,7 +203,7 @@ export const InputDemo = () => {
         const lugarService = new LugarService();
         let data = await lugarService.getLugaresByTipo('zona');
         data = crudObject.isArray(data, 'cliente');
-
+        setZonalugares(data);
         // Convertir los datos al formato esperado por el Dropdown
         const dropdownData = data.map((item) => ({
             id: item.id_lugar,
@@ -321,7 +324,29 @@ export const InputDemo = () => {
         );
     };
 
-    const DeliveryOptions = ({ direccion, handleDireccionChange, dropdownValue, setDropdownValue, dropdownValues }) => {
+const handleDropdownChange = async(e) => {
+  const selectedValue = e.value;
+  const selectedZona = zonalugares.find((zona) => zona.id_lugar === selectedValue.id);
+
+  const oldSelectedZone = selectedZone;
+  setSelectedZone(selectedZona); // Actualiza la zona seleccionada
+
+  let TotalZone = parseInt(total);
+
+  if (oldSelectedZone !== null) { // Si ya había una zona seleccionada previamente
+    TotalZone -= oldSelectedZone.precio_lugar; // Resta su precio del total
+  }
+  TotalZone += selectedZona.precio_lugar; // Agrega el precio de la zona nueva al total
+
+  setTotal(TotalZone.toString()); // Actualiza el total con el nuevo valor
+
+  setDropdownValue(selectedValue);
+  setZonaDropdown(selectedValue);
+}
+
+
+    const DeliveryOptions = ({ direccion, handleDireccionChange, dropdownValue, handleDropdownChange, dropdownValues }) => {
+
         return (
             <div>
                 <div className="p-field">
@@ -330,7 +355,7 @@ export const InputDemo = () => {
                 </div>
                 <div className="p-field">
                     <label htmlFor="telefono">Zona</label>
-                    <Dropdown value={dropdownValue} onChange={(e) => setDropdownValue(e.value)} options={dropdownValues} optionLabel="name" placeholder="Select" />
+                    <Dropdown value={dropdownValue} onChange={handleDropdownChange} options={dropdownValues} optionLabel="name" placeholder="Select" />
                 </div>
                 <div className="flex align-items-center justify-content-between my-3">
                     <Button label="Nueva Zona" onClick={() => crudObject.openNew('lugar')} />
@@ -347,7 +372,6 @@ export const InputDemo = () => {
             tipo_Orden = opciones;
             console.log('Vamo a ver', dropdownValue);
             zonaSelected = dropdownValue.id;
-            setTotal();
         } else if (mostradorOptions === 'Comer Aqui') {
             NumMesa = tableNumber;
             tipo_Orden = mostradorOptions;
@@ -362,7 +386,7 @@ export const InputDemo = () => {
         const clienteService = new ClienteService();
         const clienteSelect = await clienteService.getOneClientes(client.cedula);
         const ordenService = new OrdenService();
-        ordenService.getUpdateOrden(orderId, discount, tipo_Orden, clienteSelect.id_cliente, NumMesa, zonaSelected, direccion);
+        ordenService.getUpdateOrden(orderId, discount, tipo_Orden, clienteSelect.id_cliente, NumMesa, zonaSelected, direccion, total);
         setWriteValue(null);
         setidOrden('');
         setTotal('0');
@@ -471,6 +495,7 @@ export const InputDemo = () => {
                 id: item.id_lugar,
                 name: item.nombre_lugar
             }));
+            setZonalugares(newdata);
             _setElements(newdata);
             setdropdownValues(dropdownData);
             crudObject.hideDialog;
@@ -535,7 +560,18 @@ export const InputDemo = () => {
         );
     };
 
-    const handleOpcionesChange = (event) => {
+    const handleOpcionesChange = async(event) => {
+        const ordenService = new OrdenService();
+        await ordenService.getProductoOrden(orderId).then((data) => {
+            const updatedProductos = data.map((producto) => ({ ...producto, cantidad: 1 }));
+            setDataViewValue(updatedProductos);
+            let total = 0;
+            data.forEach((producto) => {
+                total += parseFloat(producto.costo_producto);
+            });
+            setTotal(total);
+        });
+        setSelectedZone(null);
         setOpciones(event.target.value);
         setMostradorOptions('');
         setTableNumber('');
@@ -636,7 +672,7 @@ export const InputDemo = () => {
                         </div>
                     </div>
                     {opciones === 'mostrador' && <MostradorOptions mostradorOptions={mostradorOptions} handleMostradorOptionsChange={handleMostradorOptionsChange} tableNumber={tableNumber} setTableNumber={setTableNumber} />}
-                    {opciones === 'delivery' && <DeliveryOptions direccion={direccion} handleDireccionChange={handleDireccionChange} dropdownValue={dropdownValue} setDropdownValue={setDropdownValue} dropdownValues={dropdownValues} />}
+                    {opciones === 'delivery' && <DeliveryOptions direccion={direccion} handleDireccionChange={handleDireccionChange} dropdownValue={dropdownValue} handleDropdownChange={handleDropdownChange} dropdownValues={dropdownValues} />}
                 </div>
             </div>
             {/*<h5>Tipo de orden</h5>
