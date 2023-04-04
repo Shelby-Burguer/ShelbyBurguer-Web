@@ -130,6 +130,7 @@ export const InputDemo = () => {
     const [selectedProducts, setSelectedProducts] = useState(null);
     const [globalFilter, setGlobalFilter] = useState(null);
     const [total, setTotal] = useState('0');
+    const [totalBs, setTotalBs] = useState('0');
     const [idOrden, setidOrden] = useState('');
     const [_clientes, setClientes] = useState(null);
     const [filteredClientes, setFilteredClientes] = useState([]);
@@ -189,15 +190,16 @@ export const InputDemo = () => {
         console.log('Este es el id de orden', idbumber);
 
         await clienteService.getClientes().then((data) => setClientes(data));
-
+        const cambioDia = await ordenService.getMontoDia();
         await ordenService.getProductoOrden(idbumber).then((data) => {
             const updatedProductos = data.map((producto) => ({ ...producto, cantidad: 1 }));
             setDataViewValue(updatedProductos);
             let total = 0;
             data.forEach((producto) => {
                 total += parseFloat(producto.costo_producto);
-            });
+            });      
             setTotal(total);
+            setTotalBs(total*parseFloat(cambioDia[0].monto))
         });
 
         const lugarService = new LugarService();
@@ -339,7 +341,9 @@ const handleDropdownChange = async(e) => {
   TotalZone += selectedZona.precio_lugar; // Agrega el precio de la zona nueva al total
 
   setTotal(TotalZone.toString()); // Actualiza el total con el nuevo valor
-
+  const ordenService = new OrdenService();
+  const cambioDia = await ordenService.getMontoDia();
+  setTotalBs(TotalZone*parseFloat(cambioDia[0].monto));
   setDropdownValue(selectedValue);
   setZonaDropdown(selectedValue);
 }
@@ -562,6 +566,7 @@ const handleDropdownChange = async(e) => {
 
     const handleOpcionesChange = async(event) => {
         const ordenService = new OrdenService();
+        const cambioDia = await ordenService.getMontoDia();
         await ordenService.getProductoOrden(orderId).then((data) => {
             const updatedProductos = data.map((producto) => ({ ...producto, cantidad: 1 }));
             setDataViewValue(updatedProductos);
@@ -570,6 +575,8 @@ const handleDropdownChange = async(e) => {
                 total += parseFloat(producto.costo_producto);
             });
             setTotal(total);
+            setTotalBs(total*parseFloat(cambioDia[0].monto))
+            
         });
         setSelectedZone(null);
         setOpciones(event.target.value);
@@ -797,7 +804,8 @@ const handleDropdownChange = async(e) => {
                             <label htmlFor="descuento">Descuento:</label>
                             <InputText id="descuento" value={discount} onChange={(e) => setdiscount(e.target.value)} />
                         </div>
-                        <div className="carrito-total text-right total-text my-3">Total: {total}$</div>
+                        <div className="carrito-total text-right total-text my-1">Total: {total}$</div>
+                        <div className="carrito-total text-right total-text">Bs. {totalBs}</div>
                     </div>
                     <div className="flex align-items-center justify-content-between my-3">
                         <Button label="Cancelar" className="p-button-danger" onClick={() => deleteOrder()} />

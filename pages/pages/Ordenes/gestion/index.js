@@ -38,10 +38,12 @@ const Crud = () => {
     const [file, setfile] = useState(null); 
     const [EstadoDialog, setEstadoDialog] = useState(false);
     const [pagoDialog, setPagoDialog] = useState(false);
+    const [montoDialog, setMontoDialog] = useState(false);
     const [deleteProductDialog, setDeleteProductDialog] = useState(false);
     const [deleteProductsDialog, setDeleteProductsDialog] = useState(false);
     const [product, setProduct] = useState(emptyProduct);
     const [idOrden, setIdorden] = useState(null);
+    const [montoDia, setMontoDia] = useState(null);
     const [selectedProducts, setSelectedProducts] = useState(null);
     const [submitted, setSubmitted] = useState(false);
     const [globalFilter, setGlobalFilter] = useState(null);
@@ -73,6 +75,7 @@ const Crud = () => {
     const [serialNumber, setSerialNumber] = useState('');
     const [denomination, setDenomination] = useState(0);
     const [referenceNumber, setReferenceNumber] = useState('');
+    const [montoBs, setmMontoBs] = useState('');
     const [monto, setMonto] = useState('');
     const [email, setEmail] = useState('');
     const [pagos, setPagos] = useState([]);
@@ -132,10 +135,13 @@ const Crud = () => {
         toast.current.show({ severity: 'info', summary: 'Product Selected', detail: event.data.name, life: 3000 });
     };
 
-    const openNew = () => {
-        setProduct(emptyProduct);
-        setSubmitted(false);
-        setEstadoDialog(true);
+    const openNew = async() => {
+    
+    const ordenService = new OrdenService();
+    const cambioDia = await ordenService.getMontoDia();
+    setMontoDia(cambioDia);
+    setMontoDialog(true);
+        
     };
 
 
@@ -184,6 +190,7 @@ const Crud = () => {
         setSubmitted(false);
         setEstadoDialog(false);
         setPagoDialog(false);
+        setMontoDialog(false);
         
     };
 
@@ -306,7 +313,17 @@ const Crud = () => {
         toast.current.show({ severity: 'success', summary: 'Successful', detail: 'Products Deleted', life: 3000 });
     };
 
-    const changeEstado = async() => {
+    const cambioDia = async() => {
+
+        const ordenService = new OrdenService();
+        await ordenService.postMontoCambio(montoBs);
+
+        const cambioDia = await ordenService.getMontoDia();
+        setMontoDia(cambioDia);
+        setmMontoBs('');
+    };
+
+        const changeEstado = async() => {
 
         const estadoEnProceso = infoEstado.find((estado) => estado.nombre_estado === dropdownValue.name);
         const ordenService = new OrdenService();
@@ -473,7 +490,7 @@ const Crud = () => {
     const rightToolbarTemplate = () => {
         return (
             <React.Fragment>
-                <Button label="Nuevo" icon="pi pi-plus" className="p-button-success mr-2" onClick={openNew} />
+                <Button label="Cambio del dia" icon="pi pi-plus" className="p-button-success mr-2" onClick={openNew} />
                 <Button label="Exportar" icon="pi pi-upload" className="p-button-help" onClick={exportCSV} />
             </React.Fragment>
         );
@@ -886,7 +903,7 @@ const detalleoldPagosBodyTemplate = (rowData) => {
         appendTo={typeof window !== "undefined" ? document.body : null}
         showCloseIcon
         id="overlay_panel"
-        style={{ width: "450px" }}
+        style={{ width: "550px" }}
       >
        <DataTable value={[detallePago]} responsiveLayout="scroll">
           <Column header="Tipo modeda" body={tipoEfectivoBodyTemplate} headerStyle={{ minWidth: "10rem" }} />
@@ -900,7 +917,7 @@ const detalleoldPagosBodyTemplate = (rowData) => {
         appendTo={typeof window !== "undefined" ? document.body : null}
         showCloseIcon
         id="overlay_panel"
-        style={{ width: "450px" }}
+        style={{ width: "250px" }}
       >
        <DataTable value={[detallePago]} responsiveLayout="scroll">
           <Column header="Zelle" body={correoBodyTemplate} headerStyle={{ minWidth: "10rem" }} />
@@ -1138,6 +1155,24 @@ const clienteBodyTemplate = (rowData) => {
         );
     };
 
+    const MontoBsDiaBodyTemplate = (rowData) => {
+        return (
+            <>
+                <span className="p-column-title">Unidad</span>
+                    Bs. {rowData.monto}
+            </>
+        );
+    };
+
+    const fechaMondoDiaBodyTemplate = (rowData) => {
+        return (
+            <>
+                <span className="p-column-title">Unidad</span>
+                    {rowData.fecha_historial}
+            </>
+        );
+    };
+
     const estadoMomentoBodyTemplate = (rowData) => {
         return (
             <>
@@ -1261,6 +1296,33 @@ const clienteBodyTemplate = (rowData) => {
                         <Column header="Pago" body={pagarBodyTemplate} headerStyle={{ minWidth: '4rem' }}></Column>
                         <Column header="Cambio estado" body={estadochangeBodyTemplate} headerStyle={{ minWidth: '4rem' }}></Column>
                     </DataTable>
+                    <Dialog visible={montoDialog} style={{ width: '550px' }} header="Cambio del dia" modal className="p-fluid" onHide={hideDialog}>
+                        <div className="formgrid grid">
+                            <div className="field col">              
+                                <label htmlFor="monto">Monto</label>
+                                <InputText type="text" value={montoBs} onChange={(e) => setmMontoBs(e.target.value)} />
+                            </div>
+                            <div className="field col flex align-items-center justify-content-between" style={{flexDirection: 'column'}}>
+                                <h6 htmlFor="costo"></h6>
+                                <Button label="Cambiar" icon="pi pi-plus" className="p-button-success mr-2" onClick={() => cambioDia()} />
+                            </div>
+                        </div>
+                        <DataTable
+                        ref={dtEstado}
+                        value={montoDia? montoDia : []}
+                        selection={selectedProducts}
+                        onSelectionChange={(e) => setSelectedProducts(e.value)}
+                        dataKey="id"
+                        className="datatable-responsive"
+                        globalFilter={globalFilter}
+                        emptyMessage="No products found."
+                        header={headerEstado}
+                        responsiveLayout="scroll"
+                    >
+                        <Column field="Monto del dia" header="Nombre de estado" body= {MontoBsDiaBodyTemplate} sortable headerStyle={{ minWidth: '10rem' }}></Column>
+                        <Column field="Momento de cambio" header="Momento de cambio" body= {fechaMondoDiaBodyTemplate} sortable headerStyle={{ minWidth: '10rem' }}></Column>
+                    </DataTable>
+                    </Dialog>
                     <Dialog visible={deleteProductDialog} style={{ width: '450px' }} header="Confirm" modal footer={deleteProductDialogFooter} onHide={hideDeleteProductDialog}>
                         <div className="flex align-items-center justify-content-center">
                             <i className="pi pi-exclamation-triangle mr-3" style={{ fontSize: '2rem' }} />

@@ -169,6 +169,52 @@ async getAllPagosOrden(id) {
   return resOrdenCarrito;
 }
 
+    async postMontoCambio(monto) {
+
+        let resOrdenCarrito;
+
+        const responseProducto = fetch(`http://${this.ipAddress}:10000/orden/montoBsDolares/create`, {
+            headers: { 'content-type': 'application/json' },
+            method: 'POST',
+            body: JSON.stringify({
+            monto: monto,
+            })
+        });
+
+        await responseProducto.then((dat) =>
+            dat.json().then((res) => resOrdenCarrito = res
+            )
+        );
+      
+        return resOrdenCarrito;
+    }
+
+
+async getMontoDia() {
+  let resOrdenCarrito; 
+  const responseProducto = fetch(`http://${this.ipAddress}:10000/orden/montoBsDolares/All/`, {
+    headers: { 'Cache-Control': 'no-cache' },
+    method: 'GET'
+  }).then((res) => {
+    if (!res.ok) {
+      throw new Error('Network response was not ok');
+    }
+    return res.json();
+  });
+
+  await responseProducto.then((data) => {
+    if (data !== null) {
+      resOrdenCarrito = data;
+      console.log(data);
+    }
+  }).catch((error) => {
+    console.error('Error:', error);
+  });
+
+  console.log('ResALLOrden', resOrdenCarrito);
+
+  return resOrdenCarrito;
+}
     
 }    
     
