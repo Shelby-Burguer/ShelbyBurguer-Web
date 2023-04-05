@@ -43,6 +43,10 @@ const Crud = () => {
     const [deleteProductsDialog, setDeleteProductsDialog] = useState(false);
     const [product, setProduct] = useState(emptyProduct);
     const [idOrden, setIdorden] = useState(null);
+    const [total, setTotal] = useState(null);
+    const [totalPagado, setTotalPagado] = useState('0');
+    const [totalPagadoBs, setTotalPagadoBs] = useState('0');
+    const [totalBs, setTotalBs] = useState(null);
     const [montoDia, setMontoDia] = useState(null);
     const [selectedProducts, setSelectedProducts] = useState(null);
     const [submitted, setSubmitted] = useState(false);
@@ -175,6 +179,59 @@ const Crud = () => {
         const ordenService = new OrdenService();
         await ordenService.postOrdenPago(idOrden.orden_id, pago,  paymentMethod, monto);
         }
+        const ordenService = new OrdenService();
+               
+        const pagos = await ordenService.getAllPagosOrden(idOrden.orden_id)
+        
+        const cambioDia = await ordenService.getMontoDia();
+        const totalDolares = parseFloat(idOrden.total_orden)*parseFloat(cambioDia[0].monto);
+
+        if(pagos){
+        const newPagos = await pagos.map((pago) => {
+        if (pago.tipo_pago === 'electrónico' || (pago.tipo_pago === 'efectivo' && pago.tipo_efectivo === 'Bs.')) {
+            pago.montoDolares = (parseFloat(pago.monto) / parseFloat(pago.monto_bs)).toFixed(2);
+        } else {
+            pago.montoDolares = (parseFloat(pago.monto)).toFixed(2);
+        }
+
+        return pago;
+        });
+        const montoCalculoBs = pagos[0].monto_bs
+        const totalMonto = newPagos.reduce((acc, pago) => acc + parseFloat(pago.montoDolares), 0).toFixed(2);
+        const totalPagadoBs =  (totalMonto * montoCalculoBs).toFixed(2);
+        const cambioDia = await ordenService.getMontoDia();
+        console.log('Estos son los pagos', cambioDia);
+     
+      
+        
+        setTotalPagadoBs(totalPagadoBs)
+        setTotalPagado(totalMonto)
+        setTotalBs(totalDolares);
+        setPagos(newPagos);
+        setTotal(idOrden.total_orden);
+        setMonto('')
+        setPaymentMethod('');
+        setReferenceNumber('');
+        setElectronicPaymentMethod('');
+        setSerialNumber('');
+        setDenomination(0);
+        setCurrency('VES');
+        setEmail('');
+        setPagoDialog(true);
+        }else {
+
+        setTotalBs(totalDolares);
+        setTotal(idOrden.total_orden);
+        setPagoDialog(true);
+        setMonto('')
+        setPaymentMethod('');
+        setReferenceNumber('');
+        setElectronicPaymentMethod('');
+        setSerialNumber('');
+        setDenomination(0);
+        setCurrency('VES');
+        setEmail('');
+        }
         setMonto('')
         setPaymentMethod('');
         setReferenceNumber('');
@@ -250,10 +307,41 @@ const Crud = () => {
         console.log('Estos son los pagos', orden)
         const pagos = await ordenService.getAllPagosOrden(orden.orden_id)
         
-        setPagos(pagos);
+        const cambioDia = await ordenService.getMontoDia();
+        const totalDolares = parseFloat(orden.total_orden)*parseFloat(cambioDia[0].monto);
+
+        if(pagos){
+        const newPagos = await pagos.map((pago) => {
+        if (pago.tipo_pago === 'electrónico' || (pago.tipo_pago === 'efectivo' && pago.tipo_efectivo === 'Bs.')) {
+            pago.montoDolares = (parseFloat(pago.monto) / parseFloat(pago.monto_bs)).toFixed(2);
+        } else {
+            pago.montoDolares = (parseFloat(pago.monto)).toFixed(2);
+        }
+
+        return pago;
+        });
+        const montoCalculoBs = pagos[0].monto_bs
+        const totalMonto = newPagos.reduce((acc, pago) => acc + parseFloat(pago.montoDolares), 0).toFixed(2);
+        const totalPagadoBs =  (totalMonto * montoCalculoBs).toFixed(2);
+        const cambioDia = await ordenService.getMontoDia();
+        console.log('Estos son los pagos', cambioDia);
+     
+      
+        
+        setTotalPagadoBs(totalPagadoBs)
+        setTotalPagado(totalMonto)
+        setTotalBs(totalDolares);
+        setPagos(newPagos);
+        setTotal(orden.total_orden);
         setIdorden(orden);
         setPagoDialog(true);
+        }else {
 
+        setTotalBs(totalDolares);
+        setTotal(orden.total_orden);
+        setIdorden(orden);
+        setPagoDialog(true);
+        }
     };
 
     const confirmDeleteProduct = (product) => {
@@ -319,6 +407,8 @@ const Crud = () => {
         await ordenService.postMontoCambio(montoBs);
 
         const cambioDia = await ordenService.getMontoDia();
+        
+        
         setMontoDia(cambioDia);
         setmMontoBs('');
     };
@@ -625,7 +715,7 @@ const Crud = () => {
         return (
             <>
                 <span className="p-column-title">Cantidad</span>
-                {pago.monto}$
+                {pago.montoDolares}$
             </>
         );
     };
@@ -653,6 +743,24 @@ const Crud = () => {
             <>
                 <span className="p-column-title">Nombre</span>
                 {cliente.correo_electronico}
+            </>
+        );
+    };
+
+    const montoBsCambioBodyTemplate = (cliente) => {
+        return (
+            <>
+                <span className="p-column-title">Nombre</span>
+                {cliente.monto_bs}
+            </>
+        );
+    };
+
+    const fechamontoBsCambioBodyTemplate = (cliente) => {
+        return (
+            <>
+                <span className="p-column-title">Nombre</span>
+                {cliente.fecha_historial_monto_bs}
             </>
         );
     };
@@ -896,6 +1004,8 @@ const detalleoldPagosBodyTemplate = (rowData) => {
           <Column header="Numero de referencia" body={numeroReferenciaBodyTemplate} headerStyle={{ minWidth: "10rem" }} />
           <Column header="Tipo de pago Electronico" body={tipoElectronicoBodyTemplate} sortable headerStyle={{ minWidth: "8rem" }} />
           <Column header="Monto" body={montoPagoClienteTemplate} sortable headerStyle={{ minWidth: "8rem" }} />
+          <Column header="Monto de cambio" body={montoBsCambioBodyTemplate} headerStyle={{ minWidth: "10rem" }} />
+          <Column header="Fecha cambio del dia" body={fechamontoBsCambioBodyTemplate} headerStyle={{ minWidth: "10rem" }} />
         </DataTable>
       </OverlayPanel>
             <OverlayPanel
@@ -910,6 +1020,8 @@ const detalleoldPagosBodyTemplate = (rowData) => {
           <Column header="Monto" body={montoPagoClienteTemplate} sortable headerStyle={{ minWidth: "8rem" }} />
           <Column header="Denominacion" body={denominacionPagoClienteTemplate} sortable headerStyle={{ minWidth: "8rem" }} />
           <Column header="Denominacion" body={numeroRefPagoClienteTemplate} sortable headerStyle={{ minWidth: "8rem" }} />
+          <Column header="Monto de cambio" body={montoBsCambioBodyTemplate} headerStyle={{ minWidth: "10rem" }} />
+          <Column header="Fecha cambio del dia" body={fechamontoBsCambioBodyTemplate} headerStyle={{ minWidth: "10rem" }} />
         </DataTable>
       </OverlayPanel>
       <OverlayPanel
@@ -920,7 +1032,9 @@ const detalleoldPagosBodyTemplate = (rowData) => {
         style={{ width: "250px" }}
       >
        <DataTable value={[detallePago]} responsiveLayout="scroll">
-          <Column header="Zelle" body={correoBodyTemplate} headerStyle={{ minWidth: "10rem" }} />
+          <Column header="Correo" body={correoBodyTemplate} headerStyle={{ minWidth: "10rem" }} />
+          <Column header="Monto de cambio" body={montoBsCambioBodyTemplate} headerStyle={{ minWidth: "10rem" }} />
+          <Column header="Fecha cambio del dia" body={fechamontoBsCambioBodyTemplate} headerStyle={{ minWidth: "10rem" }} />
         </DataTable>
       </OverlayPanel>
     </>
@@ -1122,6 +1236,8 @@ const clienteBodyTemplate = (rowData) => {
                                 <Button label="Agregar" icon="pi pi-plus" className="p-button-success mr-2" onClick={() => addPago()} />
                             </div>
                         </div>
+                        <div className="carrito-total text-right total-text-pago my-1">Total: {total}$</div>
+                        <div className="carrito-total text-right total-text-pago ">Bs. {totalBs}</div>
                         <DataTable
                         ref={dt}
                         value={pagos ? pagos : []}
@@ -1137,8 +1253,10 @@ const clienteBodyTemplate = (rowData) => {
                         <Column field="nombre" header="Nombre de Pago" sortable body={nombrePagoTemplate} headerStyle={{ minWidth: '10rem' }}></Column>
                         <Column field="unidad" header="Momento de pago" body={fechaPagoTemplate} sortable  headerStyle={{ minWidth: '10rem' }}></Column>
                         <Column field="unidad" header="Monto" body={montoPagoTemplate} sortable  headerStyle={{ minWidth: '10rem' }}></Column>
-                        <Column header="Cliente" body={detalleoldPagosBodyTemplate} headerStyle={{ minWidth: '4rem' }}></Column>
+                        <Column header="Detalle" body={detalleoldPagosBodyTemplate} headerStyle={{ minWidth: '4rem' }}></Column>
                     </DataTable>
+                    <div className="carrito-total text-right total-text-pago my-1">Total Pagado: {totalPagado}$</div>
+                    <div className="carrito-total text-right total-text-pago my-1"> Bs. {totalPagadoBs}</div>
                     </Dialog>
 
             </>
