@@ -38,10 +38,16 @@ const Crud = () => {
     const [file, setfile] = useState(null); 
     const [EstadoDialog, setEstadoDialog] = useState(false);
     const [pagoDialog, setPagoDialog] = useState(false);
+    const [montoDialog, setMontoDialog] = useState(false);
     const [deleteProductDialog, setDeleteProductDialog] = useState(false);
     const [deleteProductsDialog, setDeleteProductsDialog] = useState(false);
     const [product, setProduct] = useState(emptyProduct);
     const [idOrden, setIdorden] = useState(null);
+    const [total, setTotal] = useState(null);
+    const [totalPagado, setTotalPagado] = useState('0');
+    const [totalPagadoBs, setTotalPagadoBs] = useState('0');
+    const [totalBs, setTotalBs] = useState(null);
+    const [montoDia, setMontoDia] = useState(null);
     const [selectedProducts, setSelectedProducts] = useState(null);
     const [submitted, setSubmitted] = useState(false);
     const [globalFilter, setGlobalFilter] = useState(null);
@@ -55,8 +61,12 @@ const Crud = () => {
     const op3 = useRef(null);
     const op4 = useRef(null);
     const op5 = useRef(null);
+    const op6 = useRef(null);
+    const op7 = useRef(null);
+    const op8 = useRef(null);
     const [selectedProduct, setSelectedProduct] = useState(null);
     const [selectedClient, setSelectedClient] = useState(null);
+    const [detallePago, setDetallePago] = useState(null);
     const [selectedLugar, setSelectedLugar] = useState(null);
     const [productoClient, setProductoClient] = useState(null);
     const [ingredienteClient, setIngredienteClient] = useState(null);
@@ -69,7 +79,10 @@ const Crud = () => {
     const [serialNumber, setSerialNumber] = useState('');
     const [denomination, setDenomination] = useState(0);
     const [referenceNumber, setReferenceNumber] = useState('');
+    const [montoBs, setmMontoBs] = useState('');
+    const [monto, setMonto] = useState('');
     const [email, setEmail] = useState('');
+    const [pagos, setPagos] = useState([]);
 
     useEffect(async () => {
         const ingredienteService = new IngredienteService();
@@ -92,6 +105,10 @@ const Crud = () => {
         setInfoEstado(data);
         setTipoProducto(dropdownData);
         });
+
+   
+        
+
 
     }, []);
 
@@ -122,16 +139,116 @@ const Crud = () => {
         toast.current.show({ severity: 'info', summary: 'Product Selected', detail: event.data.name, life: 3000 });
     };
 
-    const openNew = () => {
-        setProduct(emptyProduct);
-        setSubmitted(false);
-        setEstadoDialog(true);
+    const openNew = async() => {
+    
+    const ordenService = new OrdenService();
+    const cambioDia = await ordenService.getMontoDia();
+    setMontoDia(cambioDia);
+    setMontoDialog(true);
+        
+    };
+
+
+    const addPago = async() => {
+   
+        if(paymentMethod === "electronico"){
+        
+        let pago = {
+        numero_referencia: referenceNumber,
+        tipo_pago: electronicPaymentMethod
+        };
+
+        const ordenService = new OrdenService();
+        await ordenService.postOrdenPago(idOrden.orden_id, pago, paymentMethod, monto);
+  
+        } else if (paymentMethod ===  "efectivo"){
+
+        let pago = {
+        numero_serie: serialNumber,
+        denominacion: denomination,
+        tipo_pago:currency
+        };
+
+        const ordenService = new OrdenService();
+        await ordenService.postOrdenPago(idOrden.orden_id, pago, paymentMethod, monto);
+       
+        } else {
+        let pago = {
+        correo_electronico: email
+        }
+        const ordenService = new OrdenService();
+        await ordenService.postOrdenPago(idOrden.orden_id, pago,  paymentMethod, monto);
+        }
+        const ordenService = new OrdenService();
+               
+        const pagos = await ordenService.getAllPagosOrden(idOrden.orden_id)
+        
+        const cambioDia = await ordenService.getMontoDia();
+        const totalDolares = parseFloat(idOrden.total_orden)*parseFloat(cambioDia[0].monto);
+
+        if(pagos){
+        const newPagos = await pagos.map((pago) => {
+        if (pago.tipo_pago === 'electrónico' || (pago.tipo_pago === 'efectivo' && pago.tipo_efectivo === 'Bs.')) {
+            pago.montoDolares = (parseFloat(pago.monto) / parseFloat(pago.monto_bs)).toFixed(2);
+        } else {
+            pago.montoDolares = (parseFloat(pago.monto)).toFixed(2);
+        }
+
+        return pago;
+        });
+        const montoCalculoBs = pagos[0].monto_bs
+        const totalMonto = newPagos.reduce((acc, pago) => acc + parseFloat(pago.montoDolares), 0).toFixed(2);
+        const totalPagadoBs =  (totalMonto * montoCalculoBs).toFixed(2);
+        const cambioDia = await ordenService.getMontoDia();
+        console.log('Estos son los pagos', cambioDia);
+     
+      
+        
+        setTotalPagadoBs(totalPagadoBs)
+        setTotalPagado(totalMonto)
+        setTotalBs(totalDolares);
+        setPagos(newPagos);
+        setTotal(idOrden.total_orden);
+        setMonto('')
+        setPaymentMethod('');
+        setReferenceNumber('');
+        setElectronicPaymentMethod('');
+        setSerialNumber('');
+        setDenomination(0);
+        setCurrency('VES');
+        setEmail('');
+        setPagoDialog(true);
+        }else {
+
+        setTotalBs(totalDolares);
+        setTotal(idOrden.total_orden);
+        setPagoDialog(true);
+        setMonto('')
+        setPaymentMethod('');
+        setReferenceNumber('');
+        setElectronicPaymentMethod('');
+        setSerialNumber('');
+        setDenomination(0);
+        setCurrency('VES');
+        setEmail('');
+        }
+        setMonto('')
+        setPaymentMethod('');
+        setReferenceNumber('');
+        setElectronicPaymentMethod('');
+        setSerialNumber('');
+        setDenomination(0);
+        setCurrency('VES');
+        setEmail('');
+
     };
 
     const hideDialog = () => {
         setSubmitted(false);
         setEstadoDialog(false);
         setPagoDialog(false);
+        setMontoDialog(false);
+        
     };
 
     const hideDeleteProductDialog = () => {
@@ -185,10 +302,46 @@ const Crud = () => {
          setEstadoDialog(true);
     };
 
-    
-    const pagoEstado = (product) => {
-        setProduct({ ...product });
-         setPagoDialog(true);
+    const pagoOrden = async(orden) => {
+        const ordenService = new OrdenService();
+        console.log('Estos son los pagos', orden)
+        const pagos = await ordenService.getAllPagosOrden(orden.orden_id)
+        
+        const cambioDia = await ordenService.getMontoDia();
+        const totalDolares = parseFloat(orden.total_orden)*parseFloat(cambioDia[0].monto);
+
+        if(pagos){
+        const newPagos = await pagos.map((pago) => {
+        if (pago.tipo_pago === 'electrónico' || (pago.tipo_pago === 'efectivo' && pago.tipo_efectivo === 'Bs.')) {
+            pago.montoDolares = (parseFloat(pago.monto) / parseFloat(pago.monto_bs)).toFixed(2);
+        } else {
+            pago.montoDolares = (parseFloat(pago.monto)).toFixed(2);
+        }
+
+        return pago;
+        });
+        const montoCalculoBs = pagos[0].monto_bs
+        const totalMonto = newPagos.reduce((acc, pago) => acc + parseFloat(pago.montoDolares), 0).toFixed(2);
+        const totalPagadoBs =  (totalMonto * montoCalculoBs).toFixed(2);
+        const cambioDia = await ordenService.getMontoDia();
+        console.log('Estos son los pagos', cambioDia);
+     
+      
+        
+        setTotalPagadoBs(totalPagadoBs)
+        setTotalPagado(totalMonto)
+        setTotalBs(totalDolares);
+        setPagos(newPagos);
+        setTotal(orden.total_orden);
+        setIdorden(orden);
+        setPagoDialog(true);
+        }else {
+
+        setTotalBs(totalDolares);
+        setTotal(orden.total_orden);
+        setIdorden(orden);
+        setPagoDialog(true);
+        }
     };
 
     const confirmDeleteProduct = (product) => {
@@ -248,7 +401,20 @@ const Crud = () => {
         toast.current.show({ severity: 'success', summary: 'Successful', detail: 'Products Deleted', life: 3000 });
     };
 
-    const changeEstado = async() => {
+    const cambioDia = async() => {
+
+        const ordenService = new OrdenService();
+        await ordenService.postMontoCambio(montoBs);
+
+        const cambioDia = await ordenService.getMontoDia();
+        
+        
+        setMontoDia(cambioDia);
+        setmMontoBs('');
+    };
+
+        const changeEstado = async() => {
+
         const estadoEnProceso = infoEstado.find((estado) => estado.nombre_estado === dropdownValue.name);
         const ordenService = new OrdenService();
         await ordenService.postEstadoOrden(estadoEnProceso.estado_id, idOrden.orden_id);
@@ -414,7 +580,7 @@ const Crud = () => {
     const rightToolbarTemplate = () => {
         return (
             <React.Fragment>
-                <Button label="Nuevo" icon="pi pi-plus" className="p-button-success mr-2" onClick={openNew} />
+                <Button label="Cambio del dia" icon="pi pi-plus" className="p-button-success mr-2" onClick={openNew} />
                 <Button label="Exportar" icon="pi pi-upload" className="p-button-help" onClick={exportCSV} />
             </React.Fragment>
         );
@@ -494,6 +660,17 @@ const Crud = () => {
         );
     };
 
+    const TotalBodyTemplate = (rowData) => {
+    return (
+    <>
+      <span className="p-column-title">
+        <span >Unidad</span>
+      </span>
+      <span style={{ fontWeight: "bold", fontSize: "1.1em" }}>{rowData.total_orden}$</span>
+    </>
+    );
+    };
+
     const numeroMesaBodyTemplate = (rowData) => {
         return (
             <>
@@ -525,11 +702,120 @@ const Crud = () => {
         );
     };
 
+    const fechaPagoTemplate = (pago) => {
+        return (
+            <>
+                <span className="p-column-title">Cantidad</span>
+                {pago.fecha_historial}
+            </>
+        );
+    };
+
+    const montoPagoTemplate = (pago) => {
+        return (
+            <>
+                <span className="p-column-title">Cantidad</span>
+                {pago.montoDolares}$
+            </>
+        );
+    };
+
+    const nombrePagoTemplate = (pago) => {
+        return (
+            <>
+                <span className="p-column-title">Cantidad</span>
+                {pago.tipo_pago}
+            </>
+        );
+    };
+
     const nombreClienteTemplate = (cliente) => {
         return (
             <>
                 <span className="p-column-title">Nombre</span>
                 {cliente.nombre_cliente}
+            </>
+        );
+    };
+
+    const correoBodyTemplate = (cliente) => {
+        return (
+            <>
+                <span className="p-column-title">Nombre</span>
+                {cliente.correo_electronico}
+            </>
+        );
+    };
+
+    const montoBsCambioBodyTemplate = (cliente) => {
+        return (
+            <>
+                <span className="p-column-title">Nombre</span>
+                {cliente.monto_bs}
+            </>
+        );
+    };
+
+    const fechamontoBsCambioBodyTemplate = (cliente) => {
+        return (
+            <>
+                <span className="p-column-title">Nombre</span>
+                {cliente.fecha_historial_monto_bs}
+            </>
+        );
+    };
+
+    const numeroReferenciaBodyTemplate = (cliente) => {
+        return (
+            <>
+                <span className="p-column-title">Nombre</span>
+                {cliente.numero_referencia}
+            </>
+        );
+    };
+
+    
+    const tipoElectronicoBodyTemplate = (cliente) => {
+        return (
+            <>
+                <span className="p-column-title">Nombre</span>
+                {cliente.tipo_electronico}
+            </>
+        );
+    };
+
+    const tipoEfectivoBodyTemplate = (cliente) => {
+        return (
+            <>
+                <span className="p-column-title">Nombre</span>
+                {cliente.tipo_efectivo}
+            </>
+        );
+    };
+
+    const montoPagoClienteTemplate = (cliente) => {
+        return (
+            <>
+                <span className="p-column-title">Cedula</span>
+                Bs.{cliente.monto}
+            </>
+        );
+    };
+
+    const denominacionPagoClienteTemplate = (cliente) => {
+        return (
+            <>
+                <span className="p-column-title">Cedula</span>
+                {cliente.denominacion}
+            </>
+        );
+    };
+
+    const numeroRefPagoClienteTemplate = (cliente) => {
+        return (
+            <>
+                <span className="p-column-title">Cedula</span>
+                {cliente.numero_serie}
             </>
         );
     };
@@ -574,7 +860,7 @@ const Crud = () => {
         return (
             <>
                 <span className="p-column-title">Direccion</span>
-                {lugar[0].precio_historico}
+                {lugar[0].precio_historico}$
             </>
         );
     };
@@ -582,6 +868,19 @@ const Crud = () => {
     const showClientDetails = (event, client) => {
         op2.current.toggle(event);
         setSelectedClient(client);
+    };
+
+    const showPagosDetails = (event, pago) => {
+        if (pago.tipo_pago === "electrónico"){
+        op6.current.toggle(event);
+        } else if (pago.tipo_pago === "efectivo"){
+        op7.current.toggle(event);
+        } else { 
+        op8.current.toggle(event);
+        }
+        setDetallePago(pago);
+        console.log("Datos",detallePago )
+        
     };
 
     const showLugarDetails = (event, lugar) => {
@@ -682,6 +981,147 @@ const dialogEstadoBodyTemplate = (rowData) => {
 };
 
 
+const detalleoldPagosBodyTemplate = (rowData) => {
+
+
+  return (
+    <>
+      <Button
+        type="button"
+        label=""
+        onClick={(e) => showPagosDetails(e, rowData)}
+        icon="pi pi-pencil"
+        className="p-button-rounded p-button-info mr-2"
+      />
+      <OverlayPanel
+        ref={op6}
+        appendTo={typeof window !== "undefined" ? document.body : null}
+        showCloseIcon
+        id="overlay_panel"
+        style={{ width: "450px" }}
+      >
+        <DataTable value={[detallePago]} responsiveLayout="scroll">
+          <Column header="Numero de referencia" body={numeroReferenciaBodyTemplate} headerStyle={{ minWidth: "10rem" }} />
+          <Column header="Tipo de pago Electronico" body={tipoElectronicoBodyTemplate} sortable headerStyle={{ minWidth: "8rem" }} />
+          <Column header="Monto" body={montoPagoClienteTemplate} sortable headerStyle={{ minWidth: "8rem" }} />
+          <Column header="Monto de cambio" body={montoBsCambioBodyTemplate} headerStyle={{ minWidth: "10rem" }} />
+          <Column header="Fecha cambio del dia" body={fechamontoBsCambioBodyTemplate} headerStyle={{ minWidth: "10rem" }} />
+        </DataTable>
+      </OverlayPanel>
+            <OverlayPanel
+        ref={op7}
+        appendTo={typeof window !== "undefined" ? document.body : null}
+        showCloseIcon
+        id="overlay_panel"
+        style={{ width: "550px" }}
+      >
+       <DataTable value={[detallePago]} responsiveLayout="scroll">
+          <Column header="Tipo modeda" body={tipoEfectivoBodyTemplate} headerStyle={{ minWidth: "10rem" }} />
+          <Column header="Monto" body={montoPagoClienteTemplate} sortable headerStyle={{ minWidth: "8rem" }} />
+          <Column header="Denominacion" body={denominacionPagoClienteTemplate} sortable headerStyle={{ minWidth: "8rem" }} />
+          <Column header="Denominacion" body={numeroRefPagoClienteTemplate} sortable headerStyle={{ minWidth: "8rem" }} />
+          <Column header="Monto de cambio" body={montoBsCambioBodyTemplate} headerStyle={{ minWidth: "10rem" }} />
+          <Column header="Fecha cambio del dia" body={fechamontoBsCambioBodyTemplate} headerStyle={{ minWidth: "10rem" }} />
+        </DataTable>
+      </OverlayPanel>
+      <OverlayPanel
+        ref={op8}
+        appendTo={typeof window !== "undefined" ? document.body : null}
+        showCloseIcon
+        id="overlay_panel"
+        style={{ width: "250px" }}
+      >
+       <DataTable value={[detallePago]} responsiveLayout="scroll">
+          <Column header="Correo" body={correoBodyTemplate} headerStyle={{ minWidth: "10rem" }} />
+          <Column header="Monto de cambio" body={montoBsCambioBodyTemplate} headerStyle={{ minWidth: "10rem" }} />
+          <Column header="Fecha cambio del dia" body={fechamontoBsCambioBodyTemplate} headerStyle={{ minWidth: "10rem" }} />
+        </DataTable>
+      </OverlayPanel>
+    </>
+  );
+};
+
+const detallePagosBodyTemplate = (rowData) => {
+  return (
+    <>
+      <Button
+        type="button"
+        label=""
+        onClick={(e) => showPagosDetails(e, rowData)}
+        icon="pi pi-pencil"
+        className="p-button-rounded p-button-info mr-2"
+      />
+      {detallePago && (
+        <OverlayPanel
+          ref={op6}
+          appendTo={typeof window !== "undefined" ? document.body : null}
+          showCloseIcon
+          id="overlay_panel"
+          style={{ width: "450px" }}
+          visible
+        >
+          {detallePago.tipo_pago ? (
+            <DataTable value={[detallePago]} responsiveLayout="scroll">
+              {detallePago.tipo_pago === "electronico" && (
+                <>
+                  <Column
+                    header="Nombre"
+                    body={nombreClienteTemplate}
+                    headerStyle={{ minWidth: "10rem" }}
+                  />
+                  <Column
+                    header="Cedula"
+                    body={cedulaClienteTemplate}
+                    sortable
+                    headerStyle={{ minWidth: "8rem" }}
+                  />
+                  <Column
+                    header="Telefono"
+                    body={telefonoClienteTemplate}
+                    sortable
+                    headerStyle={{ minWidth: "8rem" }}
+                  />
+                </>
+              )}
+              {detallePago.tipo_pago === "efectivo" && (
+                <>
+                  <Column header="Banco" field="banco" />
+                  <Column header="Numero de referencia" field="num_referencia" />
+                </>
+              )}
+              {detallePago.tipo_pago === "Zelle" && (
+                <>
+                  <Column
+                    header="Nombre"
+                    body={correoBodyTemplate}
+                    headerStyle={{ minWidth: "10rem" }}
+                  />
+                  <Column
+                    header="Cedula"
+                    body={cedulaClienteTemplate}
+                    sortable
+                    headerStyle={{ minWidth: "8rem" }}
+                  />
+                  <Column
+                    header="Telefono"
+                    body={telefonoClienteTemplate}
+                    sortable
+                    headerStyle={{ minWidth: "8rem" }}
+                  />
+                </>
+              )}
+            </DataTable>
+          ) : (
+            <div>Cargando...</div>
+          )}
+        </OverlayPanel>
+      )}
+    </>
+  );
+};
+
+
+
 const clienteBodyTemplate = (rowData) => {
 
 
@@ -731,7 +1171,94 @@ const clienteBodyTemplate = (rowData) => {
     const pagarBodyTemplate = (rowData) => {
         return (
             <>
-                <Button icon="pi pi-pencil" className="p-button-rounded p-button-secondary mr-2" onClick={() => pagoEstado(rowData)} />
+                <Button icon="pi pi-pencil" className="p-button-rounded p-button-secondary mr-2" onClick={() => pagoOrden(rowData)} />           
+            
+                <Dialog visible={pagoDialog} style={{ width: '550px' }} header="Métodos de pago" modal className="p-fluid" onHide={hideDialog}>
+                    <div className="">
+                                <div>
+                                    <div className="field">
+                                    <Dropdown value={paymentMethod} options={paymentOptions} onChange={(e) => setPaymentMethod(e.value)} placeholder="Seleccione" />
+                                    </div>
+                                    {paymentMethod === "electronico" && (
+                                        <label>
+                                        <div className="formgrid grid"></div>
+                                            <div className="field col">
+                                                <label htmlFor="tipo_de_pago_electrónico"> Tipo de pago electrónico</label>
+                                                <Dropdown value={electronicPaymentMethod} options={electronicPaymentOptions} onChange={(e) => setElectronicPaymentMethod(e.value)} placeholder="Seleccione" />
+                                            </div>
+                                            <div className="field col">
+                                                <label htmlFor="numero_de_referencia">Número de referencia</label>
+                                                <InputText type="text" value={referenceNumber} onChange={(e) => setReferenceNumber(e.target.value)} />
+                                            </div>
+                                            <div className="field col">
+                                                <label htmlFor="monto">Monto</label>
+                                                <InputText type="text" value={monto} onChange={(e) => setMonto(e.target.value)} />
+                                            </div>
+                                        </label>
+                                    )}
+                                    {paymentMethod === "efectivo" && (
+                                    <>
+                                        <div className="formgrid grid"></div>
+                                        <div className="field col">
+                                        <label htmlFor="moneda">Moneda</label>
+                                        <Dropdown value={currency} options={currencyOptions} onChange={(e) => setCurrency(e.value)} placeholder="Seleccione" />
+                                        </div>
+                                        
+                                        <div className="field col">
+                                        <label htmlFor="numero_de_serie">Número de serie (opcional)</label>
+                                        <InputText type="text" value={serialNumber} onChange={(e) => setSerialNumber(e.target.value)} />
+                                        </div>
+                                    
+                                        <div className="field col">
+                                        <label htmlFor="numero_de_serie">Denominación</label>
+                                        <InputText type="text" value={denomination} onChange={(e) => setDenomination(e.target.value)} />
+                                        </div>      
+                                        <div className="field col">
+                                                <label htmlFor="monto">Monto</label>
+                                                <InputText type="text" value={monto} onChange={(e) => setMonto(e.target.value)} />
+                                        </div>          
+
+                                    </>
+                                    )}
+                                    {paymentMethod === "zelle" && (
+                                        <div className="field col">
+                                        <label htmlFor="correo_electrónico">Correo electrónico</label>
+                                        <InputText type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+                                        <div className="field col">
+                                        <label htmlFor="monto">Monto</label>
+                                         <InputText type="text" value={monto} onChange={(e) => setMonto(e.target.value)} />
+                                         </div>
+                                        </div>  
+                                        
+                                    )}
+                                </div>
+                        <div className="field col flex align-items-center justify-content-between">
+                                <Button label="Agregar" icon="pi pi-plus" className="p-button-success mr-2" onClick={() => addPago()} />
+                            </div>
+                        </div>
+                        <div className="carrito-total text-right total-text-pago my-1">Total: {total}$</div>
+                        <div className="carrito-total text-right total-text-pago ">Bs. {totalBs}</div>
+                        <DataTable
+                        ref={dt}
+                        value={pagos ? pagos : []}
+                        selection={selectedProducts}
+                        onSelectionChange={(e) => setSelectedProducts(e.value)}
+                        dataKey="id"
+                        className="datatable-responsive"
+                        globalFilter={globalFilter}
+                        emptyMessage={pagos ? "No products found." : "No payments found."}
+                        header={headerPago}
+                        responsiveLayout="scroll"
+                    >
+                        <Column field="nombre" header="Nombre de Pago" sortable body={nombrePagoTemplate} headerStyle={{ minWidth: '10rem' }}></Column>
+                        <Column field="unidad" header="Momento de pago" body={fechaPagoTemplate} sortable  headerStyle={{ minWidth: '10rem' }}></Column>
+                        <Column field="unidad" header="Monto" body={montoPagoTemplate} sortable  headerStyle={{ minWidth: '10rem' }}></Column>
+                        <Column header="Detalle" body={detalleoldPagosBodyTemplate} headerStyle={{ minWidth: '4rem' }}></Column>
+                    </DataTable>
+                    <div className="carrito-total text-right total-text-pago my-1">Total Pagado: {totalPagado}$</div>
+                    <div className="carrito-total text-right total-text-pago my-1"> Bs. {totalPagadoBs}</div>
+                    </Dialog>
+
             </>
         );
     };
@@ -746,6 +1273,24 @@ const clienteBodyTemplate = (rowData) => {
         );
     };
 
+    const MontoBsDiaBodyTemplate = (rowData) => {
+        return (
+            <>
+                <span className="p-column-title">Unidad</span>
+                    Bs. {rowData.monto}
+            </>
+        );
+    };
+
+    const fechaMondoDiaBodyTemplate = (rowData) => {
+        return (
+            <>
+                <span className="p-column-title">Unidad</span>
+                    {rowData.fecha_historial}
+            </>
+        );
+    };
+
     const estadoMomentoBodyTemplate = (rowData) => {
         return (
             <>
@@ -756,7 +1301,7 @@ const clienteBodyTemplate = (rowData) => {
     };
 
     const estadochangeBodyTemplate = (rowData) => {
-    const test = rowData.estado 
+
         return (
             <>
             <Button icon="pi pi-pencil" className="p-button-rounded p-button-danger mr-2" onClick={() => showEstado(rowData)} />
@@ -862,85 +1407,40 @@ const clienteBodyTemplate = (rowData) => {
                         <Column field="unidad" header="Confirmacion de pago" sortable body={confirmacionPagoBodyTemplate} headerStyle={{ minWidth: '10rem' }}></Column>
                         <Column field="unidad" header="Descuento" sortable body={descuentoBodyTemplate} headerStyle={{ minWidth: '10rem' }}></Column>
                         <Column field="unidad" header="Numero de mesa" sortable body={numeroMesaBodyTemplate} headerStyle={{ minWidth: '10rem' }}></Column>
+                        <Column field="unidad" header="Total" sortable body={TotalBodyTemplate} headerStyle={{ minWidth: '10rem' }}></Column>
                         <Column header="Productos" body={productosBodyTemplate} headerStyle={{ minWidth: '4rem' }}></Column>
                         <Column header="Cliente" body={clienteBodyTemplate} headerStyle={{ minWidth: '4rem' }}></Column>
                         <Column header="Zona" body={lugarBodyTemplate} headerStyle={{ minWidth: '4rem' }}></Column>
                         <Column header="Pago" body={pagarBodyTemplate} headerStyle={{ minWidth: '4rem' }}></Column>
                         <Column header="Cambio estado" body={estadochangeBodyTemplate} headerStyle={{ minWidth: '4rem' }}></Column>
                     </DataTable>
-                    <Dialog visible={pagoDialog} style={{ width: '550px' }} header="Métodos de pago" modal className="p-fluid" onHide={hideDialog}>
-                    <div className="">
-                       
-                                <div>
-                                    <div className="field">
-                                    <Dropdown value={paymentMethod} options={paymentOptions} onChange={(e) => setPaymentMethod(e.value)} placeholder="Seleccione" />
-                                    </div>
-                                    {paymentMethod === "electronico" && (
-
-                                        <label>
-                                        <div className="formgrid grid"></div>
-                                            <div className="field col">
-                                                <label htmlFor="tipo_de_pago_electrónico"> Tipo de pago electrónico</label>
-                                                <Dropdown value={electronicPaymentMethod} options={electronicPaymentOptions} onChange={(e) => setElectronicPaymentMethod(e.value)} placeholder="Seleccione" />
-                                            </div>
-                                            <div className="field col">
-                                                <label htmlFor="numero_de_referencia">Número de referencia</label>
-                                                <InputText type="text" value={referenceNumber} onChange={(e) => setReferenceNumber(e.target.value)} />
-                                            </div>
-                                        </label>
-
-                                    )}
-                                    {paymentMethod === "efectivo" && (
-                                    <>
-                                
-                                        <div className="formgrid grid"></div>
-                                        <div className="field col">
-                                        <label htmlFor="moneda">Moneda</label>
-                                        <Dropdown value={currency} options={currencyOptions} onChange={(e) => setCurrency(e.value)} placeholder="Seleccione" />
-                                        </div>
-                                        
-                                        <div className="field col">
-                                        <label htmlFor="numero_de_serie">Número de serie (opcional)</label>
-                                        <InputText type="text" value={serialNumber} onChange={(e) => setSerialNumber(e.target.value)} />
-                                        </div>
-                                    
-                                        <div className="field col">
-                                        <label htmlFor="numero_de_serie">Denominación</label>
-                                        <InputText type="text" value={denomination} onChange={(e) => setDenomination(e.target.value)} />
-                                        </div>                
-
-                                    </>
-                                    )}
-                                    {paymentMethod === "zelle" && (
-                                        <div className="field col">
-                                        <label htmlFor="correo_electrónico">Correo electrónico</label>
-                                        <InputText type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
-                                        </div>
-                                
-                                    )}
-                                </div>
-                        <div className="field col flex align-items-center justify-content-between">
+                    <Dialog visible={montoDialog} style={{ width: '550px' }} header="Cambio del dia" modal className="p-fluid" onHide={hideDialog}>
+                        <div className="formgrid grid">
+                            <div className="field col">              
+                                <label htmlFor="monto">Monto</label>
+                                <InputText type="text" value={montoBs} onChange={(e) => setmMontoBs(e.target.value)} />
+                            </div>
+                            <div className="field col flex align-items-center justify-content-between" style={{flexDirection: 'column'}}>
                                 <h6 htmlFor="costo"></h6>
-                                <Button label="Nuevo" icon="pi pi-plus" className="p-button-success mr-2" onClick={openNew} />
+                                <Button label="Cambiar" icon="pi pi-plus" className="p-button-success mr-2" onClick={() => cambioDia()} />
                             </div>
                         </div>
                         <DataTable
-                        ref={dt}
-                        value={products}
+                        ref={dtEstado}
+                        value={montoDia? montoDia : []}
                         selection={selectedProducts}
                         onSelectionChange={(e) => setSelectedProducts(e.value)}
                         dataKey="id"
                         className="datatable-responsive"
                         globalFilter={globalFilter}
                         emptyMessage="No products found."
-                        header={headerPago}
+                        header={headerEstado}
                         responsiveLayout="scroll"
                     >
-                        <Column field="nombre" header="Nombre de Pago" sortable  headerStyle={{ minWidth: '10rem' }}></Column>
-                        <Column field="unidad" header="Momento de pago" sortable  headerStyle={{ minWidth: '10rem' }}></Column>
+                        <Column field="Monto del dia" header="Nombre de estado" body= {MontoBsDiaBodyTemplate} sortable headerStyle={{ minWidth: '10rem' }}></Column>
+                        <Column field="Momento de cambio" header="Momento de cambio" body= {fechaMondoDiaBodyTemplate} sortable headerStyle={{ minWidth: '10rem' }}></Column>
                     </DataTable>
                     </Dialog>
-
                     <Dialog visible={deleteProductDialog} style={{ width: '450px' }} header="Confirm" modal footer={deleteProductDialogFooter} onHide={hideDeleteProductDialog}>
                         <div className="flex align-items-center justify-content-center">
                             <i className="pi pi-exclamation-triangle mr-3" style={{ fontSize: '2rem' }} />

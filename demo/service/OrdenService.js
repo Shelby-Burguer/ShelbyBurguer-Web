@@ -36,9 +36,9 @@ export class OrdenService {
         return resOrden;
     }
 
-    async getUpdateOrden(id, descuento, tipo_orden, clienteId, numMesa, lugarId, direccion) {
+    async getUpdateOrden(id, descuento, tipo_orden, clienteId, numMesa, lugarId, direccion, total) {
         let resOrden;
-
+        console.log(total)
         const responseProducto = fetch(`http://${this.ipAddress}:10000/orden/update/` + id, {
             headers: { 'content-type': 'application/json' },
             method: 'PUT',
@@ -48,7 +48,8 @@ export class OrdenService {
                 cliente_id: clienteId,
                 numero_mesa: numMesa,
                 lugar_id: lugarId,
-                direccion: direccion
+                direccion: direccion,
+                total_orden: total
             })
         });
 
@@ -117,6 +118,103 @@ export class OrdenService {
         return resOrdenCarrito;
     }
 
+    async postOrdenPago(id, pago, tipo_pago, monto) {
+        console.log(id, pago, tipo_pago, monto)
+        let resOrdenCarrito;
+
+        const responseProducto = fetch(`http://${this.ipAddress}:10000/orden/ordenPago/create/`+ id, {
+            headers: { 'content-type': 'application/json' },
+            method: 'POST',
+            body: JSON.stringify({
+            tipo_pago: tipo_pago,
+            monto: monto,
+            pagoElectronico: pago,
+            pagoEfectivo: pago ,
+            zelle: pago,
+            })
+        });
+
+        await responseProducto.then((dat) =>
+            dat.json().then((res) => resOrdenCarrito = res
+            )
+        );
+      
+        return resOrdenCarrito;
+    }
+
+async getAllPagosOrden(id) {
+  let resOrdenCarrito;
+
+  const responseProducto = fetch(`http://${this.ipAddress}:10000/orden/pagos/All/` + id, {
+    headers: { 'Cache-Control': 'no-cache' },
+    method: 'GET'
+  }).then((res) => {
+    if (!res.ok) {
+      throw new Error('Network response was not ok');
+    }
+    return res.json();
+  });
+
+  await responseProducto.then((data) => {
+    if (data !== null) {
+      resOrdenCarrito = data;
+      console.log(data);
+    }
+  }).catch((error) => {
+    console.error('Error:', error);
+  });
+
+  console.log('ResALLOrden', resOrdenCarrito);
+
+  return resOrdenCarrito;
+}
+
+    async postMontoCambio(monto) {
+
+        let resOrdenCarrito;
+
+        const responseProducto = fetch(`http://${this.ipAddress}:10000/orden/montoBsDolares/create`, {
+            headers: { 'content-type': 'application/json' },
+            method: 'POST',
+            body: JSON.stringify({
+            monto: monto,
+            })
+        });
+
+        await responseProducto.then((dat) =>
+            dat.json().then((res) => resOrdenCarrito = res
+            )
+        );
+      
+        return resOrdenCarrito;
+    }
+
+
+async getMontoDia() {
+  let resOrdenCarrito; 
+  const responseProducto = fetch(`http://${this.ipAddress}:10000/orden/montoBsDolares/All/`, {
+    headers: { 'Cache-Control': 'no-cache' },
+    method: 'GET'
+  }).then((res) => {
+    if (!res.ok) {
+      throw new Error('Network response was not ok');
+    }
+    return res.json();
+  });
+
+  await responseProducto.then((data) => {
+    if (data !== null) {
+      resOrdenCarrito = data;
+      console.log(data);
+    }
+  }).catch((error) => {
+    console.error('Error:', error);
+  });
+
+  console.log('ResALLOrden', resOrdenCarrito);
+
+  return resOrdenCarrito;
+}
     
 }    
     
