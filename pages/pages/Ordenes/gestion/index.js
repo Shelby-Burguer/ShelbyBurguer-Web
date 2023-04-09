@@ -3,6 +3,7 @@ import { Button } from 'primereact/button';
 import { Column } from 'primereact/column';
 import { DataTable } from 'primereact/datatable';
 import { Dialog } from 'primereact/dialog';
+import { AutoComplete } from 'primereact/autocomplete';
 import { FileUpload } from 'primereact/fileupload';
 import { InputNumber } from 'primereact/inputnumber';
 import { InputText } from 'primereact/inputtext';
@@ -15,6 +16,8 @@ import { classNames } from 'primereact/utils';
 import React, { useEffect, useRef, useState } from 'react';
 import { IngredienteService } from '../../../../demo/service/IngredienteService';
 import { OrdenService } from '../../../../demo/service/OrdenService';
+import Crud from '../../../../shelby/utils/CrudFunctions';
+import { ClienteService } from '../../../../shelby/service/ClienteService';
 import Router from 'next/router';
 import { Tooltip } from 'primereact/tooltip';
 import { ProgressBar } from 'primereact/progressbar';
@@ -23,7 +26,7 @@ import { OverlayPanel } from 'primereact/overlaypanel';
 import { Dropdown } from 'primereact/dropdown';
 import moment from 'moment';
 
-const Crud = () => {
+const ordenes = () => {
     let emptyProduct = {
         id: null,
         nombre: '',
@@ -33,11 +36,43 @@ const Crud = () => {
         urlImage: '',
         fileImage: ''
     };
+    let emptyClient = {
+        cedula: '',
+        nombre: '',
+        apellido: '',
+        telefono: '',
+        direccion: ''
+    };
+
+    const crudObject = Crud();
+    let defaultCliente = crudObject.emptyElements.cliente;
+    let defaultDropdown = 'V';
+    let defaultLugar = crudObject.emptyElements.lugar;
+/*
+    let cliente = crudObject.element;
+    let clientes = crudObject.elements;
+    let lugar = crudObject.element;
+    let lugares = crudObject.elements;
+
+    let _visibleCliente = crudObject.clienteDialogVisible;
+    let _visibleLugar = crudObject.lugarDialogVisible;
+    let _setVisibleLugar = crudObject.setLugarDialogVisible;
+    let _setvisibleCliente = crudObject.setClienteDialogVisible;
+    let _setElement = crudObject.setElement;
+    let _setElements = crudObject.setElements;
+    let _submitted = crudObject.submitted;
+    let _setSubmitted = crudObject.setSubmitted;
+    let _selectedElements = crudObject.selectedElements;
+    let _toast = crudObject.toast;
+    let _stringBody = crudObject.stringBodyTemplate;
+*/
+
 
     const [products, setProducts] = useState(null);
     const [file, setfile] = useState(null); 
     const [EstadoDialog, setEstadoDialog] = useState(false);
-    const [pagoDialog, setPagoDialog] = useState(false);
+    const [pagoDialog, setPagoDialog] = useState(false);  
+    const [editClienteDialog, setEditClienteDialog] = useState(false);
     const [montoDialog, setMontoDialog] = useState(false);
     const [deleteProductDialog, setDeleteProductDialog] = useState(false);
     const [deleteProductsDialog, setDeleteProductsDialog] = useState(false);
@@ -83,6 +118,10 @@ const Crud = () => {
     const [monto, setMonto] = useState('');
     const [email, setEmail] = useState('');
     const [pagos, setPagos] = useState([]);
+    const [writeValue, setWriteValue] = useState(null);
+    const [filteredClientes, setFilteredClientes] = useState([]);
+    const [client, setClient] = useState(emptyClient);
+    const [_clientes, setClientes] = useState(null);
 
     useEffect(async () => {
         const ingredienteService = new IngredienteService();
@@ -130,9 +169,6 @@ const Crud = () => {
         { label: 'Euros', value: 'EUR' }
     ];
 
-   /* const formatCurrency = (value) => {
-        return value.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
-    };*/
 
     const onProductSelect = (event) => {
         op2.current.hide();
@@ -141,11 +177,10 @@ const Crud = () => {
 
     const openNew = async() => {
     
-    const ordenService = new OrdenService();
-    const cambioDia = await ordenService.getMontoDia();
-    setMontoDia(cambioDia);
-    setMontoDialog(true);
-        
+        const ordenService = new OrdenService();
+        const cambioDia = await ordenService.getMontoDia();
+        setMontoDia(cambioDia);
+        setMontoDialog(true);
     };
 
 
@@ -248,6 +283,7 @@ const Crud = () => {
         setEstadoDialog(false);
         setPagoDialog(false);
         setMontoDialog(false);
+        setEditClienteDialog(false);
         
     };
 
@@ -343,6 +379,15 @@ const Crud = () => {
         setPagoDialog(true);
         }
     };
+
+    const editCliente = async(orden) => {
+        const clienteService = new ClienteService();
+        await clienteService.getClientes().then((data) => setClientes(data));
+        setEditClienteDialog(true)
+    };
+
+
+
 
     const confirmDeleteProduct = (product) => {
         setProduct(product);
@@ -898,6 +943,36 @@ const Crud = () => {
         setIngredienteClient(ingredientes);
     };
 
+    const onInputChangeClient = (e) => {
+        setWriteValue(e.target.value);
+    };
+
+    const searchCliente = (event) => {
+        let filteredClientes = [];
+        if (_clientes) {
+            filteredClientes = _clientes.filter((cliente) => {
+                return cliente.cedula_cliente.toLowerCase().startsWith(event.query.toLowerCase());
+            });
+        }
+
+        console.log('Filtered', filteredClientes);
+        setFilteredClientes(filteredClientes);
+    };
+
+    const onClientSelect = (e) => {
+        setClient(e.value);
+        setSelectedClient(e.value);
+        setSubmitted(false); // reiniciar el estado de submitted
+
+        // Establecer los valores del cliente seleccionado en el estado
+        setClient({
+            cedula: e.value.cedula_cliente,
+            telefono: e.value.telefono_cliente,
+            nombre: e.value.nombre_cliente,
+            apellido: e.value.apellido_cliente
+        });
+    };
+
   const IngredientesBodyTemplate = (rowData) => {
      
   return (
@@ -1120,6 +1195,64 @@ const detallePagosBodyTemplate = (rowData) => {
   );
 };
 
+const testButton = () => {
+    console.log('Entra en el boton')
+}
+
+    const editClienteBodyTemplate = (rowData) => {
+        return (
+            <>
+                <Button icon="pi pi-pencil" className="p-button-rounded p-button-secondary mr-2" onClick={() => editCliente(rowData)} />           
+            
+                <Dialog visible={editClienteDialog} style={{ width: '550px' }} header="Métodos de pago" modal className="p-fluid" onHide={hideDialog}>
+                <h5>AutoComplete</h5>
+                    <AutoComplete
+                        placeholder="Cedula"
+                        id="dd"
+                        dropdown
+                        value={writeValue}
+                        onChange={onInputChangeClient}
+                        suggestions={filteredClientes}
+                        completeMethod={searchCliente}
+                        field="cedula_cliente"
+                        onSelect={onClientSelect}
+                        emptyMessage="Cedula"
+                    />
+                    <div className="flex align-items-center justify-content-between my-3">
+                        <Button label="Nuevo Cliente" onClick={() => crudObject.openNew('cliente')} />
+                    </div>
+                    <div className="flex align-items-center justify-content-between my-3">
+                        <Button label="Nuevo Cliente" onClick={() => testButton} />
+                    </div>
+                    <h5>Informacion del cliente</h5>
+                    <div className="grid formgrid">
+                        <div className="field col">
+                            <label htmlFor="cedula">Cédula</label>
+                            <InputText id="cedula" value={client.cedula} onChange={(e) => onInputChangeClient(e, 'cedula')} required autoFocus className={classNames({ 'p-invalid': submitted && !client.cedula })} />
+                            {submitted && !client.cedula && <small className="p-invalid">La cédula es obligatoria.</small>}
+                        </div>
+                        <div className="field col">
+                            <label htmlFor="telefono">Teléfono</label>
+                            <InputText id="telefono" value={client.telefono} onChange={(e) => onInputChangeClient(e, 'telefono')} required autoFocus className={classNames({ 'p-invalid': submitted && !client.telefono })} />
+                            {submitted && !client.telefono && <small className="p-invalid">El teléfono es obligatorio.</small>}
+                        </div>
+                    </div>
+                    <div className="formgrid grid">
+                        <div className="field col">
+                            <label htmlFor="nombre">Nombre</label>
+                            <InputText id="nombre" value={client.nombre} onChange={(e) => onInputChangeClient(e, 'nombre')} required autoFocus className={classNames({ 'p-invalid': submitted && !client.nombre })} />
+                            {submitted && !client.nombre && <small className="p-invalid">El nombre es obligatorio.</small>}
+                        </div>
+                        <div className="field col">
+                            <label htmlFor="apellido">Apellido</label>
+                            <InputText id="apellido" value={client.apellido} onChange={(e) => onInputChangeClient(e, 'apellido')} />
+                        </div>
+                    </div>
+                </Dialog>
+
+            </>
+        );
+    };
 
 
 const clienteBodyTemplate = (rowData) => {
@@ -1145,6 +1278,7 @@ const clienteBodyTemplate = (rowData) => {
           <Column header="Nombre" body={nombreClienteTemplate} headerStyle={{ minWidth: "10rem" }} />
           <Column header="Cedula" body={cedulaClienteTemplate} sortable headerStyle={{ minWidth: "8rem" }} />
           <Column header="Telefono" body={telefonoClienteTemplate} sortable headerStyle={{ minWidth: "8rem" }} />
+          <Column header="Editar Cliente" body={editClienteBodyTemplate} sortable headerStyle={{ minWidth: "8rem" }} />
         </DataTable>
       </OverlayPanel>
     </>
@@ -1463,4 +1597,4 @@ const clienteBodyTemplate = (rowData) => {
     );
 };
 
-export default Crud;
+export default ordenes;

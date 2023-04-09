@@ -3,16 +3,7 @@ import getConfig from 'next/config';
 import { InputText } from 'primereact/inputtext';
 import { InputTextarea } from 'primereact/inputtextarea';
 import { AutoComplete } from 'primereact/autocomplete';
-import { Calendar } from 'primereact/calendar';
-import { Chips } from 'primereact/chips';
-import { Slider } from 'primereact/slider';
-import { Knob } from 'primereact/knob';
-import { Rating } from 'primereact/rating';
-import { ColorPicker } from 'primereact/colorpicker';
 import { RadioButton } from 'primereact/radiobutton';
-import { Checkbox } from 'primereact/checkbox';
-import { InputSwitch } from 'primereact/inputswitch';
-import { ListBox } from 'primereact/listbox';
 import { Dropdown } from 'primereact/dropdown';
 import { ToggleButton } from 'primereact/togglebutton';
 import { MultiSelect } from 'primereact/multiselect';
@@ -617,7 +608,7 @@ const handleDropdownChange = async(e) => {
             <div className="col-12 md:col-6">
                 <div className="card">
                     <Toast ref={_toast} />
-                    <h5>AutoComplete</h5>
+                    <h5>Cliente</h5>
                     <AutoComplete
                         placeholder="Cedula"
                         id="dd"
@@ -682,95 +673,6 @@ const handleDropdownChange = async(e) => {
                     {opciones === 'delivery' && <DeliveryOptions direccion={direccion} handleDireccionChange={handleDireccionChange} dropdownValue={dropdownValue} handleDropdownChange={handleDropdownChange} dropdownValues={dropdownValues} />}
                 </div>
             </div>
-            {/*<h5>Tipo de orden</h5>
-                    <div className="p-grid">
-                        <div className="grid formgrid">
-                            <div className="p-col-6">
-                                <div className="field col">
-                                    <div className="p-field-radiobutton">
-                                        <RadioButton
-                                            inputId="mostrador"
-                                            name="opciones"
-                                            value="mostrador"
-                                            onChange={handleOpcionesChange}
-                                            checked={opciones === 'mostrador'}
-                                            className="radio-spacer"
-                                        />
-                                        <label htmlFor="mostrador">Mostrador</label>
-                                    </div>
-                                </div>
-                            </div>
-                            <div className="field col">
-                                <div className="p-col-6">
-                                    <div className="p-field-radiobutton">
-                                        <RadioButton
-                                            inputId="delivery"
-                                            name="opciones"
-                                            value="delivery"
-                                            onChange={handleOpcionesChange}
-                                            checked={opciones === 'delivery'}
-                                            className="radio-spacer"
-                                        />
-                                        <label htmlFor="delivery">Delivery</label>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    {opciones === 'mostrador' && (
-                        <div>
-                            <div className="grid formgrid">
-                                <div className="field col">
-                                    <div className="p-field-radiobutton">
-                                        <label htmlFor="Comer Aqui">Comer aquí</label>
-                                        <RadioButton
-                                            inputId="Comer Aqui"
-                                            name="mostradorOptions"
-                                            value="Comer Aqui"
-                                            onChange={handleMostradorOptionsChange}
-                                            checked={mostradorOptions === 'Comer Aqui'}
-                                        />
-
-                                    </div>
-                                </div>
-
-                                <div className="field col">
-                                    <div className="p-field-radiobutton">
-                                        <RadioButton
-                                            inputId="Para llevar"
-                                            name="mostradorOptions"
-                                            value="Para llevar"
-                                            onChange={handleMostradorOptionsChange}
-                                            checked={mostradorOptions === 'Para llevar'}
-                                        />
-                                        <label htmlFor="Para llevar">Para llevar</label>
-                                    </div>
-                                </div>
-                            </div>
-                            {mostradorOptions === 'Comer Aqui' && (
-                                <div className="p-field">
-                                    <div className="field col">
-                                        <label htmlFor="numero-mesa">Número de mesa:</label>
-                                        <InputText id="numero-mesa" value={tableNumber} onChange={(e) => setTableNumber(e.target.value)} />
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-                    )}
-                    {opciones === 'delivery' && (
-                        <div>
-                            <div className="p-field">
-                                <label htmlFor="direccion">Dirección:</label>
-                                <InputText id="direccion" value={direccion} onChange={handleDireccionChange} />
-                            </div>
-                            <div className="p-field">
-                                <label htmlFor="telefono">Zona</label>
-                                <Dropdown value={dropdownValue} onChange={(e) => setDropdownValue(e.value)} options={dropdownValues} optionLabel="name" placeholder="Select" />
-                            </div>
-                        </div>
-                    )}
-                </div>
-            </div>*/}
             <div className="col-12 md:col-6">
                 <div className="card">
                     <div>
