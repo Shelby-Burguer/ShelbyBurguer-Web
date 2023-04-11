@@ -4,13 +4,14 @@ export class NewProductoService {
     constructor() {
         this.contextPath = getConfig().publicRuntimeConfig.contextPath;
         this.ipAddress = window.location.host.split(':')[0];
+        this.token = localStorage.getItem('token');
     }
 
     async getProductos() {
         let resProduct;
 
         const responseProducto = fetch(`http://${this.ipAddress}:10000/productos/all`, {
-            headers: { 'Cache-Control': 'no-cache' },
+            headers: { 'Cache-Control': 'no-cache', 'Authorization': `Bearer ${this.token}` },
             method: 'GET'
         }).then((res) => res.json());
 

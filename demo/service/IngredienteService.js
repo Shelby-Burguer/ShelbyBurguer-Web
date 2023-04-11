@@ -5,6 +5,7 @@ export class IngredienteService {
     constructor() {
         this.contextPath = getConfig().publicRuntimeConfig.contextPath;
         this.ipAddress = window.location.host.split(':')[0];
+        this.token = localStorage.getItem('token');
     }
 
     async getIngredientes() {
@@ -19,7 +20,7 @@ export class IngredienteService {
         };
 
         const responseBody = fetch(`http://${this.ipAddress}:10000/ingrediente/all`, {
-            headers: { 'Cache-Control': 'no-cache' },
+            headers: { 'Cache-Control': 'no-cache', 'Authorization': `Bearer ${this.token}`}, 
             method: 'GET'
         }).then((res) => res.json());
 
@@ -55,13 +56,14 @@ export class IngredienteService {
 
     DeleteIngredientes(id) {
         return fetch(`http://${this.ipAddress}:10000/ingrediente/delete/` + id, {
+            headers: { 'Authorization': `Bearer ${this.token}`}, 
             method: 'DELETE'
         });
     }
 
     updateIngredientes(data) {
         return fetch(`http://${this.ipAddress}:10000/ingrediente/update/` + data.id, {
-            headers: { 'content-type': 'application/json' },
+            headers: { 'content-type': 'application/json', 'Authorization': `Bearer ${this.token}`},
             method: 'PATCH',
             body: JSON.stringify({
                 nombre: data.nombre,
@@ -89,7 +91,7 @@ export class IngredienteService {
         };
 
         const responseBody = fetch(`http://${this.ipAddress}:10000/ingrediente/create`, {
-            headers: { 'content-type': 'application/json' },
+            headers: { 'content-type': 'application/json' , 'Authorization': `Bearer ${this.token}`},
             method: 'POST',
             body: JSON.stringify({
                 nombre: data.nombre,
@@ -111,6 +113,7 @@ export class IngredienteService {
         fileReq.append('file', file);
 
         const responseFile = fetch(`http://${this.ipAddress}:10000/ingrediente/create/upload/` + resProduct.id, {
+            headers: { 'Cache-Control': 'no-cache', 'Authorization': `Bearer ${this.token}`}, 
             method: 'PUT',
             body: fileReq
         });
