@@ -36,21 +36,20 @@ const LoginPage = () => {
                     <div className="w-full surface-card py-4 px-5 sm:px-8" style={{ borderRadius: '53px' }}>
                     <Button icon="pi pi-arrow-left" label="Go to Dashboard" className="p-button-text mb-2" onClick={() => router.push('/')}/>
                         <div className="text-center mb-5">
-                            <img src={`${contextPath}/demo/images/login/avatar.png`} alt="Image" height="50" className="mb-3" />
-                            <div className="text-900 text-3xl font-medium mb-3">Welcome, Isabel!</div>
-                            <span className="text-600 font-medium">Sign in to continue</span>
+                            <div className="text-900 text-3xl font-medium mb-3">Bienvenido a Shelby Burguer!</div>
+                            <span className="text-600 font-medium">Ingrese la informacion solicitada para entrar</span>
                         </div>
 
                         <div>
                             <label htmlFor="email1" className="block text-900 text-xl font-medium mb-2">
-                                Email
+                                Correo
                             </label>
-                            <InputText inputid="email1" type="text" value={email}  onChange={(e) => setEmail(e.target.value)} placeholder="Email address" className="w-full md:w-30rem mb-5" style={{ padding: '1rem' }} />
+                            <InputText inputid="email1" type="text" value={email}  onChange={(e) => setEmail(e.target.value)} placeholder="Direccion de correo electronico" className="w-full md:w-30rem mb-5" style={{ padding: '1rem' }} />
 
                             <label htmlFor="password1" className="block text-900 font-medium text-xl mb-2">
-                                Password
+                                Contraseña
                             </label>
-                            <Password inputid="password1" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Password" toggleMask className="w-full mb-5" inputClassName='w-full p-3 md:w-30rem'></Password>
+                            <Password inputid="password1" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Contraseña" toggleMask className="w-full mb-5" inputClassName='w-full p-3 md:w-30rem'></Password>
 
                             <div className="flex align-items-center justify-content-between mb-5 gap-5">
                                 <div className="flex align-items-center">
@@ -63,7 +62,7 @@ const LoginPage = () => {
                                     Forgot password?
                                 </a>
                             </div>
-                            <Button label="Sign In" className="w-full p-3 text-xl" onClick={postAuthUsuario}></Button>
+                            <Button label="Ingresar" className="w-full p-3 text-xl" onClick={postAuthUsuario}></Button>
                         </div>
                     </div>
                 </div>

@@ -7,6 +7,36 @@ export class authService {
         this.token = localStorage.getItem('token');
     }
 
+    async postCreateUser(name, apellido, cedula, telefono, direccion, fecha_inicio, email, password, role, pregunta_secreta, respuesta_secreta) {
+        let resOrdenCarrito;
+
+        const responseProducto = fetch(`http://${this.ipAddress}:10000/autenticacion/registro`, {
+            headers: { 'content-type': 'application/json' },
+            method: 'POST',
+            body: JSON.stringify({
+                nombre_user: name,
+                apellido_users: apellido,
+                cedula_users: cedula,
+                telefono_users: telefono,
+                direccion_users: direccion,
+                fecha_inicio_users: fecha_inicio,
+                correo_user: email, 
+                contraseña_user: password,
+                rol_user: role,
+                preguntaSecreta_users: pregunta_secreta,
+                respuestaPregunta_users: respuesta_secreta
+            })
+        });
+       
+        await responseProducto.then((dat) => dat.json().then((res) => (resOrdenCarrito = res)));
+
+        console.log('Test Res', resOrdenCarrito);
+        //localStorage.setItem('token', resOrdenCarrito.token.token);
+        //localStorage.setItem('nombre_user', resOrdenCarrito.token.nombre_user);
+        //localStorage.setItem('nombre_role', resOrdenCarrito.token.nombre_role);
+        return resOrdenCarrito;
+    }
+
     async postAuthSesion(email, password) {
         let resOrdenCarrito;
 
@@ -20,7 +50,9 @@ export class authService {
         });
        
         await responseProducto.then((dat) => dat.json().then((res) => (resOrdenCarrito = res)));
-        localStorage.setItem('token', resOrdenCarrito.token);
+        localStorage.setItem('token', resOrdenCarrito.token.token);
+        localStorage.setItem('nombre_user', resOrdenCarrito.token.nombre_user);
+        localStorage.setItem('nombre_role', resOrdenCarrito.token.nombre_role);
         return resOrdenCarrito;
     }
 

@@ -6058,3 +6058,14 @@
 .total-text-pago {
   font-size: 18px;
 }
+  
+.custom-button {
+  font-size: 16px;
+  font-weight: bold;
+  background-color: #007bff;
+  border-color: #007bff;
+  color: #fff;
+  padding: 0.5rem 1.5rem;
+  border-radius: 5px;
+  cursor: pointer;
+}
