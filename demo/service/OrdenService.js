@@ -4,13 +4,14 @@ export class OrdenService {
     constructor() {
         this.contextPath = getConfig().publicRuntimeConfig.contextPath;
         this.ipAddress = window.location.host.split(':')[0];
+        this.token = localStorage.getItem('token');
     }
 
     async getProductoOrden(id) {
         let resOrdenCarrito;
 
         const responseProducto = fetch(`http://${this.ipAddress}:10000/orden/all/` + id, {
-            headers: { 'Cache-Control': 'no-cache' },
+            headers: { 'Cache-Control': 'no-cache', 'Authorization': `Bearer ${this.token}` },
             method: 'GET'
         }).then((res) => res.json());
 
@@ -25,7 +26,7 @@ export class OrdenService {
         let resOrden;
 
         const responseProducto = fetch(`http://${this.ipAddress}:10000/orden/one/` + id, {
-            headers: { 'Cache-Control': 'no-cache' },
+            headers: { 'Cache-Control': 'no-cache', 'Authorization': `Bearer ${this.token}` },
             method: 'GET'
         }).then((res) => res.json());
 
@@ -40,7 +41,7 @@ export class OrdenService {
         let resOrden;
         console.log(total)
         const responseProducto = fetch(`http://${this.ipAddress}:10000/orden/update/` + id, {
-            headers: { 'content-type': 'application/json' },
+            headers: { 'content-type': 'application/json', 'Authorization': `Bearer ${this.token}` },
             method: 'PUT',
             body: JSON.stringify({
                 descuento: descuento,
@@ -62,6 +63,7 @@ export class OrdenService {
 
     DeleteOrden(id) {
         return fetch(`http://${this.ipAddress}:10000/orden/delete/` + id, {
+            headers: { 'Authorization': `Bearer ${this.token}` },
             method: 'DELETE'
         });
     }
@@ -70,7 +72,7 @@ export class OrdenService {
         let resOrdenCarrito;
 
         const responseProducto = fetch(`http://${this.ipAddress}:10000/orden/all`, {
-            headers: { 'Cache-Control': 'no-cache' },
+            headers: { 'Cache-Control': 'no-cache', 'Authorization': `Bearer ${this.token}` },
             method: 'GET'
         }).then((res) => res.json());
 
@@ -86,7 +88,7 @@ export class OrdenService {
         let resOrdenCarrito;
 
         const responseProducto = fetch(`http://${this.ipAddress}:10000/orden/estados/All`, {
-            headers: { 'Cache-Control': 'no-cache' },
+            headers: { 'Cache-Control': 'no-cache', 'Authorization': `Bearer ${this.token}` },
             method: 'GET'
         }).then((res) => res.json());
 
@@ -102,7 +104,7 @@ export class OrdenService {
         let resOrdenCarrito;
 
         const responseProducto = fetch(`http://${this.ipAddress}:10000/orden/ordenEstado/create`, {
-            headers: { 'content-type': 'application/json' },
+            headers: { 'content-type': 'application/json', 'Authorization': `Bearer ${this.token}` },
             method: 'POST',
             body: JSON.stringify({
             orden_id: idOrden,
@@ -123,7 +125,7 @@ export class OrdenService {
         let resOrdenCarrito;
 
         const responseProducto = fetch(`http://${this.ipAddress}:10000/orden/ordenPago/create/`+ id, {
-            headers: { 'content-type': 'application/json' },
+            headers: { 'content-type': 'application/json', 'Authorization': `Bearer ${this.token}` },
             method: 'POST',
             body: JSON.stringify({
             tipo_pago: tipo_pago,
@@ -146,7 +148,7 @@ async getAllPagosOrden(id) {
   let resOrdenCarrito;
 
   const responseProducto = fetch(`http://${this.ipAddress}:10000/orden/pagos/All/` + id, {
-    headers: { 'Cache-Control': 'no-cache' },
+    headers: { 'Cache-Control': 'no-cache', 'Authorization': `Bearer ${this.token}` },
     method: 'GET'
   }).then((res) => {
     if (!res.ok) {
@@ -174,7 +176,7 @@ async getAllPagosOrden(id) {
         let resOrdenCarrito;
 
         const responseProducto = fetch(`http://${this.ipAddress}:10000/orden/montoBsDolares/create`, {
-            headers: { 'content-type': 'application/json' },
+            headers: { 'content-type': 'application/json', 'Authorization': `Bearer ${this.token}` },
             method: 'POST',
             body: JSON.stringify({
             monto: monto,
@@ -193,7 +195,7 @@ async getAllPagosOrden(id) {
 async getMontoDia() {
   let resOrdenCarrito; 
   const responseProducto = fetch(`http://${this.ipAddress}:10000/orden/montoBsDolares/All/`, {
-    headers: { 'Cache-Control': 'no-cache' },
+    headers: { 'Cache-Control': 'no-cache', 'Authorization': `Bearer ${this.token}` },
     method: 'GET'
   }).then((res) => {
     if (!res.ok) {

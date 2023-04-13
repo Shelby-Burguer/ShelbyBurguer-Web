@@ -37,6 +37,41 @@ export class authService {
         return resOrdenCarrito;
     }
 
+    async postCorreoUserVerify(email) {
+        let resOrdenCarrito;
+
+        const responseProducto = fetch(`http://${this.ipAddress}:10000/autenticacion/recuperarPasswordE`, {
+            headers: { 'content-type': 'application/json' },
+            method: 'POST',
+            body: JSON.stringify({
+                correo_user: email
+            })
+        });
+       
+        await responseProducto.then((dat) => dat.json().then((res) => (resOrdenCarrito = res)));
+
+        console.log('Test Res', resOrdenCarrito);
+        return resOrdenCarrito;
+    }
+
+    async postResponseQuestionUserVerify(email, respuesta) {
+        let resOrdenCarrito;
+
+        const responseProducto = fetch(`http://${this.ipAddress}:10000/autenticacion/recuperarPasswordQ`, {
+            headers: { 'content-type': 'application/json' },
+            method: 'POST',
+            body: JSON.stringify({
+                correo_user: email, 
+                respuestaPregunta_users: respuesta
+            })
+        });
+       
+        await responseProducto.then((dat) => dat.json().then((res) => (resOrdenCarrito = res)));
+
+        console.log('Test Res', resOrdenCarrito);
+        return resOrdenCarrito;
+    }
+
     async postAuthSesion(email, password) {
         let resOrdenCarrito;
 

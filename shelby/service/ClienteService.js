@@ -4,12 +4,13 @@ export class ClienteService {
     constructor() {
         this.contextPath = getConfig().publicRuntimeConfig.contextPath;
         this.ipAddress = window.location.host.split(':')[0];
+        this.token = localStorage.getItem('token');
     }
 
     async getClientes() {
         return await fetch(`http://${this.ipAddress}:10000/clientes/`, {
             method: 'GET',
-            headers: { 'Content-Type': 'application/json' }
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${this.token}` }
         })
             .then((res) => res.json())
             .catch((error) => console.log(error));
@@ -19,7 +20,7 @@ export class ClienteService {
         try {
             const response = await fetch(`http://${this.ipAddress}:10000/clientes/`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${this.token}` },
                 body: JSON.stringify(data)
             });
             console.log('El código HTTP de la respuesta es:', response.status);
@@ -34,7 +35,7 @@ export class ClienteService {
         try {
             const response = await fetch(`http://${this.ipAddress}:10000/clientes/${data.id_cliente}`, {
                 method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${this.token}` },
                 body: JSON.stringify(data)
             });
             console.log('El código HTTP de la respuesta es:', response.status);
@@ -48,6 +49,7 @@ export class ClienteService {
     async borrarCliente(id) {
         try {
             const response = await fetch(`http://${this.ipAddress}:10000/clientes/${id}`, {
+                headers: { 'Authorization': `Bearer ${this.token}` },
                 method: 'DELETE'
             });
             console.log('El código HTTP de la respuesta es:', response.status);
@@ -61,7 +63,7 @@ export class ClienteService {
     async getOneClientes(cedula) {
         return await fetch(`http://${this.ipAddress}:10000/clientes/cedula/`+ cedula, {
             method: 'GET',
-            headers: { 'Content-Type': 'application/json' }
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${this.token}` }
         })
             .then((res) => res.json())
             .catch((error) => console.log(error));

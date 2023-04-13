@@ -9,6 +9,7 @@ import { LayoutContext } from '../../../layout/context/layoutcontext';
 import { InputText } from 'primereact/inputtext';
 import { classNames } from 'primereact/utils';
 import { authService } from '../../../demo/service/authService';
+import { Dialog } from 'primereact/dialog';
 
 const LoginPage = () => {
     const [email, setEmail] = useState('');
@@ -18,14 +19,73 @@ const LoginPage = () => {
     const contextPath = getConfig().publicRuntimeConfig.contextPath;
     const router = useRouter();
     const containerClassName = classNames('surface-ground flex align-items-center justify-content-center min-h-screen min-w-screen overflow-hidden', {'p-input-filled': layoutConfig.inputStyle === 'filled'});
+    const [passwordDialogVisible, setPasswordDialogVisible] = useState(false);
+    const [pregunta, setPregunta] = useState('');
+    const [resPregunta, setResPregunta] = useState('');
+    const [resBackPregunta, setResBackPregunta] = useState('');
+    const [submitted, setSubmitted] = useState(false);
+    const [correo, setCorreo] = useState('');
 
     const postAuthUsuario = async() => {
-    
     const autenticacionService = new authService();
     const respuesta = await autenticacionService.postAuthSesion(email, password)
     setEmail('');
     setPassword('');
     console.log(respuesta);
+    };
+
+    const passwordUser = () => {
+
+    setPasswordDialogVisible(true)
+    };
+
+    const onInputChange = (e, name) => {
+        const val = (e.target && e.target.value) || '';
+        let _element = { ...element };
+        _element[`${name}`] = val;
+
+        setCliente(_element);
+    };
+
+    const hideDialog = () => {
+        setPasswordDialogVisible(false)
+        setPregunta('');
+        setResBackPregunta('');
+        setResPregunta('');
+        setCorreo('');
+    };
+
+    const correoContraseñaUser = async() => {
+    const autenticacionService = new authService();
+    const respuesta = await autenticacionService.postCorreoUserVerify(correo)
+    console.log('Test respuesta Email', respuesta)
+    setPregunta(respuesta.preguntasecreta_users)
+    };
+
+    const respuesaPreguntaSecreta = async() => {
+    const autenticacionService = new authService();
+    const respuesta = await autenticacionService.postResponseQuestionUserVerify(correo, resPregunta)
+    console.log('Test respuesta Pregunta secreta', respuesta)
+    setResBackPregunta(respuesta.respuestapregunta_users)
+    };
+
+    const onSave = async() => {
+    const autenticacionService = new authService();
+    const respuesta = await autenticacionService.postCreateUser(nombre, apellido, cedula, telefono, direccion, fecha_inicio,correo, password, dropdownValue.name, pregunta_secreta, respuesta_secreta)
+    setDropdownValue(null);
+    setPassword('');
+    setNombre('');
+    setCorreo('');
+    setPasswordDialogVisible(false);
+    };
+
+    const elementDialogFooter = () => {
+        return (
+            <React.Fragment>
+                <Button label="Cancel" icon="pi pi-times" className="p-button-text" onClick={hideDialog} />
+                <Button label="Enviar respuesta" icon="pi pi-check" className="p-button-text" onClick={() => respuesaPreguntaSecreta()} />
+            </React.Fragment>
+        );
     };
 
     return (
@@ -34,39 +94,82 @@ const LoginPage = () => {
                 <img src={`${contextPath}/layout/images/SHELBY LOGO -ai.svg`} alt="Sakai logo" className="mb-3 w-10rem flex-shrink-0"/>
                 <div style={{ borderRadius: '56px', padding: '0.3rem', background: 'linear-gradient(180deg, var(--primary-color) 10%, rgba(33, 150, 243, 0) 30%)' }}>
                     <div className="w-full surface-card py-4 px-5 sm:px-8" style={{ borderRadius: '53px' }}>
-                    <Button icon="pi pi-arrow-left" label="Go to Dashboard" className="p-button-text mb-2" onClick={() => router.push('/')}/>
+                    <Button icon="pi pi-arrow-left" label="Pagina principal" className="p-button-text mb-2" onClick={() => router.push('/')}/>
                         <div className="text-center mb-5">
                             <div className="text-900 text-3xl font-medium mb-3">Bienvenido a Shelby Burguer!</div>
                             <span className="text-600 font-medium">Ingrese la informacion solicitada para entrar</span>
                         </div>
-
                         <div>
                             <label htmlFor="email1" className="block text-900 text-xl font-medium mb-2">
-                                Correo
+                            Correo
                             </label>
                             <InputText inputid="email1" type="text" value={email}  onChange={(e) => setEmail(e.target.value)} placeholder="Direccion de correo electronico" className="w-full md:w-30rem mb-5" style={{ padding: '1rem' }} />
 
                             <label htmlFor="password1" className="block text-900 font-medium text-xl mb-2">
-                                Contraseña
+                            Contraseña
                             </label>
                             <Password inputid="password1" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Contraseña" toggleMask className="w-full mb-5" inputClassName='w-full p-3 md:w-30rem'></Password>
 
                             <div className="flex align-items-center justify-content-between mb-5 gap-5">
                                 <div className="flex align-items-center">
-                                    <Checkbox inputid="rememberme1" checked={checked} onChange={(e) => setChecked(e.checked)} className="mr-2"></Checkbox>
                                     <label htmlFor="rememberme1">
-                                        Remember me
                                     </label>
                                 </div>
-                                <a className="font-medium no-underline ml-2 text-right cursor-pointer" style={{ color: 'var(--primary-color)' }}>
-                                    Forgot password?
-                                </a>
+                                <Button label="Olvidaste tu contraseña?" className="p-button-text mb-2" onClick={() => passwordUser()}/>
                             </div>
                             <Button label="Ingresar" className="w-full p-3 text-xl" onClick={postAuthUsuario}></Button>
                         </div>
                     </div>
                 </div>
             </div>
+            <Dialog visible={passwordDialogVisible} style={{ width: '450px' }} modal className="p-fluid" footer={() => elementDialogFooter()} onHide={hideDialog}>
+                <div style={{ display: 'flex', alignItems: 'center' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginRight: '10px' }}>
+                        <span className="p-m-2" style={{ fontWeight: 'bold', fontSize: '15px' }}>Ingrese su correo</span>
+                    </div>
+                </div>
+                <div className="formgrid grid">
+                    <div className="field col">
+                        <label htmlFor="correo"></label>
+                        <div className="p-inputgroup">
+                        <InputText id="correo" value={correo} onChange={(e) => setCorreo(e.target.value)} required autoFocus className={classNames({ 'p-invalid': submitted && !correo })} />
+                        {submitted && !correo && <small className="p-invalid">Ingrese el correo de la pregunta.</small>}
+                        </div>
+                    </div>
+                </div>
+                <Button label="Enviar correo" className="w-full p-3 text-xl" onClick={correoContraseñaUser}></Button>
+                {pregunta && (
+                <>
+                    <div style={{ display: 'flex', alignItems: 'center' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginRight: '10px' }}>
+                        <span className="p-m-2" style={{ fontWeight: 'bold', fontSize: '15px' }}>{pregunta}</span>
+                    </div>
+                    </div>
+                    <div className="formgrid grid">
+                    <div className="field col">
+                        <label htmlFor="resPregunta"></label>
+                        <div className="p-inputgroup">
+                        <InputText id="resPregunta" value={resPregunta} onChange={(e) => setResPregunta(e.target.value)} required autoFocus className={classNames({ 'p-invalid': submitted && !resPregunta })} />
+                        {submitted && !resPregunta && <small className="p-invalid">Ingrese la respuesta de la pregunta.</small>}
+                        </div>
+                    </div>
+                    </div>
+                </>
+                )}
+                {resBackPregunta === resPregunta? (
+                    <div style={{ display: 'flex', alignItems: 'center' }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginRight: '10px' }}>
+                            <span className="p-m-2" style={{ fontWeight: 'bold', fontSize: '18px' }}>{resBackPregunta}</span>
+                        </div>
+                    </div>
+                ) : (
+                    <div style={{ display: 'flex', alignItems: 'center' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginRight: '10px' }}>
+                        <span className="p-m-2" style={{ fontWeight: 'bold', fontSize: '18px' }}>Respuesta o Correo incorrecto intentelo de nuevo</span>
+                    </div>
+                    </div>
+                )}
+            </Dialog>
         </div>
     );
 };

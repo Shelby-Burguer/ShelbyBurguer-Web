@@ -29,7 +29,7 @@ export class NewProductoService {
             baseProducto = { ...producto };
 
             const responseIngredientes = fetch(`http://${this.ipAddress}:10000/ingredienteProducto/all/` + producto.id, {
-                headers: { 'Cache-Control': 'no-cache' },
+                headers: { 'Cache-Control': 'no-cache', 'Authorization': `Bearer ${this.token}` },
                 method: 'GET'
             }).then((res) => res.json());
 
@@ -96,7 +96,7 @@ export class NewProductoService {
         };
         console.log('Service producto', producto);
         const responseProducto = fetch(`http://${this.ipAddress}:10000/productos/create`, {
-            headers: { 'content-type': 'application/json' },
+            headers: { 'content-type': 'application/json', 'Authorization': `Bearer ${this.token}` },
             method: 'POST',
             body: JSON.stringify({
                 nombre: producto.nombre,
@@ -123,7 +123,7 @@ export class NewProductoService {
         }
 
         fetch(`http://${this.ipAddress}:10000/ingredienteProducto/create`, {
-            headers: { 'content-type': 'application/json' },
+            headers: { 'content-type': 'application/json', 'Authorization': `Bearer ${this.token}` },
             method: 'POST',
             body: JSON.stringify(ingredienteProducto)
         });
@@ -133,6 +133,7 @@ export class NewProductoService {
 
     DeleteProductos(id) {
         return fetch(`http://${this.ipAddress}:10000/productos/delete/` + id, {
+            headers: { 'Authorization': `Bearer ${this.token}` },
             method: 'DELETE'
         });
     }
@@ -154,7 +155,7 @@ export class NewProductoService {
         };
 
         const responseProducto = fetch(`http://${this.ipAddress}:10000/ingredienteProducto/update/` + productoid, {
-            headers: { 'content-type': 'application/json' },
+            headers: { 'content-type': 'application/json', 'Authorization': `Bearer ${this.token}` },
             method: 'PUT',
             body: JSON.stringify({
                 producto: producto,
@@ -167,6 +168,7 @@ export class NewProductoService {
 
     DeleteProductos(id) {
         return fetch(`http://${this.ipAddress}:10000/productos/delete/` + id, {
+            headers: { 'Authorization': `Bearer ${this.token}` },
             method: 'DELETE'
         });
     }
