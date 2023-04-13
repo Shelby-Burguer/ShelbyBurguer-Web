@@ -4,13 +4,14 @@ export class NewComboService {
     constructor() {
         this.contextPath = getConfig().publicRuntimeConfig.contextPath;
         this.ipAddress = window.location.host.split(':')[0];
+        this.token = localStorage.getItem('token');
     }
 
     async getCombos() {
         let resProduct;
 
         const responseProducto = fetch(`http://${this.ipAddress}:10000/combo/all`, {
-            headers: { 'Cache-Control': 'no-cache' },
+            headers: { 'Cache-Control': 'no-cache' , 'Authorization': `Bearer ${this.token}` },
             method: 'GET'
         }).then((res) => res.json());
 
@@ -23,7 +24,7 @@ export class NewComboService {
         let resProduct;
 
         const responseProducto = fetch(`http://${this.ipAddress}:10000/productos/all`, {
-            headers: { 'Cache-Control': 'no-cache' },
+            headers: { 'Cache-Control': 'no-cache', 'Authorization': `Bearer ${this.token}` },
             method: 'GET'
         }).then((res) => res.json());
 
@@ -41,7 +42,7 @@ export class NewComboService {
             baseProducto = { ...producto };
 
             const responseIngredientes = fetch(`http://${this.ipAddress}:10000/ingredienteProducto/all/` + producto.id, {
-                headers: { 'Cache-Control': 'no-cache' },
+                headers: { 'Cache-Control': 'no-cache', 'Authorization': `Bearer ${this.token}` },
                 method: 'GET'
             }).then((res) => res.json());
 
@@ -95,7 +96,7 @@ export class NewComboService {
         let resCombo;
 
         const responseProducto = fetch(`http://${this.ipAddress}:10000/combo/create`, {
-            headers: { 'content-type': 'application/json' },
+            headers: { 'content-type': 'application/json' , 'Authorization': `Bearer ${this.token}`},
             method: 'POST',
             body: JSON.stringify({
                 nombre: combo.nombre,
@@ -113,6 +114,7 @@ export class NewComboService {
     DeleteCombo(id) {
         console.log('idCombo', id);
         return fetch(`http://${this.ipAddress}:10000/combo/delete/` + id, {
+            headers: {'Authorization': `Bearer ${this.token}`},
             method: 'DELETE'
         });
     }
