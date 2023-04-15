@@ -227,16 +227,11 @@ const ListDemo = (props) => {
             let _products = [...dataViewValue];
             console.log('idOrden', orderId);
             const carritoService = new CarritoService();
-            const response = await carritoService.postCarrito(product.id, orderId);
-
-            //idProducto
-            //idOrden
-            //toast.current.show({ severity: 'success', summary: 'Successful', detail: 'Product Created', life: 3000 });
+            const response = await carritoService.postCarrito(product.id, orderId, picklistTargetValue);
 
             setDataViewValue(_products);
             setcarritoDialog(false);
             setDropdownValue(null);
-            //setProduct(emptyProduct);
         }
 
         setPicklistTargetValue([]);

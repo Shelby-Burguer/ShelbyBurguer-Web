@@ -20,7 +20,7 @@ export class CarritoService {
         return resOrdenCarrito;
     }
 
-    async postCarrito(idProducto, idOrden) {
+    async postCarrito(idProducto, idOrden, arrayingredientes) {
         let resOrdenCarrito;
 
         const responseProducto = fetch(`http://${this.ipAddress}:10000/carrito/create`, {
@@ -28,7 +28,8 @@ export class CarritoService {
             method: 'POST',
             body: JSON.stringify({
                 idProducto: idProducto,
-                idOrden: idOrden
+                idOrden: idOrden,
+                ingrediente_id: arrayingredientes
             })
         });
 
@@ -37,13 +38,16 @@ export class CarritoService {
         return resOrdenCarrito;
     }
 
-    async postProductosOrden(ProductosOrden) {
+    async postProductosOrden(ProductosOrden, ingredienteProducto) {
         let resOrdenCarrito;
 
         const responseProducto = fetch(`http://${this.ipAddress}:10000/carrito/create/ProductoOrdene`, {
             headers: { 'content-type': 'application/json', 'Authorization': `Bearer ${this.token}` },
             method: 'POST',
-            body: JSON.stringify(ProductosOrden)
+            body: JSON.stringify({
+            productos: ProductosOrden,
+            ingrediente_id: ingredienteProducto
+            })
         });
 
         await responseProducto.then((dat) => dat.json().then((res) => (resOrdenCarrito = res)));
@@ -56,6 +60,22 @@ export class CarritoService {
         let resOrdenCarrito;
 
         const responseProducto = fetch(`http://${this.ipAddress}:10000/carrito/all`, {
+            headers: { 'Cache-Control': 'no-cache', 'Authorization': `Bearer ${this.token}` },
+            method: 'GET'
+        }).then((res) => res.json());
+
+        await responseProducto.then((data) => (resOrdenCarrito = data));
+
+        console.log('ResCarrito', resOrdenCarrito);
+
+        return resOrdenCarrito;
+    }
+
+
+    async getCarritoIngrediente() {
+        let resOrdenCarrito;
+
+        const responseProducto = fetch(`http://${this.ipAddress}:10000/carrito/ingrediente/all`, {
             headers: { 'Cache-Control': 'no-cache', 'Authorization': `Bearer ${this.token}` },
             method: 'GET'
         }).then((res) => res.json());
