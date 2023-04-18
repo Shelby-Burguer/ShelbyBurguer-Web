@@ -38,6 +38,7 @@ const ListDemo = (props) => {
     const [productAux, setProductAux] = useState(emptyProduct);
     const [cantidad, setCantidad] = useState(emptyCantidad);
     const [tipoProducto, setTipoProducto] = useState(null);
+    const [extrasIngredientes, setExtrasIngredientes] = useState(null);
     const [picklistSourceValue, setPicklistSourceValue] = useState(null);
     const [picklistTargetValue, setPicklistTargetValue] = useState([]);
     const [submitted, setSubmitted] = useState(false);
@@ -53,6 +54,7 @@ const ListDemo = (props) => {
     const contextPath = getConfig().publicRuntimeConfig.contextPath;
     const fileUploadRef = useRef(null);
     const [dropdownValue, setDropdownValue] = useState(null);
+    const [dropdownExtraValue, setDropdownExtraValue] = useState(null);
     const [dropdownValueAux, setDropdownValueAux] = useState(null);
     const [deleteProductDialog, setDeleteProductDialog] = useState(false);
     const [totalSize, setTotalSize] = useState(0);
@@ -75,10 +77,6 @@ const ListDemo = (props) => {
         productoServicenew.getProductos();
         setGlobalFilterValue('');
 
-        const myStoredObject = JSON.parse(localStorage.getItem('myKey'));
-        const idnumber = myStoredObject ? myStoredObject.orden_id : null;
-        setOrderId(idnumber);
-        console.log('Este es el id de orden', idnumber);
     }, []);
 
     const onFilter = (e) => {
@@ -223,11 +221,18 @@ const ListDemo = (props) => {
         console.log('producto auxiliar', productAux);
         setDropdownValueAux(dropdownValue);
         addToCart(product, carrito, setCarrito);
+
+        const myStoredObject = JSON.parse(localStorage.getItem('myKey'));
+        const idnumber = myStoredObject ? myStoredObject.orden_id : null;
+        setOrderId(idnumber);
+        console.log('Este es el id de orden', idnumber);
+
         if (product.nombre.trim()) {
             let _products = [...dataViewValue];
-            console.log('idOrden', orderId);
+            console.log('idOrden Save', orderId);
             const carritoService = new CarritoService();
-            const response = await carritoService.postCarrito(product.id, orderId, picklistTargetValue);
+            
+            const response = await carritoService.postCarrito(product.id, idnumber, picklistTargetValue);
 
             setDataViewValue(_products);
             setcarritoDialog(false);
@@ -403,19 +408,44 @@ const ListDemo = (props) => {
         setProduct(_product);
     };
 
-    const hideDialog = () => {
-        console.log('Entra?');
-        const ingredienteServie = new IngredienteService();
-        ingredienteServie.getIngredientes().then((data) => setPicklistSourceValue(data));
+    const hideDialog = async() => {
+        const ingredienteService = new IngredienteService();
+        
+        let ingredientes; 
+        await ingredienteService.getIngredientes().then((data) => ingredientes = data);
+        console.log('Que paso?', ingredientes)
+        const opcionesDropdown = ingredientes.filter(ingrediente => ingrediente.extra === "Si").map(ingrediente => ({ id: ingrediente.id, name: ingrediente.nombre }));
+
+        for (let i = ingredientes.length - 1; i >= 0; i--) {
+            if (ingredientes[i].extra === "Si") {
+                ingredientes.splice(i, 1);
+            }
+        }
+
+        setExtrasIngredientes(opcionesDropdown)
+        setPicklistSourceValue(ingredientes)
         setPicklistTargetValue([]);
         setSubmitted(false);
         setProductDialog(false);
         setDropdownValue(null);
     };
 
-    const openNew = () => {
+    const openNew = async() => {
         const ingredienteService = new IngredienteService();
-        ingredienteService.getIngredientes().then((data) => setPicklistSourceValue(data));
+        
+        let ingredientes; 
+        await ingredienteService.getIngredientes().then((data) => ingredientes = data);
+        console.log('Que paso?', ingredientes)
+        const opcionesDropdown = ingredientes.filter(ingrediente => ingrediente.extra === "Si").map(ingrediente => ({ id: ingrediente.id, name: ingrediente.nombre }));
+
+        for (let i = ingredientes.length - 1; i >= 0; i--) {
+            if (ingredientes[i].extra === "Si") {
+                ingredientes.splice(i, 1);
+            }
+        }
+
+        setExtrasIngredientes(opcionesDropdown)
+        setPicklistSourceValue(ingredientes)
         setProduct(emptyProduct);
         setSubmitted(false);
         setProductDialog(true);
@@ -442,9 +472,35 @@ const ListDemo = (props) => {
 
     const editProduct = async (product) => {
         try {
+
+        const ingredienteService = new IngredienteService();
+        
+        let ingredientes; 
+        await ingredienteService.getIngredientes().then((data) => ingredientes = data);
+        console.log('Que paso?', ingredientes)
+        const opcionesDropdown = ingredientes.filter(ingrediente => ingrediente.extra === "Si").map(ingrediente => ({ id: ingrediente.id, name: ingrediente.nombre }));
+
+        for (let i = ingredientes.length - 1; i >= 0; i--) {
+            if (ingredientes[i].extra === "Si") {
+                ingredientes.splice(i, 1);
+            }
+        }
+
+        setExtrasIngredientes(opcionesDropdown)
+        setPicklistSourceValue(ingredientes)
+
+
             const ingredienteServie = new IngredienteService();
             const data = await ingredienteServie.getIngredientes();
-
+/*
+            const ingredientesExtraSi = data.filter(ingrediente => ingrediente.extra === "Si");
+            console.log('Ingredientes extras', ingredientesExtraSi);
+            for (let i = data.length - 1; i >= 0; i--) {
+                if (data[i].extra === "si") {
+                    data.splice(i, 1);
+                }
+            }
+            */
             const nuevoTipoProducto = tipoProducto.find((producto) => producto.name === product.tipo);
 
             const picklistTargetValuenew = [...product.ingrediente, ...product.proteina];
@@ -590,6 +646,13 @@ const ListDemo = (props) => {
                             {submitted && !product.costo && <small className="p-invalid">Name is required.</small>}
                         </div>
                     </div>
+                    <div className="formgrid grid">
+                        <div className="field col">
+                            <h6>Seleccione un ingrediente extra</h6>
+                            <Dropdown value={dropdownValue} onChange={(e) => setDropdownValue(e.value)} options={tipoProducto} optionLabel="name" placeholder="Select" />
+                        </div>
+
+                    </div>
                     <div className="col-12 xl:col-13">
                         <div className="card">
                             <h6>Cambio de ingrediente</h6>
@@ -710,6 +773,13 @@ const ListDemo = (props) => {
                             filter
                             filterBy="name"
                         ></PickList>
+                    </div>
+                </div>
+
+                <div className="formgrid grid">
+                    <div className="field col">
+                        <h6>Tipo de producto</h6>
+                        <Dropdown value={dropdownExtraValue} onChange={(e) => setDropdownExtraValue(e.value)} options={extrasIngredientes} optionLabel="name" placeholder="Select" />
                     </div>
                 </div>
             </Dialog>

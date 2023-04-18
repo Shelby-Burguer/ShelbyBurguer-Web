@@ -747,6 +747,15 @@ const ordenes = () => {
         );
     };
 
+    const ingredienteProductoTemplate = (producto) => {
+        return (
+            <>
+                <span className="p-column-title">Cantidad</span>
+                {producto.ingrediente_nombre}
+            </>
+        );
+    };
+
     const fechaPagoTemplate = (pago) => {
         return (
             <>
@@ -940,6 +949,7 @@ const ordenes = () => {
 
     const showIngredientesDetails = (event, ingredientes) => {
         op5.current.toggle(event);
+        console.log('Test ingredientes', ingredientes);
         setIngredienteClient(ingredientes);
     };
 
@@ -980,7 +990,7 @@ const ordenes = () => {
       <Button
         type="button"
         label=""
-        onClick={(e) => showIngredientesDetails(e, rowData.productos)}
+        onClick={(e) => showIngredientesDetails(e, rowData.ingredientes)}
         icon="pi pi-pencil"
         className="p-button-rounded p-button-success mr-2"
       />
@@ -992,7 +1002,8 @@ const ordenes = () => {
         style={{ width: "250px" }}
       >
         <DataTable value={ingredienteClient} responsiveLayout="scroll">
-          <Column header="Ingredientes" body={cantidadProductoTemplate} sortable headerStyle={{ minWidth: "10rem" }} />
+          <Column header="Ingredientes" body={ingredienteProductoTemplate} sortable headerStyle={{ minWidth: "10rem" }} />
+          <Column header="Ingredientes" body={ingredienteProductoTemplate} sortable headerStyle={{ minWidth: "10rem" }} />
         </DataTable>
       </OverlayPanel>
     </>

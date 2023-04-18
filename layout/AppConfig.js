@@ -229,6 +229,7 @@ const AppConfig = (props) => {
         const IdOrdenService = new CarritoService();
         const idOrden = await IdOrdenService.postOrdenCarrito();
         setOrden(idOrden.orden_id);
+        console.log('id orden', idOrden.orden_id);
         setnumOrden(idOrden.numero_orden.toString());
         localStorage.setItem('myKey', JSON.stringify(idOrden));
     };

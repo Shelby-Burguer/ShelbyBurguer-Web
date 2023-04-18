@@ -16,7 +16,8 @@ export class IngredienteService {
             objectURL: '',
             nombreImagen: '',
             datosImagen: null,
-            proteina: ''
+            proteina: '',
+            extra: ''
         };
 
         const responseBody = fetch(`http://${this.ipAddress}:10000/ingrediente/all`, {
@@ -68,7 +69,8 @@ export class IngredienteService {
             body: JSON.stringify({
                 nombre: data.nombre,
                 unidad: data.unidad,
-                proteina: data.proteina
+                proteina: data.proteina,
+                extra: data.extra
             }),
             responseType: 'json'
         });
@@ -97,7 +99,8 @@ export class IngredienteService {
                 nombre: data.nombre,
                 unidad: data.unidad,
                 proteina: data.proteina,
-                objectURL: file.objectURL
+                objectURL: file.objectURL,
+                extra: data.extra
             })
         });
 
