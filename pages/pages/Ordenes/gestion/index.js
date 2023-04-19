@@ -748,10 +748,21 @@ const ordenes = () => {
     };
 
     const ingredienteProductoTemplate = (producto) => {
+        
         return (
             <>
                 <span className="p-column-title">Cantidad</span>
                 {producto.ingrediente_nombre}
+            </>
+        );
+    };
+
+    const ingredienteCantidadProductoTemplate = (producto) => {
+       
+        return (
+            <>
+                <span className="p-column-title">Cantidad</span>
+                {producto.cantidad}
             </>
         );
     };
@@ -1003,7 +1014,7 @@ const ordenes = () => {
       >
         <DataTable value={ingredienteClient} responsiveLayout="scroll">
           <Column header="Ingredientes" body={ingredienteProductoTemplate} sortable headerStyle={{ minWidth: "10rem" }} />
-          <Column header="Ingredientes" body={ingredienteProductoTemplate} sortable headerStyle={{ minWidth: "10rem" }} />
+          <Column header="Ingredientes" body={ingredienteCantidadProductoTemplate} sortable headerStyle={{ minWidth: "10rem" }} />
         </DataTable>
       </OverlayPanel>
     </>

@@ -20,16 +20,16 @@ export class CarritoService {
         return resOrdenCarrito;
     }
 
-    async postCarrito(idProducto, idOrden, arrayingredientes) {
+    async postCarrito(idProducto, idOrden, arrayingredientes, arrayingredientesExtras) {
         let resOrdenCarrito;
-
+        const ingredientesUnidos = arrayingredientes.concat(arrayingredientesExtras);
         const responseProducto = fetch(`http://${this.ipAddress}:10000/carrito/create`, {
             headers: { 'content-type': 'application/json', 'Authorization': `Bearer ${this.token}` },
             method: 'POST',
             body: JSON.stringify({
                 idProducto: idProducto,
                 idOrden: idOrden,
-                ingrediente_id: arrayingredientes
+                ingrediente_id: ingredientesUnidos
             })
         });
 

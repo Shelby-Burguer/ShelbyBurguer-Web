@@ -34,7 +34,7 @@ export class NewProductoService {
             }).then((res) => res.json());
 
             await responseIngredientes.then((data) => (resIngredientes = data));
-
+           
             for (const element of resIngredientes) {
                 let ingrediente = element;
 
@@ -43,7 +43,9 @@ export class NewProductoService {
                     nombre: '',
                     cantidad: '',
                     imagen: '',
-                    proteina: ''
+                    proteina: '',
+                    precio: '',
+                    extra:'',
                 };
 
                 newIngrediente.id = ingrediente.ingrediente.id;
@@ -51,6 +53,8 @@ export class NewProductoService {
                 newIngrediente.cantidad = ingrediente.cantidad;
                 newIngrediente.imagen = ingrediente.ingrediente.imagen;
                 newIngrediente.proteina = ingrediente.ingrediente.proteina;
+                newIngrediente.precio = ingrediente.precio;
+                newIngrediente.extra = ingrediente.ingrediente.extra
 
                 if (ingrediente.ingrediente.proteina == 'Si') {
                     arrProteinas.push(newIngrediente);
@@ -79,7 +83,7 @@ export class NewProductoService {
         return arrFinalProduct;
     }
 
-    async postProducto(producto, ingredientes) {
+    async postProducto(producto, ingredientes, ingredienteExta) {
         let resProduct = {
             id: null,
             nombre: '',
@@ -112,15 +116,19 @@ export class NewProductoService {
             })
         );
 
+        const ingredientesUnidos = ingredientes.concat(ingredienteExta);
         const ingredienteProducto = [];
-
-        for (const ingrediente of ingredientes) {
+        console.log('Este es el nuevo Ingrediente array', ingredientesUnidos)
+        for (const ingrediente of ingredientesUnidos) {
             ingredienteProducto.push({
+                precio: ingrediente.precio,
                 cantidad: ingrediente.cantidad,
                 ingrediente_id: ingrediente.id,
                 producto_id: resProduct.id
             });
         }
+
+        console.log('Este es el nuevo Ingrediente array de ingredienteProducto', ingredienteProducto);
 
         fetch(`http://${this.ipAddress}:10000/ingredienteProducto/create`, {
             headers: { 'content-type': 'application/json', 'Authorization': `Bearer ${this.token}` },
@@ -138,7 +146,7 @@ export class NewProductoService {
         });
     }
 
-    async updateProducto(productoid, producto, ingredientes) {
+    async updateProducto(productoid, producto, ingredientes, arrayExtra) {
         let resProduct = {
             id: null,
             nombre: '',
@@ -147,19 +155,20 @@ export class NewProductoService {
             imagen: ''
         };
 
+        
         let resProductoIngrediente;
 
         let resImg = {
             nombreImagen: '16891a7a-52f8-4bc6-8176-00a5ae0b1c0a.jpg',
             datosImagen: null
         };
-
+        const ingredientesFinal = ingredientes.concat(arrayExtra);
         const responseProducto = fetch(`http://${this.ipAddress}:10000/ingredienteProducto/update/` + productoid, {
             headers: { 'content-type': 'application/json', 'Authorization': `Bearer ${this.token}` },
             method: 'PUT',
             body: JSON.stringify({
                 producto: producto,
-                updateIgdtPdt: ingredientes
+                updateIgdtPdt: ingredientesFinal
             })
         });
 
