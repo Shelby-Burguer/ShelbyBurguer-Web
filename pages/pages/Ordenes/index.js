@@ -393,6 +393,7 @@ const handleDropdownChange = async(e) => {
         setClient(emptyClient);
         setMostradorOptions('');
         setOpciones('');
+        localStorage.setItem('myKey', JSON.stringify(null));
         router.push(`http://${ipAddress}:3000/pages/Ordenes/gestion/`);
     };
 

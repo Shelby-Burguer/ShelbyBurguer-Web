@@ -23,7 +23,9 @@ const Crud = () => {
         objectURL: '',
         urlImage: '',
         fileImage: '',
-        proteina: ''
+        proteina: '',
+        extra: ''
+
     };
 
     const dropdownValues = [
@@ -37,10 +39,16 @@ const Crud = () => {
         { name: 'No', code: 'n' }
     ];
 
+    const extrasValues = [
+        { name: 'Si', code: 's' },
+        { name: 'No', code: 'n' }
+    ];
+
     const [products, setProducts] = useState(null);
     const [file, setfile] = useState(null);
     const [productDialog, setProductDialog] = useState(false);
     const [proteinaDropValue, setProteinaDropValue] = useState(null);
+    const [extraDropValue, setExtraDropValue] = useState(null);
     const [dropdownValue, setDropdownValue] = useState(null);
     const [deleteProductDialog, setDeleteProductDialog] = useState(false);
     const [deleteProductsDialog, setDeleteProductsDialog] = useState(false);
@@ -211,6 +219,12 @@ const Crud = () => {
         setProduct((prevState) => ({ ...prevState, proteina: selectedValue.name }));
     };
 
+    const onExtrasDropChange = (event) => {
+        const selectedValue = event.target.value;
+        setExtraDropValue(selectedValue);
+        setProduct((prevState) => ({ ...prevState, extra: selectedValue.name }));
+    };
+
     const onInputNumberChange = (e, name) => {
         const val = e.value || 0;
         let _product = { ...product };
@@ -375,6 +389,15 @@ const Crud = () => {
         );
     };
 
+    const extraBodyTemplate = (rowData) => {
+        return (
+            <>
+                <span className="p-column-title">Proteina</span>
+                {rowData.extra}
+            </>
+        );
+    };
+
     const imageBodyTemplate = (rowData) => {
         return (
             <>
@@ -447,6 +470,7 @@ const Crud = () => {
                         <Column field="nombre" header="Nombre" sortable body={nombreBodyTemplate} headerStyle={{ minWidth: '10rem' }}></Column>
                         <Column field="unidad" header="Unidad" sortable body={unidadBodyTemplate} headerStyle={{ minWidth: '10rem' }}></Column>
                         <Column field="proteina" header="Proteina" sortable body={proteinaBodyTemplate} headerStyle={{ minWidth: '10rem' }}></Column>
+                        <Column field="proteina" header="Extra" sortable body={extraBodyTemplate} headerStyle={{ minWidth: '10rem' }}></Column>
                         <Column body={actionBodyTemplate} headerStyle={{ minWidth: '10rem' }}></Column>
                     </DataTable>
 
@@ -465,6 +489,11 @@ const Crud = () => {
                             <h6 htmlFor="proteina">Proteina</h6>
                             <Dropdown value={proteinaDropValue} onChange={onProteinaDropChange} options={proteinaValues} optionLabel="name" placeholder="Selecciona" required className={classNames({ 'p-invalid': submitted && !product.proteina })} />
                             {submitted && !product.proteina && <small className="p-invalid">La Proteina es requerida.</small>}
+                        </div>
+                        <div className="field">
+                            <h6 htmlFor="proteina">Ingrediente extra</h6>
+                            <Dropdown value={extraDropValue} onChange={onExtrasDropChange} options={extrasValues} optionLabel="name" placeholder="Selecciona" required className={classNames({ 'p-invalid': submitted && !product.extra })} />
+                            {submitted && !product.extra && <small className="p-invalid">El ingrediente extra es requerida.</small>}
                         </div>
                         <div>
                             <Tooltip target=".custom-choose-btn" content="Choose" position="bottom" />

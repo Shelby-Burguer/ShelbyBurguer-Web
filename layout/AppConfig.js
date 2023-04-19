@@ -33,9 +33,11 @@ const AppConfig = (props) => {
         setLayoutState((prevState) => ({ ...prevState, configSidebarVisible: true }));
         const carritoService = new CarritoService();
         const resProductos = await carritoService.getCarrito();
+        const resIngredientes = await carritoService.getCarritoIngrediente()
+
         const updatedProductos = resProductos.map((producto) => ({ ...producto, cantidad: 1 }));
         setDataViewValue(updatedProductos);
-
+        setIngredienteViewValue(resIngredientes);
         let total = 0;
         resProductos.forEach((producto) => {
             total += parseFloat(producto.costo_producto);
@@ -139,6 +141,7 @@ const AppConfig = (props) => {
     const [picklistTargetValue, setPicklistTargetValue] = useState([]);
     const [orderlistValue, setOrderlistValue] = useState(listValue);
     const [dataViewValue, setDataViewValue] = useState(null);
+    const [ingredienteViewValue, setIngredienteViewValue] = useState(null);
     const [globalFilterValue, setGlobalFilterValue] = useState('');
     const [filteredValue, setFilteredValue] = useState(null);
     const [layout, setLayout] = useState('grid');
@@ -197,14 +200,18 @@ const AppConfig = (props) => {
     };
 
     const continuarCarrito = async () => {
+
         const ProductoOrden = dataViewValue.map((item) => ({
             idProducto: item.producto_id,
             idOrden: orden
         }));
-        console.log(ProductoOrden);
+
         const carritoService = new CarritoService();
         const ipAddress = window.location.host.split(':')[0];
-        await carritoService.postProductosOrden(ProductoOrden);
+        console.log('Este el el array de los productos', ProductoOrden);
+        console.log('Este el el array de los ingredientes', ingredienteViewValue);
+        await carritoService.postProductosOrden(ProductoOrden, ingredienteViewValue);
+        console.log('Este el el array de los ingredientes');
         setOrderCount(orderCount + 1);
         setOrdenCreada(false);
         setOrden(null);
@@ -222,6 +229,7 @@ const AppConfig = (props) => {
         const IdOrdenService = new CarritoService();
         const idOrden = await IdOrdenService.postOrdenCarrito();
         setOrden(idOrden.orden_id);
+        console.log('id orden', idOrden.orden_id);
         setnumOrden(idOrden.numero_orden.toString());
         localStorage.setItem('myKey', JSON.stringify(idOrden));
     };
