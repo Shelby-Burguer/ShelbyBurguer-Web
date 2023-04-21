@@ -16,7 +16,7 @@ export class OrdenService {
         }).then((res) => res.json());
 
         await responseProducto.then((data) => (resOrdenCarrito = data));
-
+      
         console.log('ResCarrito', resOrdenCarrito);
 
         return resOrdenCarrito;

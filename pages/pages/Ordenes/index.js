@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import getConfig from 'next/config';
 import { InputText } from 'primereact/inputtext';
 import { InputTextarea } from 'primereact/inputtextarea';
@@ -23,6 +23,7 @@ import Crud from '../../../shelby/utils/CrudFunctions';
 import { Toast } from 'primereact/toast';
 import { LugarService } from '../../../shelby/service/LugarService';
 import { useRouter } from 'next/router';
+import { OverlayPanel } from 'primereact/overlaypanel';
 
 export const InputDemo = () => {
     let emptyClient = {
@@ -135,6 +136,8 @@ export const InputDemo = () => {
     const [zonaDropdown, setZonaDropdown] = useState(null);
     const [zonalugares, setZonalugares] = useState(null);
     const [selectedZone, setSelectedZone] = useState(null);
+    const op4 = useRef(null);
+    const [ingredientesClient, setIngredientesClient] = useState(null);
 
     const currencyOptions = [
         { label: 'Bolívares', value: 'Bs.' },
@@ -183,11 +186,12 @@ export const InputDemo = () => {
         await clienteService.getClientes().then((data) => setClientes(data));
         const cambioDia = await ordenService.getMontoDia();
         await ordenService.getProductoOrden(idbumber).then((data) => {
+            console.log('Calculo registro producto', data)
             const updatedProductos = data.map((producto) => ({ ...producto, cantidad: 1 }));
             setDataViewValue(updatedProductos);
             let total = 0;
             data.forEach((producto) => {
-                total += parseFloat(producto.costo_producto);
+                total = parseFloat(producto.costoTotal);
             });      
             setTotal(total);
             setTotalBs(total*parseFloat(cambioDia[0].monto))
@@ -295,7 +299,7 @@ export const InputDemo = () => {
         return (
             <>
                 <span className="p-column-title">Cantidad</span>
-                {rowData.costo_producto}
+                {(parseFloat(rowData.costo_producto)+parseFloat(rowData.costoIngredientes)).toString()}
             </>
         );
     };
@@ -308,14 +312,46 @@ export const InputDemo = () => {
             </>
         );
     };
+    const showproductosDetails = (event, producto) => {
+        op4.current.toggle(event);
+        setIngredientesClient(producto);
+    };
 
-    const actionBodyTemplate = (rowData) => {
+    const ingredienteProductoTemplate = (producto) => {
+        
         return (
             <>
-                <Button icon="pi pi-book" className="p-button-rounded p-button-success" onClick={() => deleteProductoCarrito(rowData)} />
+                <span className="p-column-title">Nombre</span>
+                {producto}
             </>
         );
     };
+
+const productosBodyTemplate = (rowData) => {
+     
+  return (
+    <>
+      <Button
+        type="button"
+        label=""
+        onClick={(e) => showproductosDetails(e, rowData.ingredientes)}
+        icon="pi pi-pencil"
+        className="p-button-rounded p-button-success mr-2"
+      />
+      <OverlayPanel
+        ref={op4}
+        appendTo={typeof window !== "undefined" ? document.body : null}
+        showCloseIcon
+        id="overlay_panel_productos"
+        style={{ width: "550px" }}
+      >
+        <DataTable value={ingredientesClient} responsiveLayout="scroll">
+          <Column header="Ingredientes" body={ingredienteProductoTemplate} sortable headerStyle={{ minWidth: "8rem" }} />
+        </DataTable>
+      </OverlayPanel>
+    </>
+  );
+};
 
 const handleDropdownChange = async(e) => {
   const selectedValue = e.value;
@@ -325,7 +361,7 @@ const handleDropdownChange = async(e) => {
   setSelectedZone(selectedZona); // Actualiza la zona seleccionada
 
   let TotalZone = parseInt(total);
-
+    console.log('TotalZone',TotalZone )
   if (oldSelectedZone !== null) { // Si ya había una zona seleccionada previamente
     TotalZone -= oldSelectedZone.precio_lugar; // Resta su precio del total
   }
@@ -564,7 +600,7 @@ const handleDropdownChange = async(e) => {
             setDataViewValue(updatedProductos);
             let total = 0;
             data.forEach((producto) => {
-                total += parseFloat(producto.costo_producto);
+                total = parseFloat(producto.costoTotal);
             });
             setTotal(total);
             setTotalBs(total*parseFloat(cambioDia[0].monto))
@@ -699,7 +735,7 @@ const handleDropdownChange = async(e) => {
                             <Column field="nombre" header="Nombre" body={nombreBodyTemplate} headerStyle={{ minWidth: '0rem' }}></Column>
                             <Column field="cantidad" header="Cantidad" body={cantidadBodyTemplate} headerStyle={{ minWidth: '0rem' }}></Column>
                             <Column field="precio" header="Precio" body={precioBodyTemplate} headerStyle={{ minWidth: '0rem' }}></Column>
-                            <Column body={actionBodyTemplate}></Column>
+                            <Column body={productosBodyTemplate}></Column>
                         </DataTable>
                     </div>
                     <div>

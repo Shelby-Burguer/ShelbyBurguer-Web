@@ -33,7 +33,7 @@ const AppConfig = (props) => {
         setLayoutState((prevState) => ({ ...prevState, configSidebarVisible: true }));
         const carritoService = new CarritoService();
         const resProductos = await carritoService.getCarrito();
-        const resIngredientes = await carritoService.getCarritoIngrediente()
+        const resIngredientes = await carritoService.getCarritoIngrediente();
 
         const updatedProductos = resProductos.map((producto) => ({ ...producto, cantidad: 1 }));
         setDataViewValue(updatedProductos);
