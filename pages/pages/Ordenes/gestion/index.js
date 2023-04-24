@@ -116,12 +116,14 @@ const ordenes = () => {
     const [referenceNumber, setReferenceNumber] = useState('');
     const [montoBs, setmMontoBs] = useState('');
     const [monto, setMonto] = useState('');
+    const [cantidadBilletes, setCantidadBilletes] = useState('');
     const [email, setEmail] = useState('');
     const [pagos, setPagos] = useState([]);
     const [writeValue, setWriteValue] = useState(null);
     const [filteredClientes, setFilteredClientes] = useState([]);
     const [client, setClient] = useState(emptyClient);
     const [_clientes, setClientes] = useState(null);
+    const [cash, setCash] = useState([]);
 
     useEffect(async () => {
         const ingredienteService = new IngredienteService();
@@ -197,15 +199,9 @@ const ordenes = () => {
         await ordenService.postOrdenPago(idOrden.orden_id, pago, paymentMethod, monto);
   
         } else if (paymentMethod ===  "efectivo"){
-
-        let pago = {
-        numero_serie: serialNumber,
-        denominacion: denomination,
-        tipo_pago:currency
-        };
-
+        console.log('test pago', cash)
         const ordenService = new OrdenService();
-        await ordenService.postOrdenPago(idOrden.orden_id, pago, paymentMethod, monto);
+        await ordenService.postOrdenPago(idOrden.orden_id, cash, paymentMethod, monto);
        
         } else {
         let pago = {
@@ -217,7 +213,7 @@ const ordenes = () => {
         const ordenService = new OrdenService();
                
         const pagos = await ordenService.getAllPagosOrden(idOrden.orden_id)
-        
+        console.log('Get test pago', pagos)
         const cambioDia = await ordenService.getMontoDia();
         const totalDolares = parseFloat(idOrden.total_orden)*parseFloat(cambioDia[0].monto);
 
@@ -253,6 +249,7 @@ const ordenes = () => {
         setCurrency('VES');
         setEmail('');
         setPagoDialog(true);
+        setCash([]);
         }else {
 
         setTotalBs(totalDolares);
@@ -816,7 +813,7 @@ const ordenes = () => {
         return (
             <>
                 <span className="p-column-title">Nombre</span>
-                {cliente.monto_bs}
+                {cliente.monto_bsf}
             </>
         );
     };
@@ -825,7 +822,7 @@ const ordenes = () => {
         return (
             <>
                 <span className="p-column-title">Nombre</span>
-                {cliente.fecha_historial_monto_bs}
+                {cliente.fecha_historial_bsf}
             </>
         );
     };
@@ -838,7 +835,6 @@ const ordenes = () => {
             </>
         );
     };
-
     
     const tipoElectronicoBodyTemplate = (cliente) => {
         return (
@@ -853,7 +849,7 @@ const ordenes = () => {
         return (
             <>
                 <span className="p-column-title">Nombre</span>
-                {cliente.tipo_efectivo}
+                {cliente.pagoEfectivo.tipo_pago}
             </>
         );
     };
@@ -871,7 +867,7 @@ const ordenes = () => {
         return (
             <>
                 <span className="p-column-title">Cedula</span>
-                {cliente.denominacion}
+                {cliente.pagoEfectivo.denominacion}
             </>
         );
     };
@@ -880,7 +876,7 @@ const ordenes = () => {
         return (
             <>
                 <span className="p-column-title">Cedula</span>
-                {cliente.numero_serie}
+                {cliente.pagoEfectivo.numero_serie}
             </>
         );
     };
@@ -938,13 +934,17 @@ const ordenes = () => {
     const showPagosDetails = (event, pago) => {
         if (pago.tipo_pago === "electrónico"){
         op6.current.toggle(event);
+        setDetallePago(pago.pagoElectronico);
         } else if (pago.tipo_pago === "efectivo"){
+        console.log('Vamo a ver efectiv', pago.pagoEfectivo);
+        setDetallePago(pago.pagoEfectivo);
         op7.current.toggle(event);
         } else { 
         op8.current.toggle(event);
+        setDetallePago(pago.zelle);
         }
-        setDetallePago(pago);
-        console.log("Datos",detallePago )
+       
+        console.log("Datos",pago)
         
     };
 
@@ -1112,7 +1112,7 @@ const detalleoldPagosBodyTemplate = (rowData) => {
         id="overlay_panel"
         style={{ width: "550px" }}
       >
-       <DataTable value={[detallePago]} responsiveLayout="scroll">
+       <DataTable value={detallePago} responsiveLayout="scroll">
           <Column header="Tipo modeda" body={tipoEfectivoBodyTemplate} headerStyle={{ minWidth: "10rem" }} />
           <Column header="Monto" body={montoPagoClienteTemplate} sortable headerStyle={{ minWidth: "8rem" }} />
           <Column header="Denominacion" body={denominacionPagoClienteTemplate} sortable headerStyle={{ minWidth: "8rem" }} />
@@ -1216,6 +1216,27 @@ const detallePagosBodyTemplate = (rowData) => {
     </>
   );
 };
+
+  const addCash = () => {
+    const newCash = { currency, serialNumber, denomination, cantidadBilletes, monto };
+    setCash([...cash, newCash]);
+    setCurrency("");
+    setSerialNumber("");
+    setDenomination("");
+    setMonto("");
+    setCantidadBilletes("");
+  }
+
+    const deleteCash = (rowData) => {
+    const newCash = cash.filter((cash) => cash !== rowData);
+    setCash(newCash);
+  };
+
+  const actionTemplate = (rowData) => {
+    return (
+      <Button icon="pi pi-trash" onClick={() => deleteCash(rowData)} />
+    );
+  };
 
 const testButton = () => {
     console.log('Entra en el boton')
@@ -1353,28 +1374,43 @@ const clienteBodyTemplate = (rowData) => {
                                         </label>
                                     )}
                                     {paymentMethod === "efectivo" && (
-                                    <>
-                                        <div className="formgrid grid"></div>
-                                        <div className="field col">
-                                        <label htmlFor="moneda">Moneda</label>
-                                        <Dropdown value={currency} options={currencyOptions} onChange={(e) => setCurrency(e.value)} placeholder="Seleccione" />
+                                        <>
+                                        <div className="field">
+                                            <label htmlFor="currency">Moneda</label>
+                                            <Dropdown value={currency} options={currencyOptions} onChange={(e) => setCurrency(e.value)} placeholder="Seleccione" />
                                         </div>
-                                        
-                                        <div className="field col">
-                                        <label htmlFor="numero_de_serie">Número de serie (opcional)</label>
-                                        <InputText type="text" value={serialNumber} onChange={(e) => setSerialNumber(e.target.value)} />
-                                        </div>
-                                    
-                                        <div className="field col">
-                                        <label htmlFor="numero_de_serie">Denominación</label>
-                                        <InputText type="text" value={denomination} onChange={(e) => setDenomination(e.target.value)} />
-                                        </div>      
-                                        <div className="field col">
-                                                <label htmlFor="monto">Monto</label>
-                                                <InputText type="text" value={monto} onChange={(e) => setMonto(e.target.value)} />
-                                        </div>          
 
-                                    </>
+                                        <div className="field">
+                                            <label htmlFor="serialNumber">Número de serie (opcional)</label>
+                                            <InputText type="text" value={serialNumber} onChange={(e) => setSerialNumber(e.target.value)} />
+                                        </div>
+
+                                        <div className="field">
+                                            <label htmlFor="denomination">Denominación</label>
+                                            <InputText type="text" value={denomination} onChange={(e) => setDenomination(e.target.value)} />
+                                        </div>
+
+                                        <div className="field">
+                                            <label htmlFor="cantidadBilletes">Cantidad de billetes</label>
+                                            <InputText type="text" value={cantidadBilletes} onChange={(e) => setCantidadBilletes(e.target.value)} />
+                                        </div>
+
+                                        <div className="field">
+                                            <label htmlFor="monto">Monto</label>
+                                            <InputText type="text" value={monto} onChange={(e) => setMonto(e.target.value)} />
+                                        </div>
+
+                                        <Button label="Agregar Billete" onClick={addCash} />
+
+                                        <DataTable value={cash}>
+                                            <Column field="currency" header="Moneda" />
+                                            <Column field="serialNumber" header="Número de serie" />
+                                            <Column field="denomination" header="Denominación" />
+                                            <Column field="cantidadBilletes" header="Cantidad de billetes" />
+                                            <Column field="monto" header="Monto" />
+                                            <Column body={actionTemplate} />
+                                        </DataTable>
+                                        </>
                                     )}
                                     {paymentMethod === "zelle" && (
                                         <div className="field col">
@@ -1389,7 +1425,7 @@ const clienteBodyTemplate = (rowData) => {
                                     )}
                                 </div>
                         <div className="field col flex align-items-center justify-content-between">
-                                <Button label="Agregar" icon="pi pi-plus" className="p-button-success mr-2" onClick={() => addPago()} />
+                                <Button label="Agregar Pago" icon="pi pi-plus" className="p-button-success mr-2" onClick={() => addPago()} />
                             </div>
                         </div>
                         <div className="carrito-total text-right total-text-pago my-1">Total: {total}$</div>
