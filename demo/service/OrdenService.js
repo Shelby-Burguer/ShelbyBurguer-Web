@@ -120,7 +120,7 @@ export class OrdenService {
         return resOrdenCarrito;
     }
 
-    async postOrdenPago(id, pago, tipo_pago, monto) {
+    async postOrdenPago(id, pago, tipo_pago, monto, tipo_pago_efectivo) {
         console.log(id, pago, tipo_pago, monto)
         let resOrdenCarrito;
 
@@ -130,6 +130,7 @@ export class OrdenService {
             body: JSON.stringify({
             tipo_pago: tipo_pago,
             monto: monto,
+            tipo_pago_efectivo: tipo_pago_efectivo,
             pagoElectronico: pago,
             pagoEfectivo: pago ,
             zelle: pago,

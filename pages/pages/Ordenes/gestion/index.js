@@ -194,15 +194,15 @@ const ordenes = () => {
         numero_referencia: referenceNumber,
         tipo_pago: electronicPaymentMethod
         };
-
+        console.log(currency);
         const ordenService = new OrdenService();
         await ordenService.postOrdenPago(idOrden.orden_id, pago, paymentMethod, monto);
-  
+
         } else if (paymentMethod ===  "efectivo"){
-        console.log('test pago', cash)
+        console.log('test pago currrency', currency)
         const ordenService = new OrdenService();
-        await ordenService.postOrdenPago(idOrden.orden_id, cash, paymentMethod, monto);
-       
+        await ordenService.postOrdenPago(idOrden.orden_id, cash, paymentMethod, monto, currency);
+        
         } else {
         let pago = {
         correo_electronico: email
@@ -777,7 +777,7 @@ const ordenes = () => {
         return (
             <>
                 <span className="p-column-title">Cantidad</span>
-                {pago.montoDolares}$
+                {pago.monto_total_dolares}$
             </>
         );
     };
@@ -804,7 +804,7 @@ const ordenes = () => {
         return (
             <>
                 <span className="p-column-title">Nombre</span>
-                {cliente.correo_electronico}
+                {cliente.correo}
             </>
         );
     };
@@ -871,6 +871,15 @@ const ordenes = () => {
             </>
         );
     };
+
+    const cantidadBilletesPagoClienteTemplate = (cliente) => {
+        return (
+            <>
+                <span className="p-column-title">Cedula</span>
+                {cliente.pagoEfectivo.cantidad_billetes}
+            </>
+        );
+    }; 
 
     const numeroRefPagoClienteTemplate = (cliente) => {
         return (
@@ -1114,9 +1123,9 @@ const detalleoldPagosBodyTemplate = (rowData) => {
       >
        <DataTable value={detallePago} responsiveLayout="scroll">
           <Column header="Tipo modeda" body={tipoEfectivoBodyTemplate} headerStyle={{ minWidth: "10rem" }} />
-          <Column header="Monto" body={montoPagoClienteTemplate} sortable headerStyle={{ minWidth: "8rem" }} />
           <Column header="Denominacion" body={denominacionPagoClienteTemplate} sortable headerStyle={{ minWidth: "8rem" }} />
-          <Column header="Denominacion" body={numeroRefPagoClienteTemplate} sortable headerStyle={{ minWidth: "8rem" }} />
+          <Column header="Cantidad de billetes" body={cantidadBilletesPagoClienteTemplate} sortable headerStyle={{ minWidth: "8rem" }} />
+          <Column header="# de referencia" body={numeroRefPagoClienteTemplate} sortable headerStyle={{ minWidth: "8rem" }} />
           <Column header="Monto de cambio" body={montoBsCambioBodyTemplate} headerStyle={{ minWidth: "10rem" }} />
           <Column header="Fecha cambio del dia" body={fechamontoBsCambioBodyTemplate} headerStyle={{ minWidth: "10rem" }} />
         </DataTable>
