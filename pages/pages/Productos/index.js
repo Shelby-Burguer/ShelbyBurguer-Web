@@ -634,7 +634,7 @@ const ListDemo = (props) => {
         className: 'p-button-danger'
     };
 
-    const dataviewGridItem = (data) => {
+const dataviewGridItem = (data) => {
         let arrProteinas = [];
         for (let j = 0; j < data.proteina.length; j++) {
             let proteina = data.proteina[j];
@@ -655,7 +655,201 @@ const ListDemo = (props) => {
             }
         }
 
+    if (data.tipo === "Bebida") {
         return (
+            <div className="col-12 lg:col-4">
+                <div className="card m-3 border-1 surface-borders">
+                    <div className="flex flex-wrap gap-2 align-items-center justify-content-between mb-2">
+                        <div className="flex align-items-center">
+                            <i className="pi pi-tag mr-2" />
+                            <span className="font-semibold">{data.tipo}</span>
+                        </div>
+                    </div>
+                    <div className="flex flex-column align-items-center text-center mb-3">
+                        <img src={`${contextPath}/demo/images/product/${data.imagen}`} alt={data.name} className="w-9 shadow-2 my-3 mx-0" />
+                        <div className="text-2xl font-bold">{data.nombre}</div>
+                        <div label="Text" className="mb-3"></div>
+                        <h7>Tamaño:</h7>
+             
+                        <h7>Bebida</h7>
+
+
+                        <span className="text-2xl font-semibold">${data.costo}</span>
+                    </div>
+                    <div className="flex align-items-center justify-content-between">
+                        <Button icon="pi pi-trash" className="p-button-danger" onClick={() => confirmDeleteProduct(data)} />
+                        <Button icon="pi pi-pencil" className="p-button-success" onClick={() => editProduct(data)} />
+                        <Button label="Agregar" icon="pi pi-shopping-cart" onClick={() => addCarrito(data)} />
+                    </div>
+                </div>
+                <Dialog visible={carritoDialog} style={{ width: '800px' }} header="Modificaciones" modal className="p-fluid" footer={carritotDialogFooter} onHide={carritoHideDialog}>
+                    {<img src={`${contextPath}/demo/images/product/16891a7a-52f8-4bc6-8176-00a5ae0b1c0a.jpg`} alt={product.nombre_imagen} width="150" className="mt-0 mx-auto mb-5 block shadow-2" />}
+                    <div className="field">
+                        <h6 htmlFor="nombre">Nombre</h6>
+                        <InputText id="nombre" value={product.nombre} onChange={(e) => onInputChange(e, 'nombre')} required autoFocus className={classNames({ 'p-invalid': submitted && !product.nombre })} />
+                        {submitted && !product.nombre && <small className="p-invalid">Name is required.</small>}
+                    </div>
+
+                    <div className="formgrid grid">
+                        <div className="field col">
+                            <h6>Tipo de producto</h6>
+                            <Dropdown value={dropdownValue} onChange={(e) => setDropdownValue(e.value)} options={tipoProducto} optionLabel="name" placeholder="Select" />
+                        </div>
+                        <div className="field col">
+                            <h6 htmlFor="Costo">Costo</h6>
+                            <InputText id="costo" value={product.costo} onChange={(e) => onInputChange(e, 'costo')} required autoFocus className={classNames({ 'p-invalid': submitted && !product.costo })} />
+                            {submitted && !product.costo && <small className="p-invalid">Name is required.</small>}
+                        </div>
+                    </div>
+                    <div className="formgrid grid">
+                        <div className="field col">
+                            <h6>Seleccione un ingrediente extra</h6>
+                            <Dropdown value={dropdownValue} onChange={(e) => setDropdownValue(e.value)} options={tipoProducto} optionLabel="name" placeholder="Select" />
+                        </div>
+
+                    </div>
+                    <div className="col-12 xl:col-13">
+                        <div className="card">
+                            <h6>Cambio de ingrediente</h6>
+                            <PickList
+                                source={picklistSourceValue}
+                                target={picklistTargetValue}
+                                sourceHeader="Ingredientes"
+                                targetHeader="Ingrediente seleccionado"
+                                itemTemplate={itemTemplatePickList}
+                                onChange={(e) => {
+                                    setPicklistSourceValue(e.source);
+                                    setPicklistTargetValue(e.target);
+                                }}
+                                sourceStyle={{ height: '200px' }}
+                                targetStyle={{ height: '200px' }}
+                                filter
+                                filterBy="name"
+                            ></PickList>
+                        </div>
+                    </div>
+                                    <div className="col-12 xl:col-13">
+                    <div className="card">
+                        <h6>Seleccione el ingrediente Extra</h6>
+                        <PickList
+                            source={picklistExtraSourceValue}
+                            target={picklistExtraTargetValue}
+                            sourceHeader="Ingredientes Extra"
+                            targetHeader="Ingrediente Extra Seleccionado"
+                            itemTemplate={itemTemplateExtraPickList}
+                            onChange={(e) => {
+                            setPicklistExtraTargetValue(e.target);
+                            setPicklistExtraSourceValue(e.source);
+                            }}
+                            sourceStyle={{ height: '200px' }}
+                            targetStyle={{ height: '200px' }}
+                            filter
+                            filterBy="name"
+                        ></PickList>
+                    </div>
+                </div>
+                </Dialog>
+            </div>
+            );
+        } else if (data.tipo === "Papas") {
+
+        return (
+            <div className="col-12 lg:col-4">
+                <div className="card m-3 border-1 surface-borders">
+                    <div className="flex flex-wrap gap-2 align-items-center justify-content-between mb-2">
+                        <div className="flex align-items-center">
+                            <i className="pi pi-tag mr-2" />
+                            <span className="font-semibold">{data.tipo}</span>
+                        </div>
+                    </div>
+                    <div className="flex flex-column align-items-center text-center mb-3">
+                        <img src={`${contextPath}/demo/images/product/${data.imagen}`} alt={data.name} className="w-9 shadow-2 my-3 mx-0" />
+                        <div className="text-2xl font-bold">{data.nombre}</div>
+                        <div label="Text" className="mb-3"></div>
+                        <h7>Tamaño:</h7>
+                        <div className="mb-3 ">{arrProteinas.toString()}</div>
+                        <h7>Ingredientes extras:</h7>
+
+
+                        <span className="text-2xl font-semibold">${data.costo}</span>
+                    </div>
+                    <div className="flex align-items-center justify-content-between">
+                        <Button icon="pi pi-trash" className="p-button-danger" onClick={() => confirmDeleteProduct(data)} />
+                        <Button icon="pi pi-pencil" className="p-button-success" onClick={() => editProduct(data)} />
+                        <Button label="Agregar" icon="pi pi-shopping-cart" onClick={() => addCarrito(data)} />
+                    </div>
+                </div>
+                <Dialog visible={carritoDialog} style={{ width: '800px' }} header="Modificaciones" modal className="p-fluid" footer={carritotDialogFooter} onHide={carritoHideDialog}>
+                    {<img src={`${contextPath}/demo/images/product/16891a7a-52f8-4bc6-8176-00a5ae0b1c0a.jpg`} alt={product.nombre_imagen} width="150" className="mt-0 mx-auto mb-5 block shadow-2" />}
+                    <div className="field">
+                        <h6 htmlFor="nombre">Nombre</h6>
+                        <InputText id="nombre" value={product.nombre} onChange={(e) => onInputChange(e, 'nombre')} required autoFocus className={classNames({ 'p-invalid': submitted && !product.nombre })} />
+                        {submitted && !product.nombre && <small className="p-invalid">Name is required.</small>}
+                    </div>
+
+                    <div className="formgrid grid">
+                        <div className="field col">
+                            <h6>Tipo de producto</h6>
+                            <Dropdown value={dropdownValue} onChange={(e) => setDropdownValue(e.value)} options={tipoProducto} optionLabel="name" placeholder="Select" />
+                        </div>
+                        <div className="field col">
+                            <h6 htmlFor="Costo">Costo</h6>
+                            <InputText id="costo" value={product.costo} onChange={(e) => onInputChange(e, 'costo')} required autoFocus className={classNames({ 'p-invalid': submitted && !product.costo })} />
+                            {submitted && !product.costo && <small className="p-invalid">Name is required.</small>}
+                        </div>
+                    </div>
+                    <div className="formgrid grid">
+                        <div className="field col">
+                            <h6>Seleccione un ingrediente extra</h6>
+                            <Dropdown value={dropdownValue} onChange={(e) => setDropdownValue(e.value)} options={tipoProducto} optionLabel="name" placeholder="Select" />
+                        </div>
+
+                    </div>
+                    <div className="col-12 xl:col-13">
+                        <div className="card">
+                            <h6>Cambio de ingrediente</h6>
+                            <PickList
+                                source={picklistSourceValue}
+                                target={picklistTargetValue}
+                                sourceHeader="Ingredientes"
+                                targetHeader="Ingrediente seleccionado"
+                                itemTemplate={itemTemplatePickList}
+                                onChange={(e) => {
+                                    setPicklistSourceValue(e.source);
+                                    setPicklistTargetValue(e.target);
+                                }}
+                                sourceStyle={{ height: '200px' }}
+                                targetStyle={{ height: '200px' }}
+                                filter
+                                filterBy="name"
+                            ></PickList>
+                        </div>
+                    </div>
+                                    <div className="col-12 xl:col-13">
+                    <div className="card">
+                        <h6>Seleccione el ingrediente Extra</h6>
+                        <PickList
+                            source={picklistExtraSourceValue}
+                            target={picklistExtraTargetValue}
+                            sourceHeader="Ingredientes Extra"
+                            targetHeader="Ingrediente Extra Seleccionado"
+                            itemTemplate={itemTemplateExtraPickList}
+                            onChange={(e) => {
+                            setPicklistExtraTargetValue(e.target);
+                            setPicklistExtraSourceValue(e.source);
+                            }}
+                            sourceStyle={{ height: '200px' }}
+                            targetStyle={{ height: '200px' }}
+                            filter
+                            filterBy="name"
+                        ></PickList>
+                    </div>
+                </div>
+                </Dialog>
+            </div>
+            );
+        } else {
+                    return (
             <div className="col-12 lg:col-4">
                 <div className="card m-3 border-1 surface-borders">
                     <div className="flex flex-wrap gap-2 align-items-center justify-content-between mb-2">
@@ -755,8 +949,10 @@ const ListDemo = (props) => {
                 </div>
                 </Dialog>
             </div>
-        );
-    };
+            );
+        }
+
+};
 
     const itemTemplate = (data, layout) => {
         if (!data) {
@@ -801,7 +997,6 @@ const ListDemo = (props) => {
                     <InputText id="nombre" value={product.nombre} onChange={(e) => onInputChange(e, 'nombre')} required autoFocus className={classNames({ 'p-invalid': submitted && !product.nombre })} />
                     {submitted && !product.nombre && <small className="p-invalid">Name is required.</small>}
                 </div>
-
                 <div className="formgrid grid">
                     <div className="field col">
                         <h6>Tipo de producto</h6>
@@ -813,6 +1008,14 @@ const ListDemo = (props) => {
                         {submitted && !product.costo && <small className="p-invalid">Name is required.</small>}
                     </div>
                 </div>
+                {(dropdownValue && dropdownValue.name === 'Papas' || dropdownValue && dropdownValue.name === 'Bebida') && (
+                <div className="formgrid grid">
+                    <div className="field col">
+                        <h6 htmlFor="costo">Tamaño</h6>
+                        <InputText id="costo" value={product.costo} onChange={(e) => onInputChange(e, 'costo')} required autoFocus className={classNames({ 'p-invalid': submitted && !product.costo })} />
+                        {submitted && !product.costo && <small className="p-invalid">Name is required.</small>}
+                    </div>
+                </div>)}
                 <div className="card">
                     <h6>Agregar imagen</h6>
                     <FileUpload
@@ -834,6 +1037,7 @@ const ListDemo = (props) => {
                         cancelOptions={cancelOptions}
                     />
                 </div>
+                {(dropdownValue && dropdownValue.name === 'Hamburguesa' || dropdownValue && dropdownValue.name === 'Perro'|| dropdownValue && dropdownValue.name === 'Pepito') && (
                 <div className="col-12 xl:col-13">
                     <div className="card">
                         <h6>Seleccione el ingrediente</h6>
@@ -853,7 +1057,8 @@ const ListDemo = (props) => {
                             filterBy="nombre"
                         ></PickList>
                     </div>
-                </div>
+                </div>)}
+                {(dropdownValue && dropdownValue.name === 'Hamburguesa' || dropdownValue && dropdownValue.name === 'Perro'|| dropdownValue && dropdownValue.name === 'Pepito' || dropdownValue && dropdownValue.name === 'Papas') && (
                 <div className="col-12 xl:col-13">
                     <div className="card">
                         <h6>Seleccione el ingrediente Extra</h6>
@@ -873,7 +1078,7 @@ const ListDemo = (props) => {
                             filterBy="name"
                         ></PickList>
                     </div>
-                </div>
+                </div>)}
             </Dialog>
             <Dialog visible={deleteProductDialog} style={{ width: '450px' }} header="Confirm" modal footer={deleteProductDialogFooter} onHide={hideDeleteProductDialog}>
                 <div className="justify-content-center">
