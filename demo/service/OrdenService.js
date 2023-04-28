@@ -218,6 +218,55 @@ async getMontoDia() {
 
   return resOrdenCarrito;
 }
-    
-}    
-    
+
+    async postAccionUser(nombreAccion, nombreUser, roleUser, ordenId) {
+
+        let resOrdenCarrito;
+
+        const responseProducto = fetch(`http://${this.ipAddress}:10000/orden/accionUsuario/create`, {
+            headers: { 'content-type': 'application/json', 'Authorization': `Bearer ${this.token}` },
+            method: 'POST',
+            body: JSON.stringify({
+            nombre_accion: nombreAccion,
+            nombre_user:nombreUser,
+            role_user: roleUser,
+            orden_id: ordenId
+            })
+        });
+
+        await responseProducto.then((dat) =>
+            dat.json().then((res) => resOrdenCarrito = res
+            )
+        );
+      
+        return resOrdenCarrito;
+    }
+
+async getAccionUser(id) {
+  let resOrdenCarrito;
+
+  const responseProducto = fetch(`http://${this.ipAddress}:10000/orden/accionUsuario/All/`+ id, {
+    headers: { 'Cache-Control': 'no-cache', 'Authorization': `Bearer ${this.token}` },
+    method: 'GET'
+  }).then((res) => {
+    if (!res.ok) {
+      throw new Error('Network response was not ok');
+    }
+    return res.json();
+  });
+
+  await responseProducto.then((data) => {
+    if (data !== null) {
+      resOrdenCarrito = data;
+      console.log(data);
+    }
+  }).catch((error) => {
+    console.error('Error:', error);
+  });
+
+  console.log('ResALLOrden', resOrdenCarrito);
+
+  return resOrdenCarrito;
+}
+
+}

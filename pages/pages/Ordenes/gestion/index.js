@@ -71,6 +71,7 @@ const ordenes = () => {
     const [products, setProducts] = useState(null);
     const [file, setfile] = useState(null); 
     const [EstadoDialog, setEstadoDialog] = useState(false);
+    const [accionDialog, setAccionDialog] = useState(false);
     const [pagoDialog, setPagoDialog] = useState(false);  
     const [editClienteDialog, setEditClienteDialog] = useState(false);
     const [montoDialog, setMontoDialog] = useState(false);
@@ -78,17 +79,20 @@ const ordenes = () => {
     const [deleteProductsDialog, setDeleteProductsDialog] = useState(false);
     const [product, setProduct] = useState(emptyProduct);
     const [idOrden, setIdorden] = useState(null);
+    const [ordenAccion, setOrdenAccion] = useState(null);
     const [total, setTotal] = useState(null);
     const [totalPagado, setTotalPagado] = useState('0');
     const [totalPagadoBs, setTotalPagadoBs] = useState('0');
     const [totalBs, setTotalBs] = useState(null);
     const [montoDia, setMontoDia] = useState(null);
     const [selectedProducts, setSelectedProducts] = useState(null);
+    const [accionUser, setccionUser] = useState(null);
     const [submitted, setSubmitted] = useState(false);
     const [globalFilter, setGlobalFilter] = useState(null);
     const toast = useRef(null);
     const dt = useRef(null);
     const dtEstado = useRef(null);
+    const dtAccion = useRef(null);
     const contextPath = getConfig().publicRuntimeConfig.contextPath;
     const [totalSize, setTotalSize] = useState(0);
     const fileUploadRef = useRef(null);
@@ -232,9 +236,8 @@ const ordenes = () => {
         const totalPagadoBs =  (totalMonto * montoCalculoBs).toFixed(2);
         const cambioDia = await ordenService.getMontoDia();
         console.log('Estos son los pagos', cambioDia);
-     
-      
-        
+
+
         setTotalPagadoBs(totalPagadoBs)
         setTotalPagado(totalMonto)
         setTotalBs(totalDolares);
@@ -264,6 +267,11 @@ const ordenes = () => {
         setCurrency('VES');
         setEmail('');
         }
+       
+        const userNameInfo = localStorage.getItem('nombre_user');
+        const userRoleInfo = localStorage.getItem('nombre_role');
+        await ordenService.postAccionUser('Pago gregado', userNameInfo, userRoleInfo, idOrden.orden_id);
+        
         setMonto('')
         setPaymentMethod('');
         setReferenceNumber('');
@@ -278,6 +286,7 @@ const ordenes = () => {
     const hideDialog = () => {
         setSubmitted(false);
         setEstadoDialog(false);
+        setAccionDialog(false);
         setPagoDialog(false);
         setMontoDialog(false);
         setEditClienteDialog(false);
@@ -329,10 +338,17 @@ const ordenes = () => {
         }
     };
 
-    const showEstado = (orden) => {
+    const showEstado = async(orden) => {
         console.log('Test orden', orden)
         setIdorden(orden);
          setEstadoDialog(true);
+    };
+
+    const showAccion = async(orden) => {
+        const ordenService = new OrdenService();
+        const testAccionesService = await ordenService.getAccionUser(orden.orden_id);
+        setOrdenAccion(testAccionesService);
+        setAccionDialog(true);  
     };
 
     const pagoOrden = async(orden) => {
@@ -358,9 +374,7 @@ const ordenes = () => {
         const totalPagadoBs =  (totalMonto * montoCalculoBs).toFixed(2);
         const cambioDia = await ordenService.getMontoDia();
         console.log('Estos son los pagos', cambioDia);
-     
-      
-        
+        //ordenService.postAccionUser()
         setTotalPagadoBs(totalPagadoBs)
         setTotalPagado(totalMonto)
         setTotalBs(totalDolares);
@@ -478,6 +492,11 @@ const ordenes = () => {
         setInfoEstado(data);
         setTipoProducto(dropdownData);
         });
+
+        const userNameInfo = localStorage.getItem('nombre_user');
+        const userRoleInfo = localStorage.getItem('nombre_role');
+        await ordenService.postAccionUser('Cambio de estado', userNameInfo, userRoleInfo, idOrden.orden_id);
+        
 
     };
 
@@ -1463,8 +1482,42 @@ const clienteBodyTemplate = (rowData) => {
             </>
         );
     };
+    
+    const nombreUserAccionBodyTemplate = (rowData) => {
+        return (
+            <>
+                <span className="p-column-title">Unidad</span>
+                    {rowData.nombre_user}
+            </>
+        );
+    };
 
+    const rolUserAccionBodyTemplate = (rowData) => {
+        return (
+            <>
+                <span className="p-column-title">Unidad</span>
+                    {rowData.role_user}
+            </>
+        );
+    };
+    const userAccionBodyTemplate = (rowData) => {
+        return (
+            <>
+                <span className="p-column-title">Unidad</span>
+                    {rowData.nombre_accion}
+            </>
+        );
+    };
 
+    const fechauserAccionBodyTemplate = (rowData) => {
+        return (
+            <>
+                <span className="p-column-title">Unidad</span>
+                    {rowData.fecha_accion_user_orden}
+            </>
+        );
+    };
+    
         const estadoMultBodyTemplate = (rowData) => {
         return (
             <>
@@ -1539,6 +1592,34 @@ const clienteBodyTemplate = (rowData) => {
         );
     };
 
+    const accionUsuarioBodyTemplate = (rowData) => {
+
+        return (
+            <>
+            <Button icon="pi pi-pencil" className="p-button-rounded p-button-danger mr-2" onClick={() => showAccion(rowData)} />
+            <Dialog visible={accionDialog} style={{ width: '550px' }} header="Acciones de usuario" modal className="p-fluid" onHide={hideDialog}>
+                        <DataTable
+                        ref={dtAccion}
+                        value={ordenAccion? ordenAccion : []}
+                        selection={selectedProducts}
+                        dataKey="id"
+                        className="datatable-responsive"
+                        globalFilter={globalFilter}
+                        emptyMessage="No products found."
+                        header={headerAccion}
+                        responsiveLayout="scroll"
+                    >
+                        <Column field="nombre" header="Usuario" body= {nombreUserAccionBodyTemplate} sortable headerStyle={{ minWidth: '10rem' }}></Column>
+                        <Column field="unidad" header="Rol" body= {rolUserAccionBodyTemplate} sortable headerStyle={{ minWidth: '10rem' }}></Column>
+                        <Column field="nombre" header="Accion" body= {userAccionBodyTemplate} sortable headerStyle={{ minWidth: '10rem' }}></Column>
+                        <Column field="unidad" header="Fecha acción" body= {fechauserAccionBodyTemplate} sortable headerStyle={{ minWidth: '10rem' }}></Column>
+                    </DataTable>
+                    </Dialog>
+
+            </>
+        );
+    };
+
     const header = (
         <div className="flex flex-column md:flex-row md:justify-content-between md:align-items-center">
             <h5 className="m-0">Gestion Ordenes</h5>
@@ -1548,6 +1629,12 @@ const clienteBodyTemplate = (rowData) => {
     const headerEstado = (
         <div className="flex flex-column md:flex-row md:justify-content-between md:align-items-center">
             <h5 className="m-0">Historial de estado</h5>
+        </div>
+    );
+
+    const headerAccion = (
+        <div className="flex flex-column md:flex-row md:justify-content-between md:align-items-center">
+            <h5 className="m-0">Historial de Acciones</h5>
         </div>
     );
 
@@ -1614,6 +1701,7 @@ const clienteBodyTemplate = (rowData) => {
                         <Column header="Zona" body={lugarBodyTemplate} headerStyle={{ minWidth: '4rem' }}></Column>
                         <Column header="Pago" body={pagarBodyTemplate} headerStyle={{ minWidth: '4rem' }}></Column>
                         <Column header="Cambio estado" body={estadochangeBodyTemplate} headerStyle={{ minWidth: '4rem' }}></Column>
+                        <Column header="Acciones de usuario" body={accionUsuarioBodyTemplate} headerStyle={{ minWidth: '4rem' }}></Column>
                     </DataTable>
                     <Dialog visible={montoDialog} style={{ width: '550px' }} header="Cambio del dia" modal className="p-fluid" onHide={hideDialog}>
                         <div className="formgrid grid">

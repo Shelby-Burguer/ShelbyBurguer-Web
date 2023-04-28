@@ -418,6 +418,9 @@ const handleDropdownChange = async(e) => {
         const clienteSelect = await clienteService.getOneClientes(client.cedula);
         const ordenService = new OrdenService();
         ordenService.getUpdateOrden(orderId, discount, tipo_Orden, clienteSelect.id_cliente, NumMesa, zonaSelected, direccion, total);
+        const userNameInfo = localStorage.getItem('nombre_user');
+        const userRoleInfo = localStorage.getItem('nombre_role');
+        await ordenService.postAccionUser('Creacion de orden', userNameInfo, userRoleInfo, orderId);
         setWriteValue(null);
         setidOrden('');
         setTotal('0');
@@ -429,6 +432,7 @@ const handleDropdownChange = async(e) => {
         setClient(emptyClient);
         setMostradorOptions('');
         setOpciones('');
+        
         localStorage.setItem('myKey', JSON.stringify(null));
         router.push(`http://${ipAddress}:3000/pages/Ordenes/gestion/`);
     };
