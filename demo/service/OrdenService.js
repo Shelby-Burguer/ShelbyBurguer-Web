@@ -8,6 +8,7 @@ export class OrdenService {
     }
 
     async getProductoOrden(id) {
+    try {
         let resOrdenCarrito;
 
         const responseProducto = fetch(`http://${this.ipAddress}:10000/orden/all/` + id, {
@@ -15,14 +16,22 @@ export class OrdenService {
             method: 'GET'
         }).then((res) => res.json());
 
-        await responseProducto.then((data) => (resOrdenCarrito = data));
-
-        console.log('ResCarrito', resOrdenCarrito);
+        await responseProducto.then((data) => {   console.log('ResCarrito', data);
+        if (data.statusCode == 401) {
+            throw new Error('No se pudo procesar la solicitud. Por favor, inténtelo de nuevo.');
+        }
+         (resOrdenCarrito = data)
+        });
 
         return resOrdenCarrito;
+    } catch (error) {
+    console.error(error);
+    return null;
+    }
     }
 
     async getOrden(id) {
+    try {
         let resOrden;
 
         const responseProducto = fetch(`http://${this.ipAddress}:10000/orden/one/` + id, {
@@ -30,11 +39,19 @@ export class OrdenService {
             method: 'GET'
         }).then((res) => res.json());
 
-        await responseProducto.then((data) => (resOrden = data));
-
+        await responseProducto.then((data) => {   
+        if (data.statusCode == 401) {
+            throw new Error('No se pudo procesar la solicitud. Por favor, inténtelo de nuevo.');
+        }
+          (resOrden = data)
+        });
         console.log('ResCarrito', resOrden);
 
         return resOrden;
+    } catch (error) {
+    console.error(error);
+    return null;
+    }
     }
 
     async getUpdateOrden(id, descuento, tipo_orden, clienteId, numMesa, lugarId, direccion, total) {
@@ -69,6 +86,7 @@ export class OrdenService {
     }
 
     async getAllOrden() {
+    try {
         let resOrdenCarrito;
 
         const responseProducto = fetch(`http://${this.ipAddress}:10000/orden/all`, {
@@ -76,27 +94,44 @@ export class OrdenService {
             method: 'GET'
         }).then((res) => res.json());
 
-        await responseProducto.then((data) => (resOrdenCarrito = data));
+        await responseProducto.then((data) => {  
+        if (data.statusCode == 401) {
+            throw new Error('No se pudo procesar la solicitud. Por favor, inténtelo de nuevo.');
+        }
+         (resOrdenCarrito = data)
+        });
 
         console.log('ResALLOrden', resOrdenCarrito);
 
         return resOrdenCarrito;
+    } catch (error) {
+    console.error(error);
+    return null;
+    }
     }
 
     async getAllEstados() {
-
+    try {
         let resOrdenCarrito;
 
         const responseProducto = fetch(`http://${this.ipAddress}:10000/orden/estados/All`, {
             headers: { 'Cache-Control': 'no-cache', 'Authorization': `Bearer ${this.token}` },
             method: 'GET'
         }).then((res) => res.json());
-
-        await responseProducto.then((data) => (resOrdenCarrito = data));
-
+        
+        await responseProducto.then((data) => {  
+        if (data.statusCode == 401) {
+            throw new Error('No se pudo procesar la solicitud. Por favor, inténtelo de nuevo.');
+        }
+         (resOrdenCarrito = data)
+        });
         console.log('ResALLOrden', resOrdenCarrito);
 
         return resOrdenCarrito;
+    } catch (error) {
+    console.error(error);
+    return null;
+    }
     }
 
         async postEstadoOrden(idEstado, idOrden) {
@@ -120,7 +155,7 @@ export class OrdenService {
         return resOrdenCarrito;
     }
 
-    async postOrdenPago(id, pago, tipo_pago, monto) {
+    async postOrdenPago(id, pago, tipo_pago, monto, tipo_pago_efectivo) {
         console.log(id, pago, tipo_pago, monto)
         let resOrdenCarrito;
 
@@ -130,6 +165,7 @@ export class OrdenService {
             body: JSON.stringify({
             tipo_pago: tipo_pago,
             monto: monto,
+            tipo_pago_efectivo: tipo_pago_efectivo,
             pagoElectronico: pago,
             pagoEfectivo: pago ,
             zelle: pago,
@@ -217,6 +253,55 @@ async getMontoDia() {
 
   return resOrdenCarrito;
 }
-    
-}    
-    
+
+    async postAccionUser(nombreAccion, nombreUser, roleUser, ordenId) {
+
+        let resOrdenCarrito;
+
+        const responseProducto = fetch(`http://${this.ipAddress}:10000/orden/accionUsuario/create`, {
+            headers: { 'content-type': 'application/json', 'Authorization': `Bearer ${this.token}` },
+            method: 'POST',
+            body: JSON.stringify({
+            nombre_accion: nombreAccion,
+            nombre_user:nombreUser,
+            role_user: roleUser,
+            orden_id: ordenId
+            })
+        });
+
+        await responseProducto.then((dat) =>
+            dat.json().then((res) => resOrdenCarrito = res
+            )
+        );
+      
+        return resOrdenCarrito;
+    }
+
+async getAccionUser(id) {
+  let resOrdenCarrito;
+
+  const responseProducto = fetch(`http://${this.ipAddress}:10000/orden/accionUsuario/All/`+ id, {
+    headers: { 'Cache-Control': 'no-cache', 'Authorization': `Bearer ${this.token}` },
+    method: 'GET'
+  }).then((res) => {
+    if (!res.ok) {
+      throw new Error('Network response was not ok');
+    }
+    return res.json();
+  });
+
+  await responseProducto.then((data) => {
+    if (data !== null) {
+      resOrdenCarrito = data;
+      console.log(data);
+    }
+  }).catch((error) => {
+    console.error('Error:', error);
+  });
+
+  console.log('ResALLOrden', resOrdenCarrito);
+
+  return resOrdenCarrito;
+}
+
+}

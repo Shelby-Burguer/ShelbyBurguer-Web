@@ -10,6 +10,7 @@ import { InputText } from 'primereact/inputtext';
 import { Password } from 'primereact/password';
 import { Dropdown } from 'primereact/dropdown';
 import { authService } from '../demo/service/authService';
+import { Calendar } from 'primereact/calendar';
 
 
 const AppTopbar = forwardRef((props, ref) => {
@@ -85,6 +86,17 @@ const AppTopbar = forwardRef((props, ref) => {
     };
 
     const hideDialog = () => {
+        setDropdownValue(null);
+        setPassword('');
+        setNombre('');
+        setCorreo('');
+        setApellido('');
+        setTelefono('');
+        setCedula('');
+        setDireccion('');
+        setFecha_inicio('');
+        setPreguntaSecreta('')
+        setRespuestaSecreta('')
         setUserDialogVisible(false)
     };
 
@@ -95,6 +107,13 @@ const AppTopbar = forwardRef((props, ref) => {
     setPassword('');
     setNombre('');
     setCorreo('');
+    setApellido('');
+    setTelefono('');
+    setCedula('');
+    setDireccion('');
+    setFecha_inicio('');
+    setPreguntaSecreta('')
+    setRespuestaSecreta('')
     setUserDialogVisible(false);
     };
 
@@ -177,7 +196,7 @@ const AppTopbar = forwardRef((props, ref) => {
                     </div>
                     <div className="field col">
                         <label htmlFor="fecha_inicio">Fecha Inicio</label>
-                        <InputText id="fecha_inicio" value={fecha_inicio} onChange={(e) => setFecha_inicio(e.target.value)} required autoFocus className={classNames({ 'p-invalid': submitted && !fecha_inicio })} />
+                        <Calendar showIcon showButtonBar value={fecha_inicio} onChange={(e) => setFecha_inicio(e.target.value)} required autoFocus className={classNames({ 'p-invalid': submitted && !fecha_inicio })}></Calendar>
                         {submitted && !fecha_inicio && <small className="p-invalid">El fecha de inicio es requerido.</small>}
                     </div>
                     </div>
@@ -204,6 +223,14 @@ const AppTopbar = forwardRef((props, ref) => {
                         {submitted && !respuesta_secreta && <small className="p-invalid">El respuesta_secreta es requerido.</small>}
                 </div>
                 </div>
+                <div className="formgrid grid">
+                      <div className="field col">
+                        <label htmlFor="correo">Correo</label>
+                        <InputText id="correo" value={correo} onChange={(e) => setCorreo(e.target.value)} required autoFocus className={classNames({ 'p-invalid': submitted && !correo })} />
+                        {submitted && !correo && <small className="p-invalid">El correo es requerido.</small>}
+                        </div>
+                </div>
+                
             </Dialog>
         </div>
     );

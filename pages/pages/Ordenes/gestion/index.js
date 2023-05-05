@@ -71,6 +71,7 @@ const ordenes = () => {
     const [products, setProducts] = useState(null);
     const [file, setfile] = useState(null); 
     const [EstadoDialog, setEstadoDialog] = useState(false);
+    const [accionDialog, setAccionDialog] = useState(false);
     const [pagoDialog, setPagoDialog] = useState(false);  
     const [editClienteDialog, setEditClienteDialog] = useState(false);
     const [montoDialog, setMontoDialog] = useState(false);
@@ -78,17 +79,20 @@ const ordenes = () => {
     const [deleteProductsDialog, setDeleteProductsDialog] = useState(false);
     const [product, setProduct] = useState(emptyProduct);
     const [idOrden, setIdorden] = useState(null);
+    const [ordenAccion, setOrdenAccion] = useState(null);
     const [total, setTotal] = useState(null);
     const [totalPagado, setTotalPagado] = useState('0');
     const [totalPagadoBs, setTotalPagadoBs] = useState('0');
     const [totalBs, setTotalBs] = useState(null);
     const [montoDia, setMontoDia] = useState(null);
     const [selectedProducts, setSelectedProducts] = useState(null);
+    const [accionUser, setccionUser] = useState(null);
     const [submitted, setSubmitted] = useState(false);
     const [globalFilter, setGlobalFilter] = useState(null);
     const toast = useRef(null);
     const dt = useRef(null);
     const dtEstado = useRef(null);
+    const dtAccion = useRef(null);
     const contextPath = getConfig().publicRuntimeConfig.contextPath;
     const [totalSize, setTotalSize] = useState(0);
     const fileUploadRef = useRef(null);
@@ -116,33 +120,48 @@ const ordenes = () => {
     const [referenceNumber, setReferenceNumber] = useState('');
     const [montoBs, setmMontoBs] = useState('');
     const [monto, setMonto] = useState('');
+    const [cantidadBilletes, setCantidadBilletes] = useState('');
     const [email, setEmail] = useState('');
     const [pagos, setPagos] = useState([]);
     const [writeValue, setWriteValue] = useState(null);
     const [filteredClientes, setFilteredClientes] = useState([]);
     const [client, setClient] = useState(emptyClient);
     const [_clientes, setClientes] = useState(null);
+    const [cash, setCash] = useState([]);
 
     useEffect(async () => {
         const ingredienteService = new IngredienteService();
         const result = await ingredienteService.getIngredientes();
-        console.log('test', result);
+        if(result){
+        } else{
+        toast.current.show({ severity: 'error', summary: 'Error', detail: '¡Hubo un error! Por favor, Inicie sesion.' });
+        }
+        
 
         const ordenService = new OrdenService();
         await ordenService.getAllOrden().then((data) => {
+        if(data){
             const updatedProductos = data.map((producto) => ({
                 ...producto,
                 productos: producto.productos.map((p) => ({ ...p, cantidad: 1 }))
             }));
             setProducts(updatedProductos);
+        } else {
+        toast.current.show({ severity: 'error', summary: 'Error', detail: '¡Hubo un error! Por favor, Inicie sesion.' });
+        }
         });
 
         ordenService.getAllEstados().then((data) => {
+        console.log('XO', data)
+        if(data){
          const dropdownData = data.map((item) => ({
             name: item.nombre_estado
         }));
         setInfoEstado(data);
         setTipoProducto(dropdownData);
+        } else {
+        toast.current.show({ severity: 'error', summary: 'Error', detail: '¡Hubo un error! Por favor, Inicie sesion.' });
+        }
         });
 
    
@@ -185,39 +204,64 @@ const ordenes = () => {
 
 
     const addPago = async() => {
-   
-        if(paymentMethod === "electronico"){
         
+        
+        console.log('Vamo a ver',paymentMethod);
+        if(paymentMethod){
+        if(paymentMethod === "electronico"){
+        if(electronicPaymentMethod){
+        if(monto){
         let pago = {
         numero_referencia: referenceNumber,
         tipo_pago: electronicPaymentMethod
         };
-
+        console.log(currency);
         const ordenService = new OrdenService();
         await ordenService.postOrdenPago(idOrden.orden_id, pago, paymentMethod, monto);
-  
-        } else if (paymentMethod ===  "efectivo"){
-
-        let pago = {
-        numero_serie: serialNumber,
-        denominacion: denomination,
-        tipo_pago:currency
-        };
-
-        const ordenService = new OrdenService();
-        await ordenService.postOrdenPago(idOrden.orden_id, pago, paymentMethod, monto);
-       
         } else {
+            toast.current.show({ severity: 'error', summary: 'Error', detail: 'Ingrese el monto' });
+        } 
+        } else {
+            toast.current.show({ severity: 'error', summary: 'Error', detail: 'Ingrese tipo de pago electronico' });
+        } 
+        }
+
+        if (paymentMethod ===  "efectivo"){
+        if(monto){
+        
+        if(currency === 'USD' || currency === 'Bs.'){
+        const ordenService = new OrdenService();
+        
+        await ordenService.postOrdenPago(idOrden.orden_id, cash, paymentMethod, monto, currency);
+        } else{
+            toast.current.show({ severity: 'error', summary: 'Error', detail: 'Ingrese el tipo de moneda' });
+        }
+        } else if (cash.length != 0) {
+                const ordenService = new OrdenService();
+                await ordenService.postOrdenPago(idOrden.orden_id, cash, paymentMethod, monto, currency);
+        } else{
+        console.log('donde entra')
+            toast.current.show({ severity: 'error', summary: 'Error', detail: 'Ingrese el monto o los billetes ' });
+        }
+        }
+        if (paymentMethod ===  "zelle") {
+        console.log('donde entra', monto)
+        if(monto){
         let pago = {
         correo_electronico: email
         }
         const ordenService = new OrdenService();
         await ordenService.postOrdenPago(idOrden.orden_id, pago,  paymentMethod, monto);
+        } else {
+         toast.current.show({ severity: 'error', summary: 'Error', detail: 'Ingrese el monto' });
+        }
+        }
+        } else {
+         toast.current.show({ severity: 'error', summary: 'Error', detail: 'Ingrese el tipo de pago' });
         }
         const ordenService = new OrdenService();
-               
         const pagos = await ordenService.getAllPagosOrden(idOrden.orden_id)
-        
+        console.log('Get test pago', pagos)
         const cambioDia = await ordenService.getMontoDia();
         const totalDolares = parseFloat(idOrden.total_orden)*parseFloat(cambioDia[0].monto);
 
@@ -231,14 +275,13 @@ const ordenes = () => {
 
         return pago;
         });
-        const montoCalculoBs = pagos[0].monto_bs
-        const totalMonto = newPagos.reduce((acc, pago) => acc + parseFloat(pago.montoDolares), 0).toFixed(2);
+        const montoCalculoBs = pagos[0].monto_bsf
+        const totalMonto = newPagos.reduce((acc, pago) => acc + parseFloat(pago.monto_total_dolares), 0).toFixed(2);
         const totalPagadoBs =  (totalMonto * montoCalculoBs).toFixed(2);
         const cambioDia = await ordenService.getMontoDia();
         console.log('Estos son los pagos', cambioDia);
-     
-      
-        
+
+
         setTotalPagadoBs(totalPagadoBs)
         setTotalPagado(totalMonto)
         setTotalBs(totalDolares);
@@ -253,6 +296,7 @@ const ordenes = () => {
         setCurrency('VES');
         setEmail('');
         setPagoDialog(true);
+        setCash([]);
         }else {
 
         setTotalBs(totalDolares);
@@ -266,7 +310,12 @@ const ordenes = () => {
         setDenomination(0);
         setCurrency('VES');
         setEmail('');
-        }
+    }
+       
+        const userNameInfo = localStorage.getItem('nombre_user');
+        const userRoleInfo = localStorage.getItem('nombre_role');
+        await ordenService.postAccionUser('Pago gregado', userNameInfo, userRoleInfo, idOrden.orden_id);
+        
         setMonto('')
         setPaymentMethod('');
         setReferenceNumber('');
@@ -281,6 +330,7 @@ const ordenes = () => {
     const hideDialog = () => {
         setSubmitted(false);
         setEstadoDialog(false);
+        setAccionDialog(false);
         setPagoDialog(false);
         setMontoDialog(false);
         setEditClienteDialog(false);
@@ -332,38 +382,44 @@ const ordenes = () => {
         }
     };
 
-    const showEstado = (orden) => {
+    const showEstado = async(orden) => {
         console.log('Test orden', orden)
         setIdorden(orden);
          setEstadoDialog(true);
     };
 
+    const showAccion = async(orden) => {
+        const ordenService = new OrdenService();
+        const testAccionesService = await ordenService.getAccionUser(orden.orden_id);
+        setOrdenAccion(testAccionesService);
+        setAccionDialog(true);  
+    };
+
     const pagoOrden = async(orden) => {
         const ordenService = new OrdenService();
-        console.log('Estos son los pagos', orden)
+        console.log('Estos son los pagos orde', orden)
         const pagos = await ordenService.getAllPagosOrden(orden.orden_id)
-        
+        console.log()
         const cambioDia = await ordenService.getMontoDia();
         const totalDolares = parseFloat(orden.total_orden)*parseFloat(cambioDia[0].monto);
-
+        console.log('Estos son los pagos pagos', pagos)
+         
         if(pagos){
         const newPagos = await pagos.map((pago) => {
+        
         if (pago.tipo_pago === 'electrónico' || (pago.tipo_pago === 'efectivo' && pago.tipo_efectivo === 'Bs.')) {
-            pago.montoDolares = (parseFloat(pago.monto) / parseFloat(pago.monto_bs)).toFixed(2);
+            pago.montoDolares = (parseFloat(pago.monto_total) / parseFloat(pago.monto_bs)).toFixed(2);
         } else {
-            pago.montoDolares = (parseFloat(pago.monto)).toFixed(2);
+            pago.montoDolares = (parseFloat(pago.monto_total_dolares)).toFixed(2);
         }
 
         return pago;
         });
-        const montoCalculoBs = pagos[0].monto_bs
-        const totalMonto = newPagos.reduce((acc, pago) => acc + parseFloat(pago.montoDolares), 0).toFixed(2);
+        const montoCalculoBs = pagos[0].monto_bsf
+        const totalMonto = newPagos.reduce((acc, pago) => acc + parseFloat(pago.monto_total_dolares), 0).toFixed(2);
         const totalPagadoBs =  (totalMonto * montoCalculoBs).toFixed(2);
         const cambioDia = await ordenService.getMontoDia();
-        console.log('Estos son los pagos', cambioDia);
-     
-      
-        
+        //ordenService.postAccionUser()
         setTotalPagadoBs(totalPagadoBs)
         setTotalPagado(totalMonto)
         setTotalBs(totalDolares);
@@ -373,6 +429,7 @@ const ordenes = () => {
         setPagoDialog(true);
         }else {
 
+        setPagos(null);
         setTotalBs(totalDolares);
         setTotal(orden.total_orden);
         setIdorden(orden);
@@ -386,6 +443,13 @@ const ordenes = () => {
         setEditClienteDialog(true)
     };
 
+    const onInputNumberChangeMontoDia = (e, name) => {
+        const val = e.value || 0;
+        let _element = { ...element };
+        _element[`${name}`] = val;
+
+        setElement(_element);
+    };
 
 
 
@@ -481,6 +545,11 @@ const ordenes = () => {
         setInfoEstado(data);
         setTipoProducto(dropdownData);
         });
+
+        const userNameInfo = localStorage.getItem('nombre_user');
+        const userRoleInfo = localStorage.getItem('nombre_role');
+        await ordenService.postAccionUser('Cambio de estado', userNameInfo, userRoleInfo, idOrden.orden_id);
+        
 
     };
 
@@ -687,24 +756,6 @@ const ordenes = () => {
         );
     };
 
-    const confirmacionPagoBodyTemplate = (rowData) => {
-        return (
-            <>
-                <span className="p-column-title">Unidad</span>
-                {rowData.unidad}
-            </>
-        );
-    };
-
-    const descuentoBodyTemplate = (rowData) => {
-        return (
-            <>
-                <span className="p-column-title">Unidad</span>
-                {rowData.descuento}
-            </>
-        );
-    };
-
     const TotalBodyTemplate = (rowData) => {
     return (
     <>
@@ -737,6 +788,16 @@ const ordenes = () => {
             </>
         );
     };
+
+    const tamanoProductoTemplate = (producto) => {
+        return (
+            <>
+                <span className="p-column-title">Nombre</span>
+                {producto.tamano_producto}
+            </>
+        );
+    };
+
 
     const cantidadProductoTemplate = (producto) => {
         return (
@@ -780,7 +841,7 @@ const ordenes = () => {
         return (
             <>
                 <span className="p-column-title">Cantidad</span>
-                {pago.montoDolares}$
+                {pago.monto_total_dolares}$
             </>
         );
     };
@@ -807,7 +868,7 @@ const ordenes = () => {
         return (
             <>
                 <span className="p-column-title">Nombre</span>
-                {cliente.correo_electronico}
+                {cliente.correo}
             </>
         );
     };
@@ -816,7 +877,7 @@ const ordenes = () => {
         return (
             <>
                 <span className="p-column-title">Nombre</span>
-                {cliente.monto_bs}
+                {cliente.monto_bsf}
             </>
         );
     };
@@ -825,7 +886,7 @@ const ordenes = () => {
         return (
             <>
                 <span className="p-column-title">Nombre</span>
-                {cliente.fecha_historial_monto_bs}
+                {cliente.fecha_historial_bsf}
             </>
         );
     };
@@ -838,7 +899,6 @@ const ordenes = () => {
             </>
         );
     };
-
     
     const tipoElectronicoBodyTemplate = (cliente) => {
         return (
@@ -853,7 +913,7 @@ const ordenes = () => {
         return (
             <>
                 <span className="p-column-title">Nombre</span>
-                {cliente.tipo_efectivo}
+                {cliente.pagoEfectivo.tipo_pago}
             </>
         );
     };
@@ -871,16 +931,25 @@ const ordenes = () => {
         return (
             <>
                 <span className="p-column-title">Cedula</span>
-                {cliente.denominacion}
+                {cliente.pagoEfectivo.denominacion}
             </>
         );
     };
+
+    const cantidadBilletesPagoClienteTemplate = (cliente) => {
+        return (
+            <>
+                <span className="p-column-title">Cedula</span>
+                {cliente.pagoEfectivo.cantidad_billetes}
+            </>
+        );
+    }; 
 
     const numeroRefPagoClienteTemplate = (cliente) => {
         return (
             <>
                 <span className="p-column-title">Cedula</span>
-                {cliente.numero_serie}
+                {cliente.pagoEfectivo.numero_serie}
             </>
         );
     };
@@ -938,13 +1007,17 @@ const ordenes = () => {
     const showPagosDetails = (event, pago) => {
         if (pago.tipo_pago === "electrónico"){
         op6.current.toggle(event);
+        setDetallePago(pago.pagoElectronico);
         } else if (pago.tipo_pago === "efectivo"){
+        console.log('Vamo a ver efectiv', pago.pagoEfectivo);
+        setDetallePago(pago.pagoEfectivo);
         op7.current.toggle(event);
         } else { 
         op8.current.toggle(event);
+        setDetallePago(pago.zelle);
         }
-        setDetallePago(pago);
-        console.log("Datos",detallePago )
+       
+        console.log("Datos",pago)
         
     };
 
@@ -960,7 +1033,6 @@ const ordenes = () => {
 
     const showIngredientesDetails = (event, ingredientes) => {
         op5.current.toggle(event);
-        console.log('Test ingredientes', ingredientes);
         setIngredienteClient(ingredientes);
     };
 
@@ -1010,9 +1082,9 @@ const ordenes = () => {
         appendTo={typeof window !== "undefined" ? document.body : null}
         showCloseIcon
         id="overlay_panel_ingredientes"
-        style={{ width: "250px" }}
+        style={{ width: "350px" }}
       >
-        <DataTable value={ingredienteClient} responsiveLayout="scroll">
+        <DataTable value={ingredienteClient} responsiveLayout="scroll" scrollable scrollHeight="350px" scrollWidth="100%">
           <Column header="Ingredientes" body={ingredienteProductoTemplate} sortable headerStyle={{ minWidth: "10rem" }} />
           <Column header="Ingredientes" body={ingredienteCantidadProductoTemplate} sortable headerStyle={{ minWidth: "10rem" }} />
         </DataTable>
@@ -1032,16 +1104,17 @@ const ordenes = () => {
         icon="pi pi-pencil"
         className="p-button-rounded p-button-success mr-2"
       />
-      <OverlayPanel
+        <OverlayPanel
         ref={op4}
         appendTo={typeof window !== "undefined" ? document.body : null}
         showCloseIcon
         id="overlay_panel_productos"
         style={{ width: "550px" }}
-      >
-        <DataTable value={productoClient} responsiveLayout="scroll">
+        > 
+        <DataTable value={productoClient} responsiveLayout="scroll" scrollable scrollHeight="350px" scrollWidth="100%">
           <Column header="Cantidad" body={cantidadProductoTemplate} sortable headerStyle={{ minWidth: "10rem" }} />
           <Column header="Nombre" body={nombreProductoTemplate} headerStyle={{ minWidth: "8rem" }} />
+          <Column header="Tamaño" body={tamanoProductoTemplate} headerStyle={{ minWidth: "8rem" }} />
           <Column header="Ingredientes" body={IngredientesBodyTemplate} sortable headerStyle={{ minWidth: "8rem" }} />
         </DataTable>
       </OverlayPanel>
@@ -1112,11 +1185,11 @@ const detalleoldPagosBodyTemplate = (rowData) => {
         id="overlay_panel"
         style={{ width: "550px" }}
       >
-       <DataTable value={[detallePago]} responsiveLayout="scroll">
+       <DataTable value={detallePago} responsiveLayout="scroll">
           <Column header="Tipo modeda" body={tipoEfectivoBodyTemplate} headerStyle={{ minWidth: "10rem" }} />
-          <Column header="Monto" body={montoPagoClienteTemplate} sortable headerStyle={{ minWidth: "8rem" }} />
           <Column header="Denominacion" body={denominacionPagoClienteTemplate} sortable headerStyle={{ minWidth: "8rem" }} />
-          <Column header="Denominacion" body={numeroRefPagoClienteTemplate} sortable headerStyle={{ minWidth: "8rem" }} />
+          <Column header="Cantidad de billetes" body={cantidadBilletesPagoClienteTemplate} sortable headerStyle={{ minWidth: "8rem" }} />
+          <Column header="# de referencia" body={numeroRefPagoClienteTemplate} sortable headerStyle={{ minWidth: "8rem" }} />
           <Column header="Monto de cambio" body={montoBsCambioBodyTemplate} headerStyle={{ minWidth: "10rem" }} />
           <Column header="Fecha cambio del dia" body={fechamontoBsCambioBodyTemplate} headerStyle={{ minWidth: "10rem" }} />
         </DataTable>
@@ -1216,6 +1289,27 @@ const detallePagosBodyTemplate = (rowData) => {
     </>
   );
 };
+
+  const addCash = () => {
+    const newCash = { currency, serialNumber, denomination, cantidadBilletes, monto };
+    setCash([...cash, newCash]);
+    setCurrency("");
+    setSerialNumber("");
+    setDenomination("");
+    setMonto("");
+    setCantidadBilletes("");
+  }
+
+    const deleteCash = (rowData) => {
+    const newCash = cash.filter((cash) => cash !== rowData);
+    setCash(newCash);
+  };
+
+  const actionTemplate = (rowData) => {
+    return (
+      <Button icon="pi pi-trash" onClick={() => deleteCash(rowData)} />
+    );
+  };
 
 const testButton = () => {
     console.log('Entra en el boton')
@@ -1353,28 +1447,43 @@ const clienteBodyTemplate = (rowData) => {
                                         </label>
                                     )}
                                     {paymentMethod === "efectivo" && (
-                                    <>
-                                        <div className="formgrid grid"></div>
-                                        <div className="field col">
-                                        <label htmlFor="moneda">Moneda</label>
-                                        <Dropdown value={currency} options={currencyOptions} onChange={(e) => setCurrency(e.value)} placeholder="Seleccione" />
+                                        <>
+                                        <div className="field">
+                                            <label htmlFor="currency">Moneda</label>
+                                            <Dropdown value={currency} options={currencyOptions} onChange={(e) => setCurrency(e.value)} placeholder="Seleccione" />
                                         </div>
-                                        
-                                        <div className="field col">
-                                        <label htmlFor="numero_de_serie">Número de serie (opcional)</label>
-                                        <InputText type="text" value={serialNumber} onChange={(e) => setSerialNumber(e.target.value)} />
-                                        </div>
-                                    
-                                        <div className="field col">
-                                        <label htmlFor="numero_de_serie">Denominación</label>
-                                        <InputText type="text" value={denomination} onChange={(e) => setDenomination(e.target.value)} />
-                                        </div>      
-                                        <div className="field col">
-                                                <label htmlFor="monto">Monto</label>
-                                                <InputText type="text" value={monto} onChange={(e) => setMonto(e.target.value)} />
-                                        </div>          
 
-                                    </>
+                                        <div className="field">
+                                            <label htmlFor="serialNumber">Número de serie (opcional)</label>
+                                            <InputText type="text" value={serialNumber} onChange={(e) => setSerialNumber(e.target.value)} />
+                                        </div>
+
+                                        <div className="field">
+                                            <label htmlFor="denomination">Denominación</label>
+                                            <InputText type="text" value={denomination} onChange={(e) => setDenomination(e.target.value)} />
+                                        </div>
+
+                                        <div className="field">
+                                            <label htmlFor="cantidadBilletes">Cantidad de billetes</label>
+                                            <InputText type="text" value={cantidadBilletes} onChange={(e) => setCantidadBilletes(e.target.value)} />
+                                        </div>
+
+                                        <div className="field">
+                                            <label htmlFor="monto">Monto</label>
+                                            <InputText type="text" value={monto} onChange={(e) => setMonto(e.target.value)} />
+                                        </div>
+
+                                        <Button label="Agregar Billete" onClick={addCash} />
+
+                                        <DataTable value={cash}>
+                                            <Column field="currency" header="Moneda" />
+                                            <Column field="serialNumber" header="Número de serie" />
+                                            <Column field="denomination" header="Denominación" />
+                                            <Column field="cantidadBilletes" header="Cantidad de billetes" />
+                                            <Column field="monto" header="Monto" />
+                                            <Column body={actionTemplate} />
+                                        </DataTable>
+                                        </>
                                     )}
                                     {paymentMethod === "zelle" && (
                                         <div className="field col">
@@ -1389,7 +1498,7 @@ const clienteBodyTemplate = (rowData) => {
                                     )}
                                 </div>
                         <div className="field col flex align-items-center justify-content-between">
-                                <Button label="Agregar" icon="pi pi-plus" className="p-button-success mr-2" onClick={() => addPago()} />
+                                <Button label="Agregar Pago" icon="pi pi-plus" className="p-button-success mr-2" onClick={() => addPago()} />
                             </div>
                         </div>
                         <div className="carrito-total text-right total-text-pago my-1">Total: {total}$</div>
@@ -1418,8 +1527,42 @@ const clienteBodyTemplate = (rowData) => {
             </>
         );
     };
+    
+    const nombreUserAccionBodyTemplate = (rowData) => {
+        return (
+            <>
+                <span className="p-column-title">Unidad</span>
+                    {rowData.nombre_user}
+            </>
+        );
+    };
 
+    const rolUserAccionBodyTemplate = (rowData) => {
+        return (
+            <>
+                <span className="p-column-title">Unidad</span>
+                    {rowData.role_user}
+            </>
+        );
+    };
+    const userAccionBodyTemplate = (rowData) => {
+        return (
+            <>
+                <span className="p-column-title">Unidad</span>
+                    {rowData.nombre_accion}
+            </>
+        );
+    };
 
+    const fechauserAccionBodyTemplate = (rowData) => {
+        return (
+            <>
+                <span className="p-column-title">Unidad</span>
+                    {rowData.fecha_accion_user_orden}
+            </>
+        );
+    };
+    
         const estadoMultBodyTemplate = (rowData) => {
         return (
             <>
@@ -1494,6 +1637,34 @@ const clienteBodyTemplate = (rowData) => {
         );
     };
 
+    const accionUsuarioBodyTemplate = (rowData) => {
+
+        return (
+            <>
+            <Button icon="pi pi-pencil" className="p-button-rounded p-button-danger mr-2" onClick={() => showAccion(rowData)} />
+            <Dialog visible={accionDialog} style={{ width: '550px' }} header="Acciones de usuario" modal className="p-fluid" onHide={hideDialog}>
+                        <DataTable
+                        ref={dtAccion}
+                        value={ordenAccion? ordenAccion : []}
+                        selection={selectedProducts}
+                        dataKey="id"
+                        className="datatable-responsive"
+                        globalFilter={globalFilter}
+                        emptyMessage="No products found."
+                        header={headerAccion}
+                        responsiveLayout="scroll"
+                    >
+                        <Column field="nombre" header="Usuario" body= {nombreUserAccionBodyTemplate} sortable headerStyle={{ minWidth: '10rem' }}></Column>
+                        <Column field="unidad" header="Rol" body= {rolUserAccionBodyTemplate} sortable headerStyle={{ minWidth: '10rem' }}></Column>
+                        <Column field="nombre" header="Accion" body= {userAccionBodyTemplate} sortable headerStyle={{ minWidth: '10rem' }}></Column>
+                        <Column field="unidad" header="Fecha acción" body= {fechauserAccionBodyTemplate} sortable headerStyle={{ minWidth: '10rem' }}></Column>
+                    </DataTable>
+                    </Dialog>
+
+            </>
+        );
+    };
+
     const header = (
         <div className="flex flex-column md:flex-row md:justify-content-between md:align-items-center">
             <h5 className="m-0">Gestion Ordenes</h5>
@@ -1503,6 +1674,12 @@ const clienteBodyTemplate = (rowData) => {
     const headerEstado = (
         <div className="flex flex-column md:flex-row md:justify-content-between md:align-items-center">
             <h5 className="m-0">Historial de estado</h5>
+        </div>
+    );
+
+    const headerAccion = (
+        <div className="flex flex-column md:flex-row md:justify-content-between md:align-items-center">
+            <h5 className="m-0">Historial de Acciones</h5>
         </div>
     );
 
@@ -1560,8 +1737,8 @@ const clienteBodyTemplate = (rowData) => {
                         <Column field="unidad" header="Hora de orden" sortable body={horaBodyTemplate} headerStyle={{ minWidth: '10rem' }}></Column>
                         <Column field="unidad" header="Tipo de orden" sortable body={tipoBodyTemplate} headerStyle={{ minWidth: '10rem' }}></Column>
                         <Column field="unidad" header="Estado de orden" sortable body={estadoBodyTemplate} headerStyle={{ minWidth: '10rem' }}></Column>
-                        <Column field="unidad" header="Confirmacion de pago" sortable body={confirmacionPagoBodyTemplate} headerStyle={{ minWidth: '10rem' }}></Column>
-                        <Column field="unidad" header="Descuento" sortable body={descuentoBodyTemplate} headerStyle={{ minWidth: '10rem' }}></Column>
+                        {/*<Column field="unidad" header="Confirmacion de pago" sortable body={confirmacionPagoBodyTemplate} headerStyle={{ minWidth: '10rem' }}></Column>*/}
+                        {/*<Column field="unidad" header="Descuento" sortable body={descuentoBodyTemplate} headerStyle={{ minWidth: '10rem' }}></Column>*/}
                         <Column field="unidad" header="Numero de mesa" sortable body={numeroMesaBodyTemplate} headerStyle={{ minWidth: '10rem' }}></Column>
                         <Column field="unidad" header="Total" sortable body={TotalBodyTemplate} headerStyle={{ minWidth: '10rem' }}></Column>
                         <Column header="Productos" body={productosBodyTemplate} headerStyle={{ minWidth: '4rem' }}></Column>
@@ -1569,12 +1746,13 @@ const clienteBodyTemplate = (rowData) => {
                         <Column header="Zona" body={lugarBodyTemplate} headerStyle={{ minWidth: '4rem' }}></Column>
                         <Column header="Pago" body={pagarBodyTemplate} headerStyle={{ minWidth: '4rem' }}></Column>
                         <Column header="Cambio estado" body={estadochangeBodyTemplate} headerStyle={{ minWidth: '4rem' }}></Column>
+                        <Column header="Acciones de usuario" body={accionUsuarioBodyTemplate} headerStyle={{ minWidth: '4rem' }}></Column>
                     </DataTable>
                     <Dialog visible={montoDialog} style={{ width: '550px' }} header="Cambio del dia" modal className="p-fluid" onHide={hideDialog}>
                         <div className="formgrid grid">
                             <div className="field col">              
                                 <label htmlFor="monto">Monto</label>
-                                <InputText type="text" value={montoBs} onChange={(e) => setmMontoBs(e.target.value)} />
+                                <InputText type="text" value={montoBs} onChange={(e) => setmMontoBs(e.target.value)}/>
                             </div>
                             <div className="field col flex align-items-center justify-content-between" style={{flexDirection: 'column'}}>
                                 <h6 htmlFor="costo"></h6>

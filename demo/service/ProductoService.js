@@ -8,6 +8,7 @@ export class NewProductoService {
     }
 
     async getProductos() {
+    try {
         let resProduct;
 
         const responseProducto = fetch(`http://${this.ipAddress}:10000/productos/all`, {
@@ -15,8 +16,16 @@ export class NewProductoService {
             method: 'GET'
         }).then((res) => res.json());
 
-        await responseProducto.then((data) => (resProduct = data));
+        await responseProducto.then((data) => { 
+        
+        if (data.status == 401) {
+            throw new Error('No se pudo procesar la solicitud. Por favor, inténtelo de nuevo.');
+        }
+        (resProduct = data)
+        });
 
+   
+        console.log('Que pasa pa', resProduct);
         let arrFinalProduct = [];
 
         for (const element of resProduct) {
@@ -33,7 +42,13 @@ export class NewProductoService {
                 method: 'GET'
             }).then((res) => res.json());
 
-            await responseIngredientes.then((data) => (resIngredientes = data));
+            await responseIngredientes.then((data) => { 
+            
+            if (data.status == 401) {
+                throw new Error('No se pudo procesar la solicitud. Por favor, inténtelo de nuevo.');
+            }
+            (resIngredientes = data)
+            });
            
             for (const element of resIngredientes) {
                 let ingrediente = element;
@@ -68,6 +83,7 @@ export class NewProductoService {
                 nombre: '',
                 cantidad: '',
                 imagen: '',
+                tamaño_producto: '',
                 proteina: null,
                 proteina: arrProteinas,
                 ingrediente: arrIngredientes
@@ -81,7 +97,11 @@ export class NewProductoService {
         }
 
         return arrFinalProduct;
+    } catch (error) {
+    console.error(error);
+    return null;
     }
+}
 
     async postProducto(producto, ingredientes, ingredienteExta) {
         let resProduct = {
@@ -95,9 +115,20 @@ export class NewProductoService {
         let resProductoIngrediente;
 
         let resImg = {
-            nombreImagen: '16891a7a-52f8-4bc6-8176-00a5ae0b1c0a.jpg',
+            nombreImagen: 'depositphotos_387255148-stock-photo-summer-bbq-food-table.jpg',
             datosImagen: null
         };
+        if(producto.tipo_producto === "Bebida"){
+            resImg = {
+            nombreImagen: 'A_kell_le_gusta_la_soda_de_naranja.jpg',
+            datosImagen: null
+        };
+        } else if (producto.tipo_producto === "Papas") {
+            resImg = {
+            nombreImagen: 'Papas_fritas_perfectas.jpg',
+            datosImagen: null
+            };
+        }
         console.log('Service producto', producto);
         const responseProducto = fetch(`http://${this.ipAddress}:10000/productos/create`, {
             headers: { 'content-type': 'application/json', 'Authorization': `Bearer ${this.token}` },
@@ -106,13 +137,14 @@ export class NewProductoService {
                 nombre: producto.nombre,
                 tipo: producto.tipo_producto,
                 costo: producto.costo,
-                imagen: resImg.nombreImagen
+                imagen: resImg.nombreImagen,
+                tamano_producto: producto.tamano_producto
             })
         });
 
         await responseProducto.then((dat) =>
             dat.json().then((res) => {
-                (resProduct.id = res.id), (resProduct.nombre = res.nombre), (resProduct.tipo = res.tipo), (resProduct.costo = res.costo), (resProduct.imagen = res.imagen);
+                (resProduct.id = res.id), (resProduct.nombre = res.nombre), (resProduct.tipo = res.tipo), (resProduct.costo = res.costo), (resProduct.imagen = res.imagen, (resProduct.tamano_producto = res.tamano_producto));
             })
         );
 

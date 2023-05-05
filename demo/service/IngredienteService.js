@@ -8,62 +8,92 @@ export class IngredienteService {
         this.token = localStorage.getItem('token');
     }
 
-    async getIngredientes() {
-        let resProduct = {
-            id: null,
-            nombre: '',
-            unidad: '',
-            objectURL: '',
-            nombreImagen: '',
-            datosImagen: null,
-            proteina: '',
-            extra: ''
-        };
+async getIngredientes() {
+  try {
+    let resProduct = {
+      id: null,
+      nombre: '',
+      unidad: '',
+      objectURL: '',
+      nombreImagen: '',
+      datosImagen: null,
+      proteina: '',
+      extra: ''
+    };
 
-        const responseBody = fetch(`http://${this.ipAddress}:10000/ingrediente/all`, {
-            headers: { 'Cache-Control': 'no-cache', 'Authorization': `Bearer ${this.token}`}, 
-            method: 'GET'
-        }).then((res) => res.json());
+    const responseBody = fetch(`http://${this.ipAddress}:10000/ingrediente/all`, {
+    headers: { 'Cache-Control': 'no-cache', 'Authorization': `Bearer ${this.token}`}, 
+    method: 'GET'
+    }).then((res) => res.json());
 
-        await responseBody.then((dat) => (resProduct = { ...dat }));
-        console.log('vamo a ver', resProduct);
-        let testresProduct = [];
-        let claves = Object.keys(resProduct);
-        for (const element of claves) {
-            let clave = element;
+    await responseBody.then((dat) => { 
+    console.log('vamo a ver', dat);
+    if (dat.status == 401) {
+        throw new Error('No se pudo procesar la solicitud. Por favor, inténtelo de nuevo.');
+    }
+    resProduct = { ...dat };
+    });
 
-            const blobtest = new Blob([resProduct[clave].datosImagen], { type: 'image/png' });
+    let testresProduct = [];
+    let claves = Object.keys(resProduct);
+    for (const element of claves) {
+      let clave = element;
 
-            let test = new File([blobtest], resProduct[clave].nombreImagen, { type: blobtest.type });
+      const blobtest = new Blob([resProduct[clave].datosImagen], { type: 'image/png' });
 
-            const blobURL = window.URL.createObjectURL(blobtest);
+      let test = new File([blobtest], resProduct[clave].nombreImagen, { type: blobtest.type });
 
-            test.objectURL = blobURL;
+      const blobURL = window.URL.createObjectURL(blobtest);
 
-            delete resProduct[clave].nombreImagen;
-            delete resProduct[clave].datosImagen;
-            resProduct[clave].fileImage = test;
-            resProduct[clave].nombreImage = test.name;
-            resProduct[clave].urlImage = test.objectURL;
-            resProduct[clave].cantidad = '';
+      test.objectURL = blobURL;
 
-            window.URL.revokeObjectURL(blobURL);
+      delete resProduct[clave].nombreImagen;
+      delete resProduct[clave].datosImagen;
+      resProduct[clave].fileImage = test;
+      resProduct[clave].nombreImage = test.name;
+      resProduct[clave].urlImage = test.objectURL;
+      resProduct[clave].cantidad = '';
 
-            testresProduct.push(resProduct[clave]);
-        }
+      window.URL.revokeObjectURL(blobURL);
 
-        return testresProduct;
+      testresProduct.push(resProduct[clave]);
     }
 
-    DeleteIngredientes(id) {
-        return fetch(`http://${this.ipAddress}:10000/ingrediente/delete/` + id, {
+    return testresProduct;
+  } catch (error) {
+    console.error(error);
+    return null;
+  }
+}
+
+
+   async DeleteIngredientes(id) {
+    try {
+        const responseBody =  fetch(`http://${this.ipAddress}:10000/ingrediente/delete/` + id, {
             headers: { 'Authorization': `Bearer ${this.token}`}, 
             method: 'DELETE'
         });
+
+    await responseBody.then((dat) => {
+        if (!dat.ok) {
+            throw new Error('No se pudo procesar la solicitud. Por favor, inténtelo de nuevo más tarde.');
+        }
+        (resProduct = { ...dat })
+
+    });
+
+    return responseBody
+
+    } catch (error) {
+    console.error(error);
+    return null
+
+    }
     }
 
-    updateIngredientes(data) {
-        return fetch(`http://${this.ipAddress}:10000/ingrediente/update/` + data.id, {
+    async updateIngredientes(data) {
+    try {
+        const responseBody = fetch(`http://${this.ipAddress}:10000/ingrediente/update/` + data.id, {
             headers: { 'content-type': 'application/json', 'Authorization': `Bearer ${this.token}`},
             method: 'PATCH',
             body: JSON.stringify({
@@ -74,9 +104,24 @@ export class IngredienteService {
             }),
             responseType: 'json'
         });
+
+        await responseBody.then((dat) => {
+        if (!dat.ok) {
+            throw new Error('No se pudo procesar la solicitud. Por favor, inténtelo de nuevo más tarde.');
+        }
+        (resProduct = { ...dat })
+
+    });
+
+        return resProduct;
+    } catch (error) {
+    console.error(error);
+    return null
+    }
     }
 
     async postIngredientes(data, file) {
+    try {
         let resProduct = {
             id: null,
             nombre: '',
@@ -84,7 +129,8 @@ export class IngredienteService {
             nombreImage: '',
             urlImage: '',
             fileImage: '',
-            proteina: ''
+            proteina: '',
+            extra: ''
         };
 
         let resImg = {
@@ -106,7 +152,7 @@ export class IngredienteService {
 
         await responseBody.then((dat) =>
             dat.json().then((res) => {
-                (resProduct.id = res.id), (resProduct.nombre = res.nombre), (resProduct.unidad = res.unidad), (resProduct.urlImage = res.objectURL), (resProduct.proteina = res.proteina);
+                (resProduct.id = res.id), (resProduct.nombre = res.nombre), (resProduct.unidad = res.unidad), (resProduct.urlImage = res.objectURL), (resProduct.proteina = res.proteina), (resProduct.extra = res.extra);
             })
         );
 
@@ -138,5 +184,9 @@ export class IngredienteService {
         console.log('Respuesta final', resProduct);
 
         return resProduct;
+    } catch (error) {
+    console.error(error);
+    return null
+    }
     }
 }

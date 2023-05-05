@@ -1,6 +1,6 @@
 import getConfig from 'next/config';
 import { useRouter } from 'next/router';
-import React, { useContext, useState } from 'react';
+import React, { useContext, useState, useRef  } from 'react';
 import AppConfig from '../../../layout/AppConfig';
 import { Checkbox } from 'primereact/checkbox';
 import { Button } from 'primereact/button';
@@ -10,6 +10,8 @@ import { InputText } from 'primereact/inputtext';
 import { classNames } from 'primereact/utils';
 import { authService } from '../../../demo/service/authService';
 import { Dialog } from 'primereact/dialog';
+import { Toast } from 'primereact/toast';
+
 
 const LoginPage = () => {
     const [email, setEmail] = useState('');
@@ -25,13 +27,23 @@ const LoginPage = () => {
     const [resBackPregunta, setResBackPregunta] = useState('');
     const [submitted, setSubmitted] = useState(false);
     const [correo, setCorreo] = useState('');
+    
+    const toast = useRef(null);
 
     const postAuthUsuario = async() => {
     const autenticacionService = new authService();
     const respuesta = await autenticacionService.postAuthSesion(email, password)
-    setEmail('');
-    setPassword('');
-    console.log(respuesta);
+
+        if (respuesta){
+        const ipAddress = window.location.host.split(':')[0]; 
+        setEmail('');
+        setPassword('');
+        toast.current.show({severity: 'success', summary: 'Éxito', detail: '¡Iniciaste sesión exitosamente!'});
+        router.push(`http://${ipAddress}:3000`);
+
+        } else {
+        toast.current.show({ severity: 'error', summary: 'Error', detail: '¡Hubo un error al iniciar sesión! Por favor, Revise las credenciales e intentelo nuevamente.' });
+        }
     };
 
     const passwordUser = () => {
@@ -59,14 +71,24 @@ const LoginPage = () => {
     const autenticacionService = new authService();
     const respuesta = await autenticacionService.postCorreoUserVerify(correo)
     console.log('Test respuesta Email', respuesta)
+    if (respuesta){
     setPregunta(respuesta.preguntasecreta_users)
+    toast.current.show({severity: 'success', summary: 'Éxito', detail: '¡Correo Correcto!'});
+    } else {
+    toast.current.show({ severity: 'error', summary: 'Error', detail: '¡Correo incorrecto! Por favor, Revise la informacion e intentelo nuevamente.' });
+    }
+
     };
 
     const respuesaPreguntaSecreta = async() => {
     const autenticacionService = new authService();
     const respuesta = await autenticacionService.postResponseQuestionUserVerify(correo, resPregunta)
-    console.log('Test respuesta Pregunta secreta', respuesta)
+    if(respuesta){
+    toast.current.show({severity: 'success', summary: 'Éxito', detail: '¡Respuesta correcta!'});
     setResBackPregunta(respuesta.respuestapregunta_users)
+    } else {
+        toast.current.show({ severity: 'error', summary: 'Error', detail: '¡Respuesta incorrecta! Por favor, Revise la informacion e intentelo nuevamente.' });
+    }
     };
 
     const onSave = async() => {
@@ -90,6 +112,7 @@ const LoginPage = () => {
 
     return (
         <div className={containerClassName}>
+        <Toast ref={toast} />
             <div className="flex flex-column align-items-center justify-content-center">
                 <img src={`${contextPath}/layout/images/SHELBY LOGO -ai.svg`} alt="Sakai logo" className="mb-3 w-10rem flex-shrink-0"/>
                 <div style={{ borderRadius: '56px', padding: '0.3rem', background: 'linear-gradient(180deg, var(--primary-color) 10%, rgba(33, 150, 243, 0) 30%)' }}>
@@ -170,7 +193,10 @@ const LoginPage = () => {
                     </div>
                 )}
             </Dialog>
+        
         </div>
+        
+
     );
 };
 

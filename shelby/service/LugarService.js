@@ -7,13 +7,22 @@ export class LugarService {
         this.token = localStorage.getItem('token');
     }
 
-    async getLugaresByTipo(tipo) {
-        return await fetch(`http://${this.ipAddress}:10000/lugares/${tipo}`, {
+    async getLugaresByTipo(tipo) {  
+    try {
+        const response = await fetch(`http://${this.ipAddress}:10000/lugares/${tipo}`, {
             method: 'GET',
             headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${this.token}` }
-        })
-            .then((res) => res.json())
-            .catch((error) => console.log(error));
+        }).then((res) => res.json())
+
+        if (response.statusCode == 401) {
+            throw new Error('No se pudo procesar la solicitud. Por favor, inténtelo de nuevo 1.');
+        }
+ 
+     return response
+        } catch (error) {
+            console.log(error);
+            return error;
+        }
     }
 
     async crearLugar(data) {
@@ -40,6 +49,9 @@ export class LugarService {
                 body: JSON.stringify(data)
             });
             console.log('El código HTTP de la respuesta es:', response.status);
+            if (response.statusCode == 401) {
+            throw new Error('No se pudo procesar la solicitud. Por favor, inténtelo de nuevo.');
+        }
             return response;
         } catch (error) {
             console.log(error);
@@ -54,6 +66,9 @@ export class LugarService {
                 method: 'DELETE'
             });
             console.log('El código HTTP de la respuesta es:', response.status);
+            if (response.statusCode == 401) {
+            throw new Error('No se pudo procesar la solicitud. Por favor, inténtelo de nuevo.');
+        }
             return response;
         } catch (error) {
             console.log(error);

@@ -1,31 +1,22 @@
 import getConfig from 'next/config';
 import PrimeReact from 'primereact/api';
 import { Button } from 'primereact/button';
-import { InputSwitch } from 'primereact/inputswitch';
-import { RadioButton } from 'primereact/radiobutton';
 import { DataTable } from 'primereact/datatable';
 import { Sidebar } from 'primereact/sidebar';
-import { classNames } from 'primereact/utils';
 import { Card } from 'primereact/card';
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useContext, useEffect, useState, useRef } from 'react';
 import { LayoutContext } from './context/layoutcontext';
-import { DataView, DataViewLayoutOptions } from 'primereact/dataview';
-import { Dropdown } from 'primereact/dropdown';
 import { Rating } from 'primereact/rating';
-import { PickList } from 'primereact/picklist';
-import { OrderList } from 'primereact/orderlist';
-import { InputText } from 'primereact/inputtext';
-import { ProductService } from '../demo/service/ProductosServiceShelbyBurguer';
 import { CarritoService } from '../demo/service/CarritoService';
-import ListDemo from '../pages/pages/Productos/index';
 import { addToCart } from './addToCar';
 import { Column } from 'primereact/column';
 import { useRouter } from 'next/router';
+import { Toast } from 'primereact/toast';
 
 const AppConfig = (props) => {
     const [scales] = useState([12, 13, 14, 15, 16]);
     const { layoutConfig, setLayoutConfig, layoutState, setLayoutState } = useContext(LayoutContext);
-
+    const toast = useRef(null);
     const contextPath = getConfig().publicRuntimeConfig.contextPath;
     const router = useRouter();
 
@@ -33,7 +24,8 @@ const AppConfig = (props) => {
         setLayoutState((prevState) => ({ ...prevState, configSidebarVisible: true }));
         const carritoService = new CarritoService();
         const resProductos = await carritoService.getCarrito();
-        const resIngredientes = await carritoService.getCarritoIngrediente()
+        if(resProductos){
+        const resIngredientes = await carritoService.getCarritoIngrediente();
 
         const updatedProductos = resProductos.map((producto) => ({ ...producto, cantidad: 1 }));
         setDataViewValue(updatedProductos);
@@ -43,6 +35,9 @@ const AppConfig = (props) => {
             total += parseFloat(producto.costo_producto);
         });
         setTotal(total);
+        } else {
+        toast.current.show({ severity: 'error', summary: 'Error', detail: '¡Hubo un error! Por favor, Inicie sesion.' });
+        }
     };
 
     const onConfigSidebarHide = () => {
@@ -208,10 +203,7 @@ const AppConfig = (props) => {
 
         const carritoService = new CarritoService();
         const ipAddress = window.location.host.split(':')[0];
-        console.log('Este el el array de los productos', ProductoOrden);
-        console.log('Este el el array de los ingredientes', ingredienteViewValue);
         await carritoService.postProductosOrden(ProductoOrden, ingredienteViewValue);
-        console.log('Este el el array de los ingredientes');
         setOrderCount(orderCount + 1);
         setOrdenCreada(false);
         setOrden(null);
@@ -229,9 +221,9 @@ const AppConfig = (props) => {
         const IdOrdenService = new CarritoService();
         const idOrden = await IdOrdenService.postOrdenCarrito();
         setOrden(idOrden.orden_id);
-        console.log('id orden', idOrden.orden_id);
         setnumOrden(idOrden.numero_orden.toString());
         localStorage.setItem('myKey', JSON.stringify(idOrden));
+
     };
 
     const addProductToCarrito = (product) => {
@@ -254,9 +246,6 @@ const AppConfig = (props) => {
 
     const deleteProductoCarrito = async (producto) => {
         let _dataViewValue = dataViewValue.filter((val) => val.producto_id !== producto.producto_id);
-        console.log(dataViewValue);
-        console.log(_dataViewValue);
-        console.log(producto.producto_id);
         setDataViewValue(_dataViewValue);
         const carritoService = new CarritoService();
         await carritoService.DeleteProductoCarrito(producto.producto_id);
@@ -365,6 +354,7 @@ const dataviewListItem = (data) => {
     const dataviewGridItem = (data) => {
         return (
             <div className="col-12 lg:col-3">
+            
                 <div className="card m-3 border-1 surface-border">
                     <div className="flex flex-wrap gap-2 align-items-center justify-content-between mb-2">
                         <div className="flex align-items-center">
@@ -412,7 +402,7 @@ const dataviewListItem = (data) => {
             <button className="layout-config-button p-link" type="button" onClick={onConfigButtonClick}>
                 <i className="pi pi-shopping-cart"></i>
             </button>
-
+             <Toast ref={toast} />
             <Sidebar visible={layoutState.configSidebarVisible} onHide={onConfigSidebarHide} position="right" style={{ width: '38rem' }}>
                 <div className="grid list-demo">
                     <div className="col-12">
@@ -444,14 +434,14 @@ const dataviewListItem = (data) => {
 
                             {/*<DataView value={filteredValue || dataViewValue} layout={layout} rows={3} sortOrder={sortOrder} sortField={sortField} itemTemplate={dataviewListItem} style={{ height: '450px', overflowY: 'scroll' }} />*/}
 
-                            <div className="carrito-total text-right total-text  my-3">Total: {total}</div>
+                            <div className="carrito-total text-right total-text  my-3">Total:{total}$</div>
 
                             <div className="flex align-items-center justify-content-between my-3">
                                 <Button label="Limpiar" className="p-button-danger" onClick={() => deleteCarrito()} />
                                 <Button label="Continuar" onClick={() => continuarCarrito()} />
                             </div>
                             <div className="p-d-flex p-jc-center p-ai-center">
-                                <Button label="Crear orden" onClick={() => addCarrito()} />
+                                <Button label="Crear orden" onClick={() => addCarrito()} disabled={orden} />
                             </div>
                         </div>
                     </div>

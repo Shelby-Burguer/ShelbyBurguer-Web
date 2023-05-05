@@ -65,8 +65,13 @@ const Crud = () => {
     useEffect(async () => {
         const ingredienteService = new IngredienteService();
         const result = await ingredienteService.getIngredientes();
-        console.log('test', result);
+        if(result){
         setProducts(result);
+        } else {
+         toast.current.show({ severity: 'error', summary: 'Error', detail: '¡Hubo un error! Por favor, Inicie sesion.'});
+        }
+        
+        
     }, []);
 
     /* const formatCurrency = (value) => {
@@ -82,15 +87,21 @@ const Crud = () => {
     };
 
     const hideDialog = () => {
+        setExtraDropValue(null); 
+        setProteinaDropValue(null);
         setSubmitted(false);
         setProductDialog(false);
     };
 
     const hideDeleteProductDialog = () => {
+        setExtraDropValue(null); 
+        setProteinaDropValue(null);
         setDeleteProductDialog(false);
     };
 
     const hideDeleteProductsDialog = () => {
+        setExtraDropValue(null); 
+        setProteinaDropValue(null);
         setDeleteProductsDialog(false);
     };
 
@@ -126,6 +137,8 @@ const Crud = () => {
                     toast.current.show({ severity: 'success', summary: 'Successful', detail: 'Product Created', life: 3000 });
                 }
                 setProducts(_products);
+                setProteinaDropValue(null)
+                setExtraDropValue(null)
                 setProductDialog(false);
                 setProduct(emptyProduct);
             }

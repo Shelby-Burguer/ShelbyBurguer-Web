@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import getConfig from 'next/config';
 import { InputText } from 'primereact/inputtext';
 import { InputTextarea } from 'primereact/inputtextarea';
@@ -23,6 +23,7 @@ import Crud from '../../../shelby/utils/CrudFunctions';
 import { Toast } from 'primereact/toast';
 import { LugarService } from '../../../shelby/service/LugarService';
 import { useRouter } from 'next/router';
+import { OverlayPanel } from 'primereact/overlaypanel';
 
 export const InputDemo = () => {
     let emptyClient = {
@@ -41,7 +42,6 @@ export const InputDemo = () => {
 
     const crudObject = Crud();
     const router = useRouter();
-    const ipAddress = window.location.host.split(':')[0];
     let defaultCliente = crudObject.emptyElements.cliente;
     let defaultDropdown = 'V';
     let defaultLugar = crudObject.emptyElements.lugar;
@@ -135,7 +135,10 @@ export const InputDemo = () => {
     const [zonaDropdown, setZonaDropdown] = useState(null);
     const [zonalugares, setZonalugares] = useState(null);
     const [selectedZone, setSelectedZone] = useState(null);
-
+    const op4 = useRef(null);
+    const [ingredientesClient, setIngredientesClient] = useState(null);
+    const toast = useRef(null);
+    
     const currencyOptions = [
         { label: 'Bolívares', value: 'Bs.' },
         { label: 'Dólares', value: 'USD' },
@@ -167,6 +170,7 @@ export const InputDemo = () => {
     ];
 
     useEffect(async () => {
+    
         calculateTotal();
         _setElement(defaultLugar);
 
@@ -182,33 +186,56 @@ export const InputDemo = () => {
 
         await clienteService.getClientes().then((data) => setClientes(data));
         const cambioDia = await ordenService.getMontoDia();
+       
+
+
         await ordenService.getProductoOrden(idbumber).then((data) => {
+        if(data){
+            console.log('Calculo registro producto', data)
             const updatedProductos = data.map((producto) => ({ ...producto, cantidad: 1 }));
             setDataViewValue(updatedProductos);
             let total = 0;
             data.forEach((producto) => {
-                total += parseFloat(producto.costo_producto);
+                total = parseFloat(producto.costoTotal);
             });      
-            setTotal(total);
-            setTotalBs(total*parseFloat(cambioDia[0].monto))
+            if(cambioDia){
+                setTotal(total);
+                setTotalBs(total*parseFloat(cambioDia[0].monto))
+            
+            } else {
+            toast.current.show({ severity: 'error', summary: 'Error', detail: '¡Hubo un error! Ingrese la tasa cambio del dia.' });
+            }
+        } else {
+        toast.current.show({ severity: 'error', summary: 'Error', detail: '¡Hubo un error! Por favor, Inicie sesion o ingrese la orden' });
+        }
         });
 
         const lugarService = new LugarService();
         let data = await lugarService.getLugaresByTipo('zona');
         data = crudObject.isArray(data, 'cliente');
+        if(data){
         setZonalugares(data);
         // Convertir los datos al formato esperado por el Dropdown
         const dropdownData = data.map((item) => ({
             id: item.id_lugar,
             name: item.nombre_lugar
+        
         }));
         _setElements(data);
         setdropdownValues(dropdownData);
+        } else {
+        toast.current.show({ severity: 'error', summary: 'Error', detail: '¡Hubo un error! Por favor, Inicie sesion.' });
+
+        }
 
         const orden = await ordenService.getOrden(idbumber);
+        if(orden){
         countryService.getCountries().then((data) => setAutoValue(data), console.log('Info autoValue', data));
         nodeService.getTreeNodes().then((data) => setTreeSelectNodes(data));
         setidOrden(orden.numero_orden);
+        } else {
+        toast.current.show({ severity: 'error', summary: 'Error', detail: '¡Hubo un error! Por favor, ingrese la orden.' });
+        }
     }, []);
 
     const contextPath = getConfig().publicRuntimeConfig.contextPath;
@@ -259,9 +286,8 @@ export const InputDemo = () => {
         setCheckboxValue(selectedValue);
     };
 
-    const handleDireccionChange = (event) => {
-        const value = event.target.value;
-        setDireccion(value);
+    const handleDireccionChange = (e) => {
+        setDireccion(e.target.value);
     };
 
     const itemTemplate = (option) => {
@@ -295,7 +321,7 @@ export const InputDemo = () => {
         return (
             <>
                 <span className="p-column-title">Cantidad</span>
-                {rowData.costo_producto}
+                {(parseFloat(rowData.costo_producto)+parseFloat(rowData.costoIngredientes)).toString()}
             </>
         );
     };
@@ -308,14 +334,46 @@ export const InputDemo = () => {
             </>
         );
     };
+    const showproductosDetails = (event, producto) => {
+        op4.current.toggle(event);
+        setIngredientesClient(producto);
+    };
 
-    const actionBodyTemplate = (rowData) => {
+    const ingredienteProductoTemplate = (producto) => {
+        
         return (
             <>
-                <Button icon="pi pi-book" className="p-button-rounded p-button-success" onClick={() => deleteProductoCarrito(rowData)} />
+                <span className="p-column-title">Nombre</span>
+                {producto}
             </>
         );
     };
+
+const productosBodyTemplate = (rowData) => {
+     
+  return (
+    <>
+      <Button
+        type="button"
+        label=""
+        onClick={(e) => showproductosDetails(e, rowData.ingredientes)}
+        icon="pi pi-pencil"
+        className="p-button-rounded p-button-success mr-2"
+      />
+      <OverlayPanel
+        ref={op4}
+        appendTo={typeof window !== "undefined" ? document.body : null}
+        showCloseIcon
+        id="overlay_panel_productos"
+        style={{ width: "550px" }}
+      >
+        <DataTable value={ingredientesClient} responsiveLayout="scroll">
+          <Column header="Ingredientes" body={ingredienteProductoTemplate} sortable headerStyle={{ minWidth: "8rem" }} />
+        </DataTable>
+      </OverlayPanel>
+    </>
+  );
+};
 
 const handleDropdownChange = async(e) => {
   const selectedValue = e.value;
@@ -324,8 +382,8 @@ const handleDropdownChange = async(e) => {
   const oldSelectedZone = selectedZone;
   setSelectedZone(selectedZona); // Actualiza la zona seleccionada
 
-  let TotalZone = parseInt(total);
-
+  let TotalZone = parseFloat(total);
+    console.log('TotalZone',TotalZone )
   if (oldSelectedZone !== null) { // Si ya había una zona seleccionada previamente
     TotalZone -= oldSelectedZone.precio_lugar; // Resta su precio del total
   }
@@ -339,41 +397,24 @@ const handleDropdownChange = async(e) => {
   setZonaDropdown(selectedValue);
 }
 
-
-    const DeliveryOptions = ({ direccion, handleDireccionChange, dropdownValue, handleDropdownChange, dropdownValues }) => {
-
-        return (
-            <div>
-                <div className="p-field">
-                    <label htmlFor="direccion">Dirección:</label>
-                    <InputText id="direccion" value={direccion} onChange={handleDireccionChange} />
-                </div>
-                <div className="p-field">
-                    <label htmlFor="telefono">Zona</label>
-                    <Dropdown value={dropdownValue} onChange={handleDropdownChange} options={dropdownValues} optionLabel="name" placeholder="Select" />
-                </div>
-                <div className="flex align-items-center justify-content-between my-3">
-                    <Button label="Nueva Zona" onClick={() => crudObject.openNew('lugar')} />
-                </div>
-            </div>
-        );
-    };
-
     const procesarOrden = async () => {
         let tipo_Orden;
         let NumMesa = null;
         let zonaSelected = null;
         if (opciones === 'delivery') {
             tipo_Orden = opciones;
-            console.log('Vamo a ver', dropdownValue);
+            if(dropdownValue){
             zonaSelected = dropdownValue.id;
+            } else {
+            toast.current.show({ severity: 'error', summary: 'Error', detail: '¡Hubo un error! Ingrese la zona de la orden' });
+            }
+
         } else if (mostradorOptions === 'Comer Aqui') {
             NumMesa = tableNumber;
             tipo_Orden = mostradorOptions;
         } else {
             tipo_Orden = mostradorOptions;
         }
-
         console.log('test', discount);
         console.log('opcionCambio', opciones);
         console.log('Mostrar orden', mostradorOptions);
@@ -381,7 +422,13 @@ const handleDropdownChange = async(e) => {
         const clienteService = new ClienteService();
         const clienteSelect = await clienteService.getOneClientes(client.cedula);
         const ordenService = new OrdenService();
+        if(orderId && tipo_Orden ===  'Comer Aqui' && clienteSelect.id_cliente && total){
         ordenService.getUpdateOrden(orderId, discount, tipo_Orden, clienteSelect.id_cliente, NumMesa, zonaSelected, direccion, total);
+        const userNameInfo = localStorage.getItem('nombre_user');
+        const userRoleInfo = localStorage.getItem('nombre_role');
+
+       
+        await ordenService.postAccionUser('Creacion de orden', userNameInfo, userRoleInfo, orderId);
         setWriteValue(null);
         setidOrden('');
         setTotal('0');
@@ -393,8 +440,34 @@ const handleDropdownChange = async(e) => {
         setClient(emptyClient);
         setMostradorOptions('');
         setOpciones('');
+        const ipAddress = window.location.host.split(':')[0];
         localStorage.setItem('myKey', JSON.stringify(null));
         router.push(`http://${ipAddress}:3000/pages/Ordenes/gestion/`);
+        } else if(orderId && tipo_Orden && clienteSelect.id_cliente && total && zonaSelected && direccion){
+             ordenService.getUpdateOrden(orderId, discount, tipo_Orden, clienteSelect.id_cliente, NumMesa, zonaSelected, direccion, total);
+            const userNameInfo = localStorage.getItem('nombre_user');
+            const userRoleInfo = localStorage.getItem('nombre_role');
+
+        
+            await ordenService.postAccionUser('Creacion de orden', userNameInfo, userRoleInfo, orderId);
+            setWriteValue(null);
+            setidOrden('');
+            setTotal('0');
+            setOrderId('');
+            setDataViewValue([]);
+            setDataViewValue(null);
+            setDireccion('');
+            setdiscount('');
+            setClient(emptyClient);
+            setMostradorOptions('');
+            setOpciones('');
+            const ipAddress = window.location.host.split(':')[0];
+            localStorage.setItem('myKey', JSON.stringify(null));
+            router.push(`http://${ipAddress}:3000/pages/Ordenes/gestion/`);
+        } else {
+         toast.current.show({ severity: 'error', summary: 'Error', detail: '¡Hubo un error! Revise la informacion del cliente o tipo de orden' });
+        }
+
     };
 
     const deleteOrder = async () => {
@@ -556,6 +629,7 @@ const handleDropdownChange = async(e) => {
         );
     };
 
+
     const handleOpcionesChange = async(event) => {
         const ordenService = new OrdenService();
         const cambioDia = await ordenService.getMontoDia();
@@ -564,7 +638,7 @@ const handleDropdownChange = async(e) => {
             setDataViewValue(updatedProductos);
             let total = 0;
             data.forEach((producto) => {
-                total += parseFloat(producto.costo_producto);
+                total = parseFloat(producto.costoTotal);
             });
             setTotal(total);
             setTotalBs(total*parseFloat(cambioDia[0].monto))
@@ -604,11 +678,14 @@ const handleDropdownChange = async(e) => {
 
     const fechaActual = new Date().toLocaleDateString();
 
+
+
     return (
         <div className="grid p-fluid">
             <div className="col-12 md:col-6">
                 <div className="card">
                     <Toast ref={_toast} />
+                    <Toast ref={toast} />
                     <h5>Cliente</h5>
                     <AutoComplete
                         placeholder="Cedula"
@@ -671,7 +748,20 @@ const handleDropdownChange = async(e) => {
                         </div>
                     </div>
                     {opciones === 'mostrador' && <MostradorOptions mostradorOptions={mostradorOptions} handleMostradorOptionsChange={handleMostradorOptionsChange} tableNumber={tableNumber} setTableNumber={setTableNumber} />}
-                    {opciones === 'delivery' && <DeliveryOptions direccion={direccion} handleDireccionChange={handleDireccionChange} dropdownValue={dropdownValue} handleDropdownChange={handleDropdownChange} dropdownValues={dropdownValues} />}
+                    {opciones === 'delivery' && 
+                    <div>
+                    <div className="p-field">
+                        <label htmlFor="direccion">Dirección:</label>
+                    <InputText id="direccion" value={direccion} onChange={(e) => setDireccion(e.target.value)} />
+                    </div>
+                    <div className="p-field">
+                        <label htmlFor="zonal">Zona</label>
+                        <Dropdown value={dropdownValue} onChange={handleDropdownChange} options={dropdownValues} optionLabel="name" placeholder="Select" />
+                    </div>
+                    <div className="flex align-items-center justify-content-between my-3">
+                        <Button label="Nueva Zona" onClick={() => crudObject.openNew('lugar')} />
+                    </div>
+                    </div>}
                 </div>
             </div>
             <div className="col-12 md:col-6">
@@ -699,15 +789,11 @@ const handleDropdownChange = async(e) => {
                             <Column field="nombre" header="Nombre" body={nombreBodyTemplate} headerStyle={{ minWidth: '0rem' }}></Column>
                             <Column field="cantidad" header="Cantidad" body={cantidadBodyTemplate} headerStyle={{ minWidth: '0rem' }}></Column>
                             <Column field="precio" header="Precio" body={precioBodyTemplate} headerStyle={{ minWidth: '0rem' }}></Column>
-                            <Column body={actionBodyTemplate}></Column>
+                            <Column body={productosBodyTemplate}></Column>
                         </DataTable>
                     </div>
                     <div>
-                        <div className="my-2">
-                            <label htmlFor="descuento">Descuento:</label>
-                            <InputText id="descuento" value={discount} onChange={(e) => setdiscount(e.target.value)} />
-                        </div>
-                        <div className="carrito-total text-right total-text my-1">Total: {total}$</div>
+                        <div className="carrito-total text-right total-text my-3">Total: {total}$</div>
                         <div className="carrito-total text-right total-text">Bs. {totalBs}</div>
                     </div>
                     <div className="flex align-items-center justify-content-between my-3">
