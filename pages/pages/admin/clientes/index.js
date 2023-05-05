@@ -6,7 +6,7 @@ import { InputText } from 'primereact/inputtext';
 import { Toast } from 'primereact/toast';
 import { Toolbar } from 'primereact/toolbar';
 import { classNames } from 'primereact/utils';
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import Crud from '../../../../shelby/utils/CrudFunctions';
 import { ClienteService } from '../../../../shelby/service/ClienteService';
 
@@ -32,7 +32,7 @@ const ClientePage = () => {
     let _selectedElements = crudObject.selectedElements;
     let _toast = crudObject.toast;
     let _stringBody = crudObject.stringBodyTemplate;
-
+    const toast = useRef(null);
     const elementName = 'cliente';
 
     const saveCliente = async () => {
@@ -116,9 +116,13 @@ const ClientePage = () => {
         const fetchData = async () => {
             const clienteService = new ClienteService();
             let data = await clienteService.getClientes();
+            if(data){
             data = crudObject.isArray(data, elementName);
             _setElements(data);
             console.log(data);
+            } else {
+            toast.current.show({ severity: 'error', summary: 'Error', detail: '¡Hubo un error! Por favor, Inicie sesion.' });
+            }
         };
         fetchData();
     }, []);
@@ -128,6 +132,7 @@ const ClientePage = () => {
             <div className="col-12">
                 <div className="card">
                     <Toast ref={_toast} />
+                    <Toast ref={toast} />
                     <Toolbar className="mb-4" left={() => crudObject.leftToolbarTemplate(elementName)} right={crudObject.rightToolbarTemplate}></Toolbar>
 
                     <DataTable

@@ -18,6 +18,7 @@ import { Toolbar } from 'primereact/toolbar';
 import { Dialog } from 'primereact/dialog';
 import getConfig from 'next/config';
 import { Tag } from 'primereact/tag';
+import { Toast } from 'primereact/toast';
 
 const ListDemo = (props) => {
     let emptyProduct = {
@@ -27,7 +28,8 @@ const ListDemo = (props) => {
         costo: '',
         nombre_imagen: '',
         cantidad: '', 
-        precio: ''
+        precio: '',
+        tamano_producto: ''
     };
 
     let emptyCantidad = {
@@ -75,9 +77,19 @@ const ListDemo = (props) => {
     useEffect(() => {
         const productService = new ProductService();
         const productoServicenew = new NewProductoService();
-        productoServicenew.getProductos().then((data) => {setDataViewValue(data), console.log('Entra el producto',data)});
+        
+        productoServicenew.getProductos().then((data) => {
+        console.log('Test que es', data)
+         if(data) {
+         setDataViewValue(data) 
+        } else{
+        toast.current.show({ severity: 'error', summary: 'Error', detail: '¡Hubo un error! Por favor, Inicie sesion.' });
+        }
+         });
+        
+
+
         productService.getTypeProducts().then((data) => setTipoProducto(data));
-        productoServicenew.getProductos();
         setGlobalFilterValue('');
 
     }, []);
@@ -185,6 +197,7 @@ const ListDemo = (props) => {
                     costo: '',
                     imagen: '',
                     proteina: null,
+                    tamano_producto: '',
                     proteina: arrProteinas,
                     ingrediente: arrIngredientes
                 };
@@ -194,6 +207,7 @@ const ListDemo = (props) => {
                 NewProduct.tipo = dropdownValue.name;
                 NewProduct.costo = response.costo;
                 NewProduct.imagen = response.imagen;
+                 NewProduct.tamano_producto = response.tamano_producto;
                 NewProduct.proteina = arrProteinas;
                 NewProduct.ingrediente = arrIngredientes;
 
@@ -396,13 +410,13 @@ const ListDemo = (props) => {
                 </div>
                 {/*<span className="font-bold text-900">${item.price}</span>*/}
                 <div className="flex-1 flex flex-column gap-2">
-                    <span className="font-bold"> Cantidad</span>
+                    <span className="font-bold">Cantidad</span>
                     <div className="col-12 mb-0 lg:col-11 lg:mb-0">
                         <InputText id="cantidad" value={item.cantidad} onChange={(e) => onInputChangePickList(e, 'cantidad', item.id)} required autoFocus className={classNames({ 'p-invalid': submitted && !item.cantidad })} />
                     </div>
-                    <span className="font-bold"> Precio</span>
+                    <span className="font-bold">Precio</span>
                     <div className="col-12 mb-0 lg:col-11 lg:mb-0">
-                        <InputText id="precio" value={item.precio} onChange={(e) => onInputChangePickList(e, 'precio', item.id)} required autoFocus className={classNames({ 'p-invalid': submitted && !item.precio })} />
+                        <InputText id="precio" value={item.precio} onChange={(e) => onInputChangePickList(e, 'precio', item.id)} required tabIndex="2" className={classNames({ 'p-invalid': submitted && !item.precio})} />
                     </div>
                 </div>
             </div>
@@ -442,6 +456,10 @@ const ListDemo = (props) => {
             });
         }
     };
+    
+
+
+
 
     const onInputChange = (e, name) => {
         const val = (e.target && e.target.value) || '';
@@ -670,9 +688,7 @@ const dataviewGridItem = (data) => {
                         <div className="text-2xl font-bold">{data.nombre}</div>
                         <div label="Text" className="mb-3"></div>
                         <h7>Tamaño:</h7>
-             
-                        <h7>Bebida</h7>
-
+                        <div label="Text" className="mb-3">{data.tamano_producto}</div>                       
 
                         <span className="text-2xl font-semibold">${data.costo}</span>
                     </div>
@@ -682,77 +698,10 @@ const dataviewGridItem = (data) => {
                         <Button label="Agregar" icon="pi pi-shopping-cart" onClick={() => addCarrito(data)} />
                     </div>
                 </div>
-                <Dialog visible={carritoDialog} style={{ width: '800px' }} header="Modificaciones" modal className="p-fluid" footer={carritotDialogFooter} onHide={carritoHideDialog}>
-                    {<img src={`${contextPath}/demo/images/product/16891a7a-52f8-4bc6-8176-00a5ae0b1c0a.jpg`} alt={product.nombre_imagen} width="150" className="mt-0 mx-auto mb-5 block shadow-2" />}
-                    <div className="field">
-                        <h6 htmlFor="nombre">Nombre</h6>
-                        <InputText id="nombre" value={product.nombre} onChange={(e) => onInputChange(e, 'nombre')} required autoFocus className={classNames({ 'p-invalid': submitted && !product.nombre })} />
-                        {submitted && !product.nombre && <small className="p-invalid">Name is required.</small>}
-                    </div>
-
-                    <div className="formgrid grid">
-                        <div className="field col">
-                            <h6>Tipo de producto</h6>
-                            <Dropdown value={dropdownValue} onChange={(e) => setDropdownValue(e.value)} options={tipoProducto} optionLabel="name" placeholder="Select" />
-                        </div>
-                        <div className="field col">
-                            <h6 htmlFor="Costo">Costo</h6>
-                            <InputText id="costo" value={product.costo} onChange={(e) => onInputChange(e, 'costo')} required autoFocus className={classNames({ 'p-invalid': submitted && !product.costo })} />
-                            {submitted && !product.costo && <small className="p-invalid">Name is required.</small>}
-                        </div>
-                    </div>
-                    <div className="formgrid grid">
-                        <div className="field col">
-                            <h6>Seleccione un ingrediente extra</h6>
-                            <Dropdown value={dropdownValue} onChange={(e) => setDropdownValue(e.value)} options={tipoProducto} optionLabel="name" placeholder="Select" />
-                        </div>
-
-                    </div>
-                    <div className="col-12 xl:col-13">
-                        <div className="card">
-                            <h6>Cambio de ingrediente</h6>
-                            <PickList
-                                source={picklistSourceValue}
-                                target={picklistTargetValue}
-                                sourceHeader="Ingredientes"
-                                targetHeader="Ingrediente seleccionado"
-                                itemTemplate={itemTemplatePickList}
-                                onChange={(e) => {
-                                    setPicklistSourceValue(e.source);
-                                    setPicklistTargetValue(e.target);
-                                }}
-                                sourceStyle={{ height: '200px' }}
-                                targetStyle={{ height: '200px' }}
-                                filter
-                                filterBy="name"
-                            ></PickList>
-                        </div>
-                    </div>
-                                    <div className="col-12 xl:col-13">
-                    <div className="card">
-                        <h6>Seleccione el ingrediente Extra</h6>
-                        <PickList
-                            source={picklistExtraSourceValue}
-                            target={picklistExtraTargetValue}
-                            sourceHeader="Ingredientes Extra"
-                            targetHeader="Ingrediente Extra Seleccionado"
-                            itemTemplate={itemTemplateExtraPickList}
-                            onChange={(e) => {
-                            setPicklistExtraTargetValue(e.target);
-                            setPicklistExtraSourceValue(e.source);
-                            }}
-                            sourceStyle={{ height: '200px' }}
-                            targetStyle={{ height: '200px' }}
-                            filter
-                            filterBy="name"
-                        ></PickList>
-                    </div>
-                </div>
-                </Dialog>
             </div>
             );
         } else if (data.tipo === "Papas") {
-
+        console.log('Test tamaño', data)
         return (
             <div className="col-12 lg:col-4">
                 <div className="card m-3 border-1 surface-borders">
@@ -767,8 +716,7 @@ const dataviewGridItem = (data) => {
                         <div className="text-2xl font-bold">{data.nombre}</div>
                         <div label="Text" className="mb-3"></div>
                         <h7>Tamaño:</h7>
-                        <div className="mb-3 ">{arrProteinas.toString()}</div>
-                        <h7>Ingredientes extras:</h7>
+                        <div label="Text" className="mb-3">{data.tamano_producto}</div>      
 
 
                         <span className="text-2xl font-semibold">${data.costo}</span>
@@ -779,77 +727,10 @@ const dataviewGridItem = (data) => {
                         <Button label="Agregar" icon="pi pi-shopping-cart" onClick={() => addCarrito(data)} />
                     </div>
                 </div>
-                <Dialog visible={carritoDialog} style={{ width: '800px' }} header="Modificaciones" modal className="p-fluid" footer={carritotDialogFooter} onHide={carritoHideDialog}>
-                    {<img src={`${contextPath}/demo/images/product/16891a7a-52f8-4bc6-8176-00a5ae0b1c0a.jpg`} alt={product.nombre_imagen} width="150" className="mt-0 mx-auto mb-5 block shadow-2" />}
-                    <div className="field">
-                        <h6 htmlFor="nombre">Nombre</h6>
-                        <InputText id="nombre" value={product.nombre} onChange={(e) => onInputChange(e, 'nombre')} required autoFocus className={classNames({ 'p-invalid': submitted && !product.nombre })} />
-                        {submitted && !product.nombre && <small className="p-invalid">Name is required.</small>}
-                    </div>
-
-                    <div className="formgrid grid">
-                        <div className="field col">
-                            <h6>Tipo de producto</h6>
-                            <Dropdown value={dropdownValue} onChange={(e) => setDropdownValue(e.value)} options={tipoProducto} optionLabel="name" placeholder="Select" />
-                        </div>
-                        <div className="field col">
-                            <h6 htmlFor="Costo">Costo</h6>
-                            <InputText id="costo" value={product.costo} onChange={(e) => onInputChange(e, 'costo')} required autoFocus className={classNames({ 'p-invalid': submitted && !product.costo })} />
-                            {submitted && !product.costo && <small className="p-invalid">Name is required.</small>}
-                        </div>
-                    </div>
-                    <div className="formgrid grid">
-                        <div className="field col">
-                            <h6>Seleccione un ingrediente extra</h6>
-                            <Dropdown value={dropdownValue} onChange={(e) => setDropdownValue(e.value)} options={tipoProducto} optionLabel="name" placeholder="Select" />
-                        </div>
-
-                    </div>
-                    <div className="col-12 xl:col-13">
-                        <div className="card">
-                            <h6>Cambio de ingrediente</h6>
-                            <PickList
-                                source={picklistSourceValue}
-                                target={picklistTargetValue}
-                                sourceHeader="Ingredientes"
-                                targetHeader="Ingrediente seleccionado"
-                                itemTemplate={itemTemplatePickList}
-                                onChange={(e) => {
-                                    setPicklistSourceValue(e.source);
-                                    setPicklistTargetValue(e.target);
-                                }}
-                                sourceStyle={{ height: '200px' }}
-                                targetStyle={{ height: '200px' }}
-                                filter
-                                filterBy="name"
-                            ></PickList>
-                        </div>
-                    </div>
-                                    <div className="col-12 xl:col-13">
-                    <div className="card">
-                        <h6>Seleccione el ingrediente Extra</h6>
-                        <PickList
-                            source={picklistExtraSourceValue}
-                            target={picklistExtraTargetValue}
-                            sourceHeader="Ingredientes Extra"
-                            targetHeader="Ingrediente Extra Seleccionado"
-                            itemTemplate={itemTemplateExtraPickList}
-                            onChange={(e) => {
-                            setPicklistExtraTargetValue(e.target);
-                            setPicklistExtraSourceValue(e.source);
-                            }}
-                            sourceStyle={{ height: '200px' }}
-                            targetStyle={{ height: '200px' }}
-                            filter
-                            filterBy="name"
-                        ></PickList>
-                    </div>
-                </div>
-                </Dialog>
             </div>
             );
         } else {
-                    return (
+            return (
             <div className="col-12 lg:col-4">
                 <div className="card m-3 border-1 surface-borders">
                     <div className="flex flex-wrap gap-2 align-items-center justify-content-between mb-2">
@@ -882,13 +763,17 @@ const dataviewGridItem = (data) => {
                     </div>
                 </div>
                 <Dialog visible={carritoDialog} style={{ width: '800px' }} header="Modificaciones" modal className="p-fluid" footer={carritotDialogFooter} onHide={carritoHideDialog}>
-                    {<img src={`${contextPath}/demo/images/product/16891a7a-52f8-4bc6-8176-00a5ae0b1c0a.jpg`} alt={product.nombre_imagen} width="150" className="mt-0 mx-auto mb-5 block shadow-2" />}
+                    {(dropdownValue && dropdownValue.name === 'Hamburguesa' || dropdownValue && dropdownValue.name === 'Perro'|| dropdownValue && dropdownValue.name === 'Pepito') && (
+                    <img src={`${contextPath}/demo/images/product/depositphotos_387255148-stock-photo-summer-bbq-food-table.jpg`} alt={product.nombre_imagen} width="150" className="mt-0 mx-auto mb-5 block shadow-2" />)}
+                    {(dropdownValue && dropdownValue.name === 'Papas') && (
+                    <img src={`${contextPath}/demo/images/product/16891a7a-52f8-4bc6-8176-00a5ae0b1c0a.jpg`} alt={product.nombre_imagen} width="150" className="mt-0 mx-auto mb-5 block shadow-2" />)}
+                    {(dropdownValue && dropdownValue.name === 'Bebida') && (
+                    <img src={`${contextPath}/demo/images/product/Papas_fritas_perfectas.jpg`} alt={product.nombre_imagen} width="150" className="mt-0 mx-auto mb-5 block shadow-2" />)}
                     <div className="field">
                         <h6 htmlFor="nombre">Nombre</h6>
                         <InputText id="nombre" value={product.nombre} onChange={(e) => onInputChange(e, 'nombre')} required autoFocus className={classNames({ 'p-invalid': submitted && !product.nombre })} />
                         {submitted && !product.nombre && <small className="p-invalid">Name is required.</small>}
                     </div>
-
                     <div className="formgrid grid">
                         <div className="field col">
                             <h6>Tipo de producto</h6>
@@ -900,13 +785,7 @@ const dataviewGridItem = (data) => {
                             {submitted && !product.costo && <small className="p-invalid">Name is required.</small>}
                         </div>
                     </div>
-                    <div className="formgrid grid">
-                        <div className="field col">
-                            <h6>Seleccione un ingrediente extra</h6>
-                            <Dropdown value={dropdownValue} onChange={(e) => setDropdownValue(e.value)} options={tipoProducto} optionLabel="name" placeholder="Select" />
-                        </div>
-
-                    </div>
+                    {(dropdownValue && dropdownValue.name === 'Hamburguesa' || dropdownValue && dropdownValue.name === 'Perro'|| dropdownValue && dropdownValue.name === 'Pepito') && (
                     <div className="col-12 xl:col-13">
                         <div className="card">
                             <h6>Cambio de ingrediente</h6>
@@ -926,8 +805,9 @@ const dataviewGridItem = (data) => {
                                 filterBy="name"
                             ></PickList>
                         </div>
-                    </div>
-                                    <div className="col-12 xl:col-13">
+                    </div>)}
+                    {(dropdownValue && dropdownValue.name === 'Hamburguesa' || dropdownValue && dropdownValue.name === 'Perro'|| dropdownValue && dropdownValue.name === 'Pepito' || dropdownValue && dropdownValue.name === 'Papas') && (
+                    <div className="col-12 xl:col-13">
                     <div className="card">
                         <h6>Seleccione el ingrediente Extra</h6>
                         <PickList
@@ -946,12 +826,11 @@ const dataviewGridItem = (data) => {
                             filterBy="name"
                         ></PickList>
                     </div>
-                </div>
+                </div>)}
                 </Dialog>
             </div>
             );
         }
-
 };
 
     const itemTemplate = (data, layout) => {
@@ -984,6 +863,7 @@ const dataviewGridItem = (data) => {
 
     return (
         <div className="grid list-demo">
+        <Toast ref={toast} />
             <div className="col-12">
                 <div className="card">
                     <h5>Productos</h5>
@@ -1012,8 +892,8 @@ const dataviewGridItem = (data) => {
                 <div className="formgrid grid">
                     <div className="field col">
                         <h6 htmlFor="costo">Tamaño</h6>
-                        <InputText id="costo" value={product.costo} onChange={(e) => onInputChange(e, 'costo')} required autoFocus className={classNames({ 'p-invalid': submitted && !product.costo })} />
-                        {submitted && !product.costo && <small className="p-invalid">Name is required.</small>}
+                        <InputText id="costo" value={product.tamano_producto} onChange={(e) => onInputChange(e, 'tamano_producto')} required autoFocus className={classNames({ 'p-invalid': submitted && !product.tamano_producto })} />
+                        {submitted && !product.tamano_producto && <small className="p-invalid">Tamaño is required.</small>}
                     </div>
                 </div>)}
                 <div className="card">

@@ -57,6 +57,7 @@ export class CarritoService {
     }
 
     async getCarrito() {
+    try {
         let resOrdenCarrito;
 
         const responseProducto = fetch(`http://${this.ipAddress}:10000/carrito/all`, {
@@ -64,11 +65,21 @@ export class CarritoService {
             method: 'GET'
         }).then((res) => res.json());
 
-        await responseProducto.then((data) => (resOrdenCarrito = data));
+
+        await responseProducto.then((data) => {  
+        if (data.statusCode == 401) {
+            throw new Error('No se pudo procesar la solicitud. Por favor, inténtelo de nuevo.');
+        }
+         (resOrdenCarrito = data)
+        });
 
         console.log('ResCarrito', resOrdenCarrito);
 
         return resOrdenCarrito;
+    } catch (error) {
+    console.error(error);
+    return null;
+    }
     }
 
 

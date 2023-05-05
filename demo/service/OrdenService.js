@@ -8,6 +8,7 @@ export class OrdenService {
     }
 
     async getProductoOrden(id) {
+    try {
         let resOrdenCarrito;
 
         const responseProducto = fetch(`http://${this.ipAddress}:10000/orden/all/` + id, {
@@ -15,14 +16,22 @@ export class OrdenService {
             method: 'GET'
         }).then((res) => res.json());
 
-        await responseProducto.then((data) => (resOrdenCarrito = data));
-      
-        console.log('ResCarrito', resOrdenCarrito);
+        await responseProducto.then((data) => {   console.log('ResCarrito', data);
+        if (data.statusCode == 401) {
+            throw new Error('No se pudo procesar la solicitud. Por favor, inténtelo de nuevo.');
+        }
+         (resOrdenCarrito = data)
+        });
 
         return resOrdenCarrito;
+    } catch (error) {
+    console.error(error);
+    return null;
+    }
     }
 
     async getOrden(id) {
+    try {
         let resOrden;
 
         const responseProducto = fetch(`http://${this.ipAddress}:10000/orden/one/` + id, {
@@ -30,11 +39,19 @@ export class OrdenService {
             method: 'GET'
         }).then((res) => res.json());
 
-        await responseProducto.then((data) => (resOrden = data));
-
+        await responseProducto.then((data) => {   
+        if (data.statusCode == 401) {
+            throw new Error('No se pudo procesar la solicitud. Por favor, inténtelo de nuevo.');
+        }
+          (resOrden = data)
+        });
         console.log('ResCarrito', resOrden);
 
         return resOrden;
+    } catch (error) {
+    console.error(error);
+    return null;
+    }
     }
 
     async getUpdateOrden(id, descuento, tipo_orden, clienteId, numMesa, lugarId, direccion, total) {
@@ -69,6 +86,7 @@ export class OrdenService {
     }
 
     async getAllOrden() {
+    try {
         let resOrdenCarrito;
 
         const responseProducto = fetch(`http://${this.ipAddress}:10000/orden/all`, {
@@ -76,27 +94,44 @@ export class OrdenService {
             method: 'GET'
         }).then((res) => res.json());
 
-        await responseProducto.then((data) => (resOrdenCarrito = data));
+        await responseProducto.then((data) => {  
+        if (data.statusCode == 401) {
+            throw new Error('No se pudo procesar la solicitud. Por favor, inténtelo de nuevo.');
+        }
+         (resOrdenCarrito = data)
+        });
 
         console.log('ResALLOrden', resOrdenCarrito);
 
         return resOrdenCarrito;
+    } catch (error) {
+    console.error(error);
+    return null;
+    }
     }
 
     async getAllEstados() {
-
+    try {
         let resOrdenCarrito;
 
         const responseProducto = fetch(`http://${this.ipAddress}:10000/orden/estados/All`, {
             headers: { 'Cache-Control': 'no-cache', 'Authorization': `Bearer ${this.token}` },
             method: 'GET'
         }).then((res) => res.json());
-
-        await responseProducto.then((data) => (resOrdenCarrito = data));
-
+        
+        await responseProducto.then((data) => {  
+        if (data.statusCode == 401) {
+            throw new Error('No se pudo procesar la solicitud. Por favor, inténtelo de nuevo.');
+        }
+         (resOrdenCarrito = data)
+        });
         console.log('ResALLOrden', resOrdenCarrito);
 
         return resOrdenCarrito;
+    } catch (error) {
+    console.error(error);
+    return null;
+    }
     }
 
         async postEstadoOrden(idEstado, idOrden) {

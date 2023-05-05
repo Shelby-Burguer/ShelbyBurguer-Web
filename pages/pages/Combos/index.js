@@ -4,9 +4,7 @@ import { Button } from 'primereact/button';
 import { Dropdown } from 'primereact/dropdown';
 import { Rating } from 'primereact/rating';
 import { PickList } from 'primereact/picklist';
-import { OrderList } from 'primereact/orderlist';
 import { classNames } from 'primereact/utils';
-import { Tooltip } from 'primereact/tooltip';
 import { FileUpload } from 'primereact/fileupload';
 import { ProductService } from '../../../demo/service/ProductosServiceShelbyBurguer';
 import { NewComboService } from '../../../demo/service/ComboService';
@@ -16,8 +14,6 @@ import { Dialog } from 'primereact/dialog';
 import { Toast } from 'primereact/toast';
 import { DataTable } from 'primereact/datatable';
 import { Column } from 'primereact/column';
-import { InputTextarea } from 'primereact/inputtextarea';
-import { RadioButton } from 'primereact/radiobutton';
 import { NewProductoService } from '../../../demo/service/ProductoService';
 import getConfig from 'next/config';
 
@@ -73,7 +69,7 @@ const ListDemo = () => {
     const dt = useRef(null);
     const [selectedProducts, setSelectedProducts] = useState(null);
     //const [source, setSource] = useState([]);
-    // const [target, setTarget] = useState([]);
+    //const [target, setTarget] = useState([]);
 
     const sortOptions = [
         { label: 'Price High to Low', value: '!price' },
@@ -90,8 +86,19 @@ const ListDemo = () => {
     useEffect(() => {
         const productService = new ProductService();
         const comboService = new NewComboService();
-        comboService.getCombos().then((data) => setDataViewValue(data));
-        //productService.getProducts().then((data) => setDataViewValue(data));
+        comboService.getCombos().then((data) => {
+        console.log('quelqlq aqui', data)
+        if(data){
+        setDataViewValue(data)
+        } else{
+        toast.current.show({ severity: 'error', summary: 'Error', detail: '¡Hubo un error! Por favor, Inicie sesion.' });
+        }
+        
+        }     
+                
+        );
+        console.log('quelqlq aet aqui',comboService)
+        
         productService.getProducts().then((data) => setProducts(data));
         //productService.getProducts().then((data) => setSource(data));
         setGlobalFilterValue('');
@@ -180,14 +187,14 @@ const ListDemo = () => {
 
     const productDialogFooter = (
         <>
-            <Button label="Cancel" icon="pi pi-times" className="p-button-text" onClick={hideDialog} />
+            <Button label="Cancel" icon="pi pi-times" className="p-button-text" onClick={() => hideDialog()} />
             <Button label="Save" icon="pi pi-check" className="p-button-text" onClick={saveProduct} />
         </>
     );
 
     const deleteProductDialogFooter = (
         <>
-            <Button label="No" icon="pi pi-times" className="p-button-text" onClick={hideDeleteProductDialog} />
+            <Button label="No" icon="pi pi-times" className="p-button-text" onClick={() => hideDeleteProductDialog()} />
             <Button label="Yes" icon="pi pi-check" className="p-button-text" onClick={deleteProduct} />
         </>
     );
@@ -557,6 +564,7 @@ const ListDemo = () => {
 
     return (
         <div className="grid list-demo">
+         <Toast ref={toast} />
             <div className="col-12">
                 <div className="card">
                     <h5>Combos</h5>

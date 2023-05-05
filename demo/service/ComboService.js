@@ -8,6 +8,7 @@ export class NewComboService {
     }
 
     async getCombos() {
+       try {
         let resProduct;
 
         const responseProducto = fetch(`http://${this.ipAddress}:10000/combo/all`, {
@@ -15,9 +16,20 @@ export class NewComboService {
             method: 'GET'
         }).then((res) => res.json());
 
-        await responseProducto.then((data) => (resProduct = data));
-
+        await responseProducto.then((data) => {   
+      
+        if (data.statusCode == 401) {
+        console.log('que es entra?')  
+            throw new Error('No se pudo procesar la solicitud. Por favor, inténtelo de nuevo.');
+        }
+        (resProduct = data)
+        });
+    
         return resProduct;
+    } catch (error) {
+    console.error(error);
+    return null;
+    }
     }
 
     async getProductos() {

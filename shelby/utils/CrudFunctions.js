@@ -74,10 +74,16 @@ const Crud = () => {
     };
 
     const formatCurrency = (value) => {
-        return value.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
+      if (value === undefined) {
+
+      }else{
+       return value.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
+      }
+       
     };
 
     const openNew = (type) => {
+    console.log('Aqui si entra')
     setElement(emptyElements[type]);
     setSubmitted(false);
     setElementDialog(true);
@@ -104,6 +110,8 @@ const Crud = () => {
     };
 
     const editElement = (element) => {
+        console.log('Test')
+        setLugarDialogVisible(true);
         setElement({ ...element });
         setElementDialog(true);
     };

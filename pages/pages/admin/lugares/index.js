@@ -6,7 +6,7 @@ import { InputText } from 'primereact/inputtext';
 import { Toast } from 'primereact/toast';
 import { Toolbar } from 'primereact/toolbar';
 import { classNames } from 'primereact/utils';
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import Crud from '../../../../shelby/utils/CrudFunctions';
 import { LugarService } from '../../../../shelby/service/LugarService';
 
@@ -25,10 +25,12 @@ const LugarPage = () => {
     let _setSubmitted = crudObject.setSubmitted;
     let _selectedElements = crudObject.selectedElements;
     let _toast = crudObject.toast;
+    const toast = useRef(null);
 
     const elementName = 'lugar';
 
     const saveLugar = async () => {
+    console.log('Que es lo que pasa?')
         _setSubmitted(true);
         const lugarService = new LugarService();
         let _elements = [...lugares];
@@ -103,8 +105,13 @@ const LugarPage = () => {
         const fetchData = async () => {
             const lugarService = new LugarService();
             let data = await lugarService.getLugaresByTipo('zona');
+            console.log('Que pasa?', data)
+            if(data){
             data = crudObject.isArray(data, elementName);
             _setElements(data);
+            } else {
+            toast.current.show({ severity: 'error', summary: 'Error', detail: '¡Hubo un error! Por favor, Inicie sesion.' });
+            }
         };
         fetchData();
     }, []);
@@ -114,6 +121,7 @@ const LugarPage = () => {
             <div className="col-12">
                 <div className="card">
                     <Toast ref={_toast} />
+                    <Toast ref={toast} />
                     <Toolbar className="mb-4" left={() => crudObject.leftToolbarTemplate(elementName)} right={crudObject.rightToolbarTemplate}></Toolbar>
 
                     <DataTable

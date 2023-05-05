@@ -8,12 +8,23 @@ export class ClienteService {
     }
 
     async getClientes() {
-        return await fetch(`http://${this.ipAddress}:10000/clientes/`, {
+    try {
+        const response = await fetch(`http://${this.ipAddress}:10000/clientes/`, {
             method: 'GET',
             headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${this.token}` }
-        })
-            .then((res) => res.json())
-            .catch((error) => console.log(error));
+        }).then((res) => res.json())
+            
+        if (response.statusCode == 401) {
+            throw new Error('No se pudo procesar la solicitud. Por favor, inténtelo de nuevo.');
+        }
+    
+ 
+        
+     return response
+    } catch (error) {
+    console.error(error);
+    return null;
+    }
     }
 
     async crearCliente(data) {
