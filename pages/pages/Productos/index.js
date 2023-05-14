@@ -27,7 +27,7 @@ const ListDemo = (props) => {
         tipo_producto: '',
         costo: '',
         nombre_imagen: '',
-        cantidad: '', 
+        cantidad: '',
         precio: '',
         tamano_producto: ''
     };
@@ -77,21 +77,18 @@ const ListDemo = (props) => {
     useEffect(() => {
         const productService = new ProductService();
         const productoServicenew = new NewProductoService();
-        
-        productoServicenew.getProductos().then((data) => {
-        console.log('Test que es', data)
-         if(data) {
-         setDataViewValue(data) 
-        } else{
-        toast.current.show({ severity: 'error', summary: 'Error', detail: '¡Hubo un error! Por favor, Inicie sesion.' });
-        }
-         });
-        
 
+        productoServicenew.getProductos().then((data) => {
+            console.log('Test que es', data);
+            if (data) {
+                setDataViewValue(data);
+            } else {
+                toast.current.show({ severity: 'error', summary: 'Error', detail: '¡Hubo un error! Por favor, Inicie sesion.' });
+            }
+        });
 
         productService.getTypeProducts().then((data) => setTipoProducto(data));
         setGlobalFilterValue('');
-
     }, []);
 
     const onFilter = (e) => {
@@ -101,7 +98,19 @@ const ListDemo = (props) => {
             setFilteredValue(null);
         } else {
             const filtered = dataViewValue.filter((product) => {
-                return product.name.toLowerCase().includes(value);
+                return product.nombre.toLowerCase().includes(value);
+            });
+            setFilteredValue(filtered);
+        }
+    };
+
+    const onFilterByCategory = (category) => {
+        const value = category;
+        if (value.length === 0) {
+            setFilteredValue(null);
+        } else {
+            const filtered = dataViewValue.filter((product) => {
+                return product.tipo.toLowerCase().includes(value);
             });
             setFilteredValue(filtered);
         }
@@ -127,7 +136,7 @@ const ListDemo = (props) => {
         console.log('Derecha', picklistTargetValue);
         console.log('producto auxiliar', productAux);
         console.log('Ingrediente extra', picklistExtraTargetValue);
-        
+
         setDropdownValueAux(dropdownValue);
 
         if (product.nombre.trim()) {
@@ -207,7 +216,7 @@ const ListDemo = (props) => {
                 NewProduct.tipo = dropdownValue.name;
                 NewProduct.costo = response.costo;
                 NewProduct.imagen = response.imagen;
-                 NewProduct.tamano_producto = response.tamano_producto;
+                NewProduct.tamano_producto = response.tamano_producto;
                 NewProduct.proteina = arrProteinas;
                 NewProduct.ingrediente = arrIngredientes;
 
@@ -238,7 +247,7 @@ const ListDemo = (props) => {
         console.log('Izquierda', picklistSourceValue);
         console.log('Derecha', picklistTargetValue);
         console.log('producto auxiliar', productAux);
-        console.log('Ingredientes extras', picklistExtraTargetValue);        
+        console.log('Ingredientes extras', picklistExtraTargetValue);
         setDropdownValueAux(dropdownValue);
         addToCart(product, carrito, setCarrito);
 
@@ -251,7 +260,7 @@ const ListDemo = (props) => {
             let _products = [...dataViewValue];
             console.log('idOrden Save', orderId);
             const carritoService = new CarritoService();
-            
+
             const response = await carritoService.postCarrito(product.id, idnumber, picklistTargetValue, picklistExtraTargetValue);
 
             setDataViewValue(_products);
@@ -290,9 +299,13 @@ const ListDemo = (props) => {
         return (
             <React.Fragment>
                 <div className="my-1">
-                    <span className="block mt-1 md:mt-2 p-input-icon-left">
+                    <span className="flex mt-2 md:mt-2 p-input-icon-left flex-wrap gap-2">
                         <i className="pi pi-search" />
-                        <InputText value={globalFilterValue} onChange={onFilter} placeholder="Search by Name" />
+                        <InputText value={globalFilterValue} onChange={onFilter} placeholder="Buscar..." />
+                        <Button label="Hamburguesas" severity="warning" rounded onClick={() => onFilterByCategory('hamburguesa')} />
+                        <Button label="Perros Calientes" severity="warning" rounded onClick={() => onFilterByCategory('perro')} />
+                        <Button label="Pepitos" severity="warning" rounded onClick={() => onFilterByCategory('pepito')} />
+                        <Button label="Bebidas" severity="warning" rounded onClick={() => onFilterByCategory('bebida')} />
                     </span>
                 </div>
             </React.Fragment>
@@ -383,7 +396,6 @@ const ListDemo = (props) => {
     };
 
     const itemTemplatePickList = (item) => {
-    
         return (
             <div className="flex flex-wrap p-1 align-items-center gap-2">
                 <img className="w-4rem shadow-2 flex-shrink-0 border-round" src={`${contextPath}/demo/images/combo/Verduras_y_frutas.jpg`} alt={item.nombre} />
@@ -416,7 +428,7 @@ const ListDemo = (props) => {
                     </div>
                     <span className="font-bold">Precio</span>
                     <div className="col-12 mb-0 lg:col-11 lg:mb-0">
-                        <InputText id="precio" value={item.precio} onChange={(e) => onInputChangePickList(e, 'precio', item.id)} required tabIndex="2" className={classNames({ 'p-invalid': submitted && !item.precio})} />
+                        <InputText id="precio" value={item.precio} onChange={(e) => onInputChangePickList(e, 'precio', item.id)} required tabIndex="2" className={classNames({ 'p-invalid': submitted && !item.precio })} />
                     </div>
                 </div>
             </div>
@@ -433,14 +445,14 @@ const ListDemo = (props) => {
                 newState[itemIndex] = { ...newState[itemIndex], [propertyName]: value };
                 return newState;
             });
-        } else if (picklistExtraSourceValue.some((item) => item.id === itemId)){
+        } else if (picklistExtraSourceValue.some((item) => item.id === itemId)) {
             setPicklistExtraSourceValue((prevState) => {
                 const newState = [...prevState];
                 const itemIndex = newState.findIndex((item) => item.id === itemId);
                 newState[itemIndex] = { ...newState[itemIndex], [propertyName]: value };
                 return newState;
             });
-        } else if (picklistExtraTargetValue.some((item) => item.id === itemId)){
+        } else if (picklistExtraTargetValue.some((item) => item.id === itemId)) {
             setPicklistExtraTargetValue((prevState) => {
                 const newState = [...prevState];
                 const itemIndex = newState.findIndex((item) => item.id === itemId);
@@ -456,10 +468,6 @@ const ListDemo = (props) => {
             });
         }
     };
-    
-
-
-
 
     const onInputChange = (e, name) => {
         const val = (e.target && e.target.value) || '';
@@ -469,45 +477,45 @@ const ListDemo = (props) => {
         setProduct(_product);
     };
 
-    const hideDialog = async() => {
+    const hideDialog = async () => {
         const ingredienteService = new IngredienteService();
-        
-        let ingredientes; 
-        await ingredienteService.getIngredientes().then((data) => ingredientes = data);
-        console.log('Que paso?', ingredientes)
-        const opcionesDropdown = ingredientes.filter(ingrediente => ingrediente.extra === "Si").map(ingrediente => ({ id: ingrediente.id, name: ingrediente.nombre }));
+
+        let ingredientes;
+        await ingredienteService.getIngredientes().then((data) => (ingredientes = data));
+        console.log('Que paso?', ingredientes);
+        const opcionesDropdown = ingredientes.filter((ingrediente) => ingrediente.extra === 'Si').map((ingrediente) => ({ id: ingrediente.id, name: ingrediente.nombre }));
 
         for (let i = ingredientes.length - 1; i >= 0; i--) {
-            if (ingredientes[i].extra === "Si") {
+            if (ingredientes[i].extra === 'Si') {
                 ingredientes.splice(i, 1);
             }
         }
-        setPicklistExtraSourceValue(opcionesDropdown)
-        setExtrasIngredientes(opcionesDropdown)
-        setPicklistSourceValue(ingredientes)
+        setPicklistExtraSourceValue(opcionesDropdown);
+        setExtrasIngredientes(opcionesDropdown);
+        setPicklistSourceValue(ingredientes);
         setPicklistTargetValue([]);
         setSubmitted(false);
         setProductDialog(false);
         setDropdownValue(null);
     };
 
-    const openNew = async() => {
+    const openNew = async () => {
         const ingredienteService = new IngredienteService();
-        
-        let ingredientes; 
-        await ingredienteService.getIngredientes().then((data) => ingredientes = data);
-        console.log('Que paso?', ingredientes)
-        const opcionesDropdown = ingredientes.filter(ingrediente => ingrediente.extra === "Si")
+
+        let ingredientes;
+        await ingredienteService.getIngredientes().then((data) => (ingredientes = data));
+        console.log('Que paso?', ingredientes);
+        const opcionesDropdown = ingredientes.filter((ingrediente) => ingrediente.extra === 'Si');
 
         for (let i = ingredientes.length - 1; i >= 0; i--) {
-            if (ingredientes[i].extra === "Si") {
+            if (ingredientes[i].extra === 'Si') {
                 ingredientes.splice(i, 1);
             }
         }
 
-        setPicklistExtraSourceValue(opcionesDropdown)   
-        setExtrasIngredientes(opcionesDropdown)
-        setPicklistSourceValue(ingredientes)
+        setPicklistExtraSourceValue(opcionesDropdown);
+        setExtrasIngredientes(opcionesDropdown);
+        setPicklistSourceValue(ingredientes);
         setProduct(emptyProduct);
         setSubmitted(false);
         setProductDialog(true);
@@ -544,18 +552,17 @@ const ListDemo = (props) => {
 
             const picklistTargetValuenew = [...product.ingrediente, ...product.proteina];
 
-            const picklistExtraTargetValuenew = picklistTargetValuenew.filter(item => item.extra === 'Si');
-            
-            const indexToRemove = picklistTargetValuenew.findIndex(item => item.extra === 'Si');
+            const picklistExtraTargetValuenew = picklistTargetValuenew.filter((item) => item.extra === 'Si');
+
+            const indexToRemove = picklistTargetValuenew.findIndex((item) => item.extra === 'Si');
             if (indexToRemove !== -1) {
-            picklistTargetValuenew.splice(indexToRemove, 1);
+                picklistTargetValuenew.splice(indexToRemove, 1);
             }
-            
+
             const idsSeleccionados = picklistTargetValuenew.map((ingrediente) => ingrediente.id);
 
             const idsSeleccionadosExtra = picklistExtraTargetValuenew.map((ingrediente) => ingrediente.id);
 
-            
             const picklistSourceValuenew = data.filter((ingrediente) => {
                 return !idsSeleccionados.includes(ingrediente.id) && ingrediente.extra === 'No';
             });
@@ -590,18 +597,17 @@ const ListDemo = (props) => {
 
             const picklistTargetValuenew = [...product.ingrediente, ...product.proteina];
 
-            const picklistExtraTargetValuenew = picklistTargetValuenew.filter(item => item.extra === 'Si');
-            
-            const indexToRemove = picklistTargetValuenew.findIndex(item => item.extra === 'Si');
+            const picklistExtraTargetValuenew = picklistTargetValuenew.filter((item) => item.extra === 'Si');
+
+            const indexToRemove = picklistTargetValuenew.findIndex((item) => item.extra === 'Si');
             if (indexToRemove !== -1) {
-            picklistTargetValuenew.splice(indexToRemove, 1);
+                picklistTargetValuenew.splice(indexToRemove, 1);
             }
-            
+
             const idsSeleccionados = picklistTargetValuenew.map((ingrediente) => ingrediente.id);
 
             const idsSeleccionadosExtra = picklistExtraTargetValuenew.map((ingrediente) => ingrediente.id);
 
-            
             const picklistSourceValuenew = data.filter((ingrediente) => {
                 return !idsSeleccionados.includes(ingrediente.id) && ingrediente.extra === 'No';
             });
@@ -652,7 +658,7 @@ const ListDemo = (props) => {
         className: 'p-button-danger'
     };
 
-const dataviewGridItem = (data) => {
+    const dataviewGridItem = (data) => {
         let arrProteinas = [];
         for (let j = 0; j < data.proteina.length; j++) {
             let proteina = data.proteina[j];
@@ -673,165 +679,171 @@ const dataviewGridItem = (data) => {
             }
         }
 
-    if (data.tipo === "Bebida") {
-        return (
-            <div className="col-12 lg:col-4">
-                <div className="card m-3 border-1 surface-borders">
-                    <div className="flex flex-wrap gap-2 align-items-center justify-content-between mb-2">
-                        <div className="flex align-items-center">
-                            <i className="pi pi-tag mr-2" />
-                            <span className="font-semibold">{data.tipo}</span>
+        if (data.tipo === 'Bebida') {
+            return (
+                <div className="col-12 lg:col-4">
+                    <div className="card m-3 border-1 surface-borders">
+                        <div className="flex flex-wrap gap-2 align-items-center justify-content-between mb-2">
+                            <div className="flex align-items-center">
+                                <i className="pi pi-tag mr-2" />
+                                <span className="font-semibold">{data.tipo}</span>
+                            </div>
+                        </div>
+                        <div className="flex flex-column align-items-center text-center mb-3">
+                            <img src={`${contextPath}/demo/images/product/${data.imagen}`} alt={data.name} className="w-9 shadow-2 my-3 mx-0" />
+                            <div className="text-2xl font-bold">{data.nombre}</div>
+                            <div label="Text" className="mb-3"></div>
+                            <h7>Tamaño:</h7>
+                            <div label="Text" className="mb-3">
+                                {data.tamano_producto}
+                            </div>
+
+                            <span className="text-2xl font-semibold">${data.costo}</span>
+                        </div>
+                        <div className="flex align-items-center justify-content-between">
+                            <Button icon="pi pi-trash" className="p-button-danger" onClick={() => confirmDeleteProduct(data)} />
+                            <Button icon="pi pi-pencil" className="p-button-success" onClick={() => editProduct(data)} />
+                            <Button label="Agregar" icon="pi pi-shopping-cart" onClick={() => addCarrito(data)} />
                         </div>
                     </div>
-                    <div className="flex flex-column align-items-center text-center mb-3">
-                        <img src={`${contextPath}/demo/images/product/${data.imagen}`} alt={data.name} className="w-9 shadow-2 my-3 mx-0" />
-                        <div className="text-2xl font-bold">{data.nombre}</div>
-                        <div label="Text" className="mb-3"></div>
-                        <h7>Tamaño:</h7>
-                        <div label="Text" className="mb-3">{data.tamano_producto}</div>                       
-
-                        <span className="text-2xl font-semibold">${data.costo}</span>
-                    </div>
-                    <div className="flex align-items-center justify-content-between">
-                        <Button icon="pi pi-trash" className="p-button-danger" onClick={() => confirmDeleteProduct(data)} />
-                        <Button icon="pi pi-pencil" className="p-button-success" onClick={() => editProduct(data)} />
-                        <Button label="Agregar" icon="pi pi-shopping-cart" onClick={() => addCarrito(data)} />
-                    </div>
                 </div>
-            </div>
             );
-        } else if (data.tipo === "Papas") {
-        console.log('Test tamaño', data)
-        return (
-            <div className="col-12 lg:col-4">
-                <div className="card m-3 border-1 surface-borders">
-                    <div className="flex flex-wrap gap-2 align-items-center justify-content-between mb-2">
-                        <div className="flex align-items-center">
-                            <i className="pi pi-tag mr-2" />
-                            <span className="font-semibold">{data.tipo}</span>
+        } else if (data.tipo === 'Papas') {
+            console.log('Test tamaño', data);
+            return (
+                <div className="col-12 lg:col-4">
+                    <div className="card m-3 border-1 surface-borders">
+                        <div className="flex flex-wrap gap-2 align-items-center justify-content-between mb-2">
+                            <div className="flex align-items-center">
+                                <i className="pi pi-tag mr-2" />
+                                <span className="font-semibold">{data.tipo}</span>
+                            </div>
+                        </div>
+                        <div className="flex flex-column align-items-center text-center mb-3">
+                            <img src={`${contextPath}/demo/images/product/${data.imagen}`} alt={data.name} className="w-9 shadow-2 my-3 mx-0" />
+                            <div className="text-2xl font-bold">{data.nombre}</div>
+                            <div label="Text" className="mb-3"></div>
+                            <h7>Tamaño:</h7>
+                            <div label="Text" className="mb-3">
+                                {data.tamano_producto}
+                            </div>
+
+                            <span className="text-2xl font-semibold">${data.costo}</span>
+                        </div>
+                        <div className="flex align-items-center justify-content-between">
+                            <Button icon="pi pi-trash" className="p-button-danger" onClick={() => confirmDeleteProduct(data)} />
+                            <Button icon="pi pi-pencil" className="p-button-success" onClick={() => editProduct(data)} />
+                            <Button label="Agregar" icon="pi pi-shopping-cart" onClick={() => addCarrito(data)} />
                         </div>
                     </div>
-                    <div className="flex flex-column align-items-center text-center mb-3">
-                        <img src={`${contextPath}/demo/images/product/${data.imagen}`} alt={data.name} className="w-9 shadow-2 my-3 mx-0" />
-                        <div className="text-2xl font-bold">{data.nombre}</div>
-                        <div label="Text" className="mb-3"></div>
-                        <h7>Tamaño:</h7>
-                        <div label="Text" className="mb-3">{data.tamano_producto}</div>      
-
-
-                        <span className="text-2xl font-semibold">${data.costo}</span>
-                    </div>
-                    <div className="flex align-items-center justify-content-between">
-                        <Button icon="pi pi-trash" className="p-button-danger" onClick={() => confirmDeleteProduct(data)} />
-                        <Button icon="pi pi-pencil" className="p-button-success" onClick={() => editProduct(data)} />
-                        <Button label="Agregar" icon="pi pi-shopping-cart" onClick={() => addCarrito(data)} />
-                    </div>
                 </div>
-            </div>
             );
         } else {
             return (
-            <div className="col-12 lg:col-4">
-                <div className="card m-3 border-1 surface-borders">
-                    <div className="flex flex-wrap gap-2 align-items-center justify-content-between mb-2">
-                        <div className="flex align-items-center">
-                            <i className="pi pi-tag mr-2" />
-                            <span className="font-semibold">{data.tipo}</span>
+                <div className="col-12 lg:col-4">
+                    <div className="card m-3 border-1 surface-borders">
+                        <div className="flex flex-wrap gap-2 align-items-center justify-content-between mb-2">
+                            <div className="flex align-items-center">
+                                <i className="pi pi-tag mr-2" />
+                                <span className="font-semibold">{data.tipo}</span>
+                            </div>
                         </div>
-                    </div>
-                    <div className="flex flex-column align-items-center text-center mb-3">
-                        <img src={`${contextPath}/demo/images/product/${data.imagen}`} alt={data.name} className="w-9 shadow-2 my-3 mx-0" />
-                        <div className="text-2xl font-bold">{data.nombre}</div>
-                        <div label="Text" className="mb-3"></div>
-                        <h7>Proteinas a elegir:</h7>
-                        <div className="mb-3 ">{arrProteinas.toString()}</div>
-                        <h7>Ingredientes:</h7>
-                        <div label="Text" className="mb-3">
-                            {arrIngredientes.toString()}
-                            <br></br>
-                            {arrIngredientes2.toString()}
-                            <br></br>
-                            {arrIngredientes3.toString()}
-                        </div>
+                        <div className="flex flex-column align-items-center text-center mb-3">
+                            <img src={`${contextPath}/demo/images/product/${data.imagen}`} alt={data.name} className="w-9 shadow-2 my-3 mx-0" />
+                            <div className="text-2xl font-bold">{data.nombre}</div>
+                            <div label="Text" className="mb-3"></div>
+                            {/* <h7>Proteinas a elegir:</h7>
+                        <div className="mb-3 ">{arrProteinas.toString()}</div> */}
+                            <span>Ingredientes:</span>
+                            <div label="Text" className="mb-3">
+                                {arrIngredientes.toString()}
+                                <br></br>
+                                {arrIngredientes2.toString()}
+                                <br></br>
+                                {arrIngredientes3.toString()}
+                            </div>
 
-                        <span className="text-2xl font-semibold">${data.costo}</span>
+                            <span className="text-2xl font-semibold">${data.costo}</span>
+                        </div>
+                        <div className="flex align-items-center justify-content-between">
+                            <Button icon="pi pi-trash" className="p-button-danger" onClick={() => confirmDeleteProduct(data)} />
+                            <Button icon="pi pi-pencil" className="p-button-success" onClick={() => editProduct(data)} />
+                            <Button label="Agregar" icon="pi pi-shopping-cart" onClick={() => addCarrito(data)} />
+                        </div>
                     </div>
-                    <div className="flex align-items-center justify-content-between">
-                        <Button icon="pi pi-trash" className="p-button-danger" onClick={() => confirmDeleteProduct(data)} />
-                        <Button icon="pi pi-pencil" className="p-button-success" onClick={() => editProduct(data)} />
-                        <Button label="Agregar" icon="pi pi-shopping-cart" onClick={() => addCarrito(data)} />
-                    </div>
+                    <Dialog visible={carritoDialog} style={{ width: '800px' }} header="Modificaciones" modal className="p-fluid" footer={carritotDialogFooter} onHide={carritoHideDialog}>
+                        {((dropdownValue && dropdownValue.name === 'Hamburguesa') || (dropdownValue && dropdownValue.name === 'Perro') || (dropdownValue && dropdownValue.name === 'Pepito')) && (
+                            <img src={`${contextPath}/demo/images/product/depositphotos_387255148-stock-photo-summer-bbq-food-table.jpg`} alt={product.nombre_imagen} width="150" className="mt-0 mx-auto mb-5 block shadow-2" />
+                        )}
+                        {dropdownValue && dropdownValue.name === 'Papas' && (
+                            <img src={`${contextPath}/demo/images/product/16891a7a-52f8-4bc6-8176-00a5ae0b1c0a.jpg`} alt={product.nombre_imagen} width="150" className="mt-0 mx-auto mb-5 block shadow-2" />
+                        )}
+                        {dropdownValue && dropdownValue.name === 'Bebida' && <img src={`${contextPath}/demo/images/product/Papas_fritas_perfectas.jpg`} alt={product.nombre_imagen} width="150" className="mt-0 mx-auto mb-5 block shadow-2" />}
+                        <div className="field">
+                            <h6 htmlFor="nombre">Nombre</h6>
+                            <InputText id="nombre" value={product.nombre} onChange={(e) => onInputChange(e, 'nombre')} required autoFocus className={classNames({ 'p-invalid': submitted && !product.nombre })} />
+                            {submitted && !product.nombre && <small className="p-invalid">Name is required.</small>}
+                        </div>
+                        <div className="formgrid grid">
+                            <div className="field col">
+                                <h6>Tipo de producto</h6>
+                                <Dropdown value={dropdownValue} onChange={(e) => setDropdownValue(e.value)} options={tipoProducto} optionLabel="name" placeholder="Select" />
+                            </div>
+                            <div className="field col">
+                                <h6 htmlFor="Costo">Costo</h6>
+                                <InputText id="costo" value={product.costo} onChange={(e) => onInputChange(e, 'costo')} required autoFocus className={classNames({ 'p-invalid': submitted && !product.costo })} />
+                                {submitted && !product.costo && <small className="p-invalid">Name is required.</small>}
+                            </div>
+                        </div>
+                        {((dropdownValue && dropdownValue.name === 'Hamburguesa') || (dropdownValue && dropdownValue.name === 'Perro') || (dropdownValue && dropdownValue.name === 'Pepito')) && (
+                            <div className="col-12 xl:col-13">
+                                <div className="card">
+                                    <h6>Cambio de ingrediente</h6>
+                                    <PickList
+                                        source={picklistSourceValue}
+                                        target={picklistTargetValue}
+                                        sourceHeader="Ingredientes"
+                                        targetHeader="Ingrediente seleccionado"
+                                        itemTemplate={itemTemplatePickList}
+                                        onChange={(e) => {
+                                            setPicklistSourceValue(e.source);
+                                            setPicklistTargetValue(e.target);
+                                        }}
+                                        sourceStyle={{ height: '200px' }}
+                                        targetStyle={{ height: '200px' }}
+                                        filter
+                                        filterBy="name"
+                                    ></PickList>
+                                </div>
+                            </div>
+                        )}
+                        {((dropdownValue && dropdownValue.name === 'Hamburguesa') || (dropdownValue && dropdownValue.name === 'Perro') || (dropdownValue && dropdownValue.name === 'Pepito') || (dropdownValue && dropdownValue.name === 'Papas')) && (
+                            <div className="col-12 xl:col-13">
+                                <div className="card">
+                                    <h6>Seleccione el ingrediente Extra</h6>
+                                    <PickList
+                                        source={picklistExtraSourceValue}
+                                        target={picklistExtraTargetValue}
+                                        sourceHeader="Ingredientes Extra"
+                                        targetHeader="Ingrediente Extra Seleccionado"
+                                        itemTemplate={itemTemplateExtraPickList}
+                                        onChange={(e) => {
+                                            setPicklistExtraTargetValue(e.target);
+                                            setPicklistExtraSourceValue(e.source);
+                                        }}
+                                        sourceStyle={{ height: '200px' }}
+                                        targetStyle={{ height: '200px' }}
+                                        filter
+                                        filterBy="name"
+                                    ></PickList>
+                                </div>
+                            </div>
+                        )}
+                    </Dialog>
                 </div>
-                <Dialog visible={carritoDialog} style={{ width: '800px' }} header="Modificaciones" modal className="p-fluid" footer={carritotDialogFooter} onHide={carritoHideDialog}>
-                    {(dropdownValue && dropdownValue.name === 'Hamburguesa' || dropdownValue && dropdownValue.name === 'Perro'|| dropdownValue && dropdownValue.name === 'Pepito') && (
-                    <img src={`${contextPath}/demo/images/product/depositphotos_387255148-stock-photo-summer-bbq-food-table.jpg`} alt={product.nombre_imagen} width="150" className="mt-0 mx-auto mb-5 block shadow-2" />)}
-                    {(dropdownValue && dropdownValue.name === 'Papas') && (
-                    <img src={`${contextPath}/demo/images/product/16891a7a-52f8-4bc6-8176-00a5ae0b1c0a.jpg`} alt={product.nombre_imagen} width="150" className="mt-0 mx-auto mb-5 block shadow-2" />)}
-                    {(dropdownValue && dropdownValue.name === 'Bebida') && (
-                    <img src={`${contextPath}/demo/images/product/Papas_fritas_perfectas.jpg`} alt={product.nombre_imagen} width="150" className="mt-0 mx-auto mb-5 block shadow-2" />)}
-                    <div className="field">
-                        <h6 htmlFor="nombre">Nombre</h6>
-                        <InputText id="nombre" value={product.nombre} onChange={(e) => onInputChange(e, 'nombre')} required autoFocus className={classNames({ 'p-invalid': submitted && !product.nombre })} />
-                        {submitted && !product.nombre && <small className="p-invalid">Name is required.</small>}
-                    </div>
-                    <div className="formgrid grid">
-                        <div className="field col">
-                            <h6>Tipo de producto</h6>
-                            <Dropdown value={dropdownValue} onChange={(e) => setDropdownValue(e.value)} options={tipoProducto} optionLabel="name" placeholder="Select" />
-                        </div>
-                        <div className="field col">
-                            <h6 htmlFor="Costo">Costo</h6>
-                            <InputText id="costo" value={product.costo} onChange={(e) => onInputChange(e, 'costo')} required autoFocus className={classNames({ 'p-invalid': submitted && !product.costo })} />
-                            {submitted && !product.costo && <small className="p-invalid">Name is required.</small>}
-                        </div>
-                    </div>
-                    {(dropdownValue && dropdownValue.name === 'Hamburguesa' || dropdownValue && dropdownValue.name === 'Perro'|| dropdownValue && dropdownValue.name === 'Pepito') && (
-                    <div className="col-12 xl:col-13">
-                        <div className="card">
-                            <h6>Cambio de ingrediente</h6>
-                            <PickList
-                                source={picklistSourceValue}
-                                target={picklistTargetValue}
-                                sourceHeader="Ingredientes"
-                                targetHeader="Ingrediente seleccionado"
-                                itemTemplate={itemTemplatePickList}
-                                onChange={(e) => {
-                                    setPicklistSourceValue(e.source);
-                                    setPicklistTargetValue(e.target);
-                                }}
-                                sourceStyle={{ height: '200px' }}
-                                targetStyle={{ height: '200px' }}
-                                filter
-                                filterBy="name"
-                            ></PickList>
-                        </div>
-                    </div>)}
-                    {(dropdownValue && dropdownValue.name === 'Hamburguesa' || dropdownValue && dropdownValue.name === 'Perro'|| dropdownValue && dropdownValue.name === 'Pepito' || dropdownValue && dropdownValue.name === 'Papas') && (
-                    <div className="col-12 xl:col-13">
-                    <div className="card">
-                        <h6>Seleccione el ingrediente Extra</h6>
-                        <PickList
-                            source={picklistExtraSourceValue}
-                            target={picklistExtraTargetValue}
-                            sourceHeader="Ingredientes Extra"
-                            targetHeader="Ingrediente Extra Seleccionado"
-                            itemTemplate={itemTemplateExtraPickList}
-                            onChange={(e) => {
-                            setPicklistExtraTargetValue(e.target);
-                            setPicklistExtraSourceValue(e.source);
-                            }}
-                            sourceStyle={{ height: '200px' }}
-                            targetStyle={{ height: '200px' }}
-                            filter
-                            filterBy="name"
-                        ></PickList>
-                    </div>
-                </div>)}
-                </Dialog>
-            </div>
             );
         }
-};
+    };
 
     const itemTemplate = (data, layout) => {
         if (!data) {
@@ -863,7 +875,7 @@ const dataviewGridItem = (data) => {
 
     return (
         <div className="grid list-demo">
-        <Toast ref={toast} />
+            <Toast ref={toast} />
             <div className="col-12">
                 <div className="card">
                     <h5>Productos</h5>
@@ -888,14 +900,15 @@ const dataviewGridItem = (data) => {
                         {submitted && !product.costo && <small className="p-invalid">Name is required.</small>}
                     </div>
                 </div>
-                {(dropdownValue && dropdownValue.name === 'Papas' || dropdownValue && dropdownValue.name === 'Bebida') && (
-                <div className="formgrid grid">
-                    <div className="field col">
-                        <h6 htmlFor="costo">Tamaño</h6>
-                        <InputText id="costo" value={product.tamano_producto} onChange={(e) => onInputChange(e, 'tamano_producto')} required autoFocus className={classNames({ 'p-invalid': submitted && !product.tamano_producto })} />
-                        {submitted && !product.tamano_producto && <small className="p-invalid">Tamaño is required.</small>}
+                {((dropdownValue && dropdownValue.name === 'Papas') || (dropdownValue && dropdownValue.name === 'Bebida')) && (
+                    <div className="formgrid grid">
+                        <div className="field col">
+                            <h6 htmlFor="costo">Tamaño</h6>
+                            <InputText id="costo" value={product.tamano_producto} onChange={(e) => onInputChange(e, 'tamano_producto')} required autoFocus className={classNames({ 'p-invalid': submitted && !product.tamano_producto })} />
+                            {submitted && !product.tamano_producto && <small className="p-invalid">Tamaño is required.</small>}
+                        </div>
                     </div>
-                </div>)}
+                )}
                 <div className="card">
                     <h6>Agregar imagen</h6>
                     <FileUpload
@@ -917,48 +930,50 @@ const dataviewGridItem = (data) => {
                         cancelOptions={cancelOptions}
                     />
                 </div>
-                {(dropdownValue && dropdownValue.name === 'Hamburguesa' || dropdownValue && dropdownValue.name === 'Perro'|| dropdownValue && dropdownValue.name === 'Pepito') && (
-                <div className="col-12 xl:col-13">
-                    <div className="card">
-                        <h6>Seleccione el ingrediente</h6>
-                        <PickList
-                            source={picklistSourceValue}
-                            target={picklistTargetValue}
-                            sourceHeader="Ingredientes"
-                            targetHeader="Ingrediente seleccionado"
-                            itemTemplate={itemTemplatePickList}
-                            onChange={(e) => {
-                                setPicklistSourceValue(e.source);
-                                setPicklistTargetValue(e.target);
-                            }}
-                            sourceStyle={{ height: '200px' }}
-                            targetStyle={{ height: '200px' }}
-                            filter
-                            filterBy="nombre"
-                        ></PickList>
+                {((dropdownValue && dropdownValue.name === 'Hamburguesa') || (dropdownValue && dropdownValue.name === 'Perro') || (dropdownValue && dropdownValue.name === 'Pepito')) && (
+                    <div className="col-12 xl:col-13">
+                        <div className="card">
+                            <h6>Seleccione el ingrediente</h6>
+                            <PickList
+                                source={picklistSourceValue}
+                                target={picklistTargetValue}
+                                sourceHeader="Ingredientes"
+                                targetHeader="Ingrediente seleccionado"
+                                itemTemplate={itemTemplatePickList}
+                                onChange={(e) => {
+                                    setPicklistSourceValue(e.source);
+                                    setPicklistTargetValue(e.target);
+                                }}
+                                sourceStyle={{ height: '200px' }}
+                                targetStyle={{ height: '200px' }}
+                                filter
+                                filterBy="nombre"
+                            ></PickList>
+                        </div>
                     </div>
-                </div>)}
-                {(dropdownValue && dropdownValue.name === 'Hamburguesa' || dropdownValue && dropdownValue.name === 'Perro'|| dropdownValue && dropdownValue.name === 'Pepito' || dropdownValue && dropdownValue.name === 'Papas') && (
-                <div className="col-12 xl:col-13">
-                    <div className="card">
-                        <h6>Seleccione el ingrediente Extra</h6>
-                        <PickList
-                            source={picklistExtraSourceValue}
-                            target={picklistExtraTargetValue}
-                            sourceHeader="Ingredientes Extra"
-                            targetHeader="Ingrediente Extra Seleccionado"
-                            itemTemplate={itemTemplateExtraPickList}
-                            onChange={(e) => {
-                            setPicklistExtraTargetValue(e.target);
-                            setPicklistExtraSourceValue(e.source);
-                            }}
-                            sourceStyle={{ height: '200px' }}
-                            targetStyle={{ height: '200px' }}
-                            filter
-                            filterBy="name"
-                        ></PickList>
+                )}
+                {((dropdownValue && dropdownValue.name === 'Hamburguesa') || (dropdownValue && dropdownValue.name === 'Perro') || (dropdownValue && dropdownValue.name === 'Pepito') || (dropdownValue && dropdownValue.name === 'Papas')) && (
+                    <div className="col-12 xl:col-13">
+                        <div className="card">
+                            <h6>Seleccione el ingrediente Extra</h6>
+                            <PickList
+                                source={picklistExtraSourceValue}
+                                target={picklistExtraTargetValue}
+                                sourceHeader="Ingredientes Extra"
+                                targetHeader="Ingrediente Extra Seleccionado"
+                                itemTemplate={itemTemplateExtraPickList}
+                                onChange={(e) => {
+                                    setPicklistExtraTargetValue(e.target);
+                                    setPicklistExtraSourceValue(e.source);
+                                }}
+                                sourceStyle={{ height: '200px' }}
+                                targetStyle={{ height: '200px' }}
+                                filter
+                                filterBy="name"
+                            ></PickList>
+                        </div>
                     </div>
-                </div>)}
+                )}
             </Dialog>
             <Dialog visible={deleteProductDialog} style={{ width: '450px' }} header="Confirm" modal footer={deleteProductDialogFooter} onHide={hideDeleteProductDialog}>
                 <div className="justify-content-center">

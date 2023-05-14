@@ -48,7 +48,7 @@ const ordenes = () => {
     let defaultCliente = crudObject.emptyElements.cliente;
     let defaultDropdown = 'V';
     let defaultLugar = crudObject.emptyElements.lugar;
-/*
+    /*
     let cliente = crudObject.element;
     let clientes = crudObject.elements;
     let lugar = crudObject.element;
@@ -67,12 +67,11 @@ const ordenes = () => {
     let _stringBody = crudObject.stringBodyTemplate;
 */
 
-
     const [products, setProducts] = useState(null);
-    const [file, setfile] = useState(null); 
+    const [file, setfile] = useState(null);
     const [EstadoDialog, setEstadoDialog] = useState(false);
     const [accionDialog, setAccionDialog] = useState(false);
-    const [pagoDialog, setPagoDialog] = useState(false);  
+    const [pagoDialog, setPagoDialog] = useState(false);
     const [editClienteDialog, setEditClienteDialog] = useState(false);
     const [montoDialog, setMontoDialog] = useState(false);
     const [deleteProductDialog, setDeleteProductDialog] = useState(false);
@@ -132,42 +131,36 @@ const ordenes = () => {
     useEffect(async () => {
         const ingredienteService = new IngredienteService();
         const result = await ingredienteService.getIngredientes();
-        if(result){
-        } else{
-        toast.current.show({ severity: 'error', summary: 'Error', detail: '¡Hubo un error! Por favor, Inicie sesion.' });
+        if (result) {
+        } else {
+            toast.current.show({ severity: 'error', summary: 'Error', detail: '¡Hubo un error! Por favor, Inicie sesion.' });
         }
-        
 
         const ordenService = new OrdenService();
         await ordenService.getAllOrden().then((data) => {
-        if(data){
-            const updatedProductos = data.map((producto) => ({
-                ...producto,
-                productos: producto.productos.map((p) => ({ ...p, cantidad: 1 }))
-            }));
-            setProducts(updatedProductos);
-        } else {
-        toast.current.show({ severity: 'error', summary: 'Error', detail: '¡Hubo un error! Por favor, Inicie sesion.' });
-        }
+            if (data) {
+                const updatedProductos = data.map((producto) => ({
+                    ...producto,
+                    productos: producto.productos.map((p) => ({ ...p, cantidad: 1 }))
+                }));
+                setProducts(updatedProductos);
+            } else {
+                toast.current.show({ severity: 'error', summary: 'Error', detail: '¡Hubo un error! Por favor, Inicie sesion.' });
+            }
         });
 
         ordenService.getAllEstados().then((data) => {
-        console.log('XO', data)
-        if(data){
-         const dropdownData = data.map((item) => ({
-            name: item.nombre_estado
-        }));
-        setInfoEstado(data);
-        setTipoProducto(dropdownData);
-        } else {
-        toast.current.show({ severity: 'error', summary: 'Error', detail: '¡Hubo un error! Por favor, Inicie sesion.' });
-        }
+            console.log('XO', data);
+            if (data) {
+                const dropdownData = data.map((item) => ({
+                    name: item.nombre_estado
+                }));
+                setInfoEstado(data);
+                setTipoProducto(dropdownData);
+            } else {
+                toast.current.show({ severity: 'error', summary: 'Error', detail: '¡Hubo un error! Por favor, Inicie sesion.' });
+            }
         });
-
-   
-        
-
-
     }, []);
 
     const paymentOptions = [
@@ -188,135 +181,127 @@ const ordenes = () => {
         { label: 'Euros', value: 'EUR' }
     ];
 
-
     const onProductSelect = (event) => {
         op2.current.hide();
         toast.current.show({ severity: 'info', summary: 'Product Selected', detail: event.data.name, life: 3000 });
     };
 
-    const openNew = async() => {
-    
+    const openNew = async () => {
         const ordenService = new OrdenService();
         const cambioDia = await ordenService.getMontoDia();
         setMontoDia(cambioDia);
         setMontoDialog(true);
     };
 
+    const addPago = async () => {
+        console.log('Vamo a ver', paymentMethod);
+        if (paymentMethod) {
+            if (paymentMethod === 'electronico') {
+                if (electronicPaymentMethod) {
+                    if (monto) {
+                        let pago = {
+                            numero_referencia: referenceNumber,
+                            tipo_pago: electronicPaymentMethod
+                        };
+                        console.log(currency);
+                        const ordenService = new OrdenService();
+                        await ordenService.postOrdenPago(idOrden.orden_id, pago, paymentMethod, monto);
+                    } else {
+                        toast.current.show({ severity: 'error', summary: 'Error', detail: 'Ingrese el monto' });
+                    }
+                } else {
+                    toast.current.show({ severity: 'error', summary: 'Error', detail: 'Ingrese tipo de pago electronico' });
+                }
+            }
 
-    const addPago = async() => {
-        
-        
-        console.log('Vamo a ver',paymentMethod);
-        if(paymentMethod){
-        if(paymentMethod === "electronico"){
-        if(electronicPaymentMethod){
-        if(monto){
-        let pago = {
-        numero_referencia: referenceNumber,
-        tipo_pago: electronicPaymentMethod
-        };
-        console.log(currency);
-        const ordenService = new OrdenService();
-        await ordenService.postOrdenPago(idOrden.orden_id, pago, paymentMethod, monto);
-        } else {
-            toast.current.show({ severity: 'error', summary: 'Error', detail: 'Ingrese el monto' });
-        } 
-        } else {
-            toast.current.show({ severity: 'error', summary: 'Error', detail: 'Ingrese tipo de pago electronico' });
-        } 
-        }
+            if (paymentMethod === 'efectivo') {
+                if (monto) {
+                    if (currency === 'USD' || currency === 'Bs.') {
+                        const ordenService = new OrdenService();
 
-        if (paymentMethod ===  "efectivo"){
-        if(monto){
-        
-        if(currency === 'USD' || currency === 'Bs.'){
-        const ordenService = new OrdenService();
-        
-        await ordenService.postOrdenPago(idOrden.orden_id, cash, paymentMethod, monto, currency);
-        } else{
-            toast.current.show({ severity: 'error', summary: 'Error', detail: 'Ingrese el tipo de moneda' });
-        }
-        } else if (cash.length != 0) {
-                const ordenService = new OrdenService();
-                await ordenService.postOrdenPago(idOrden.orden_id, cash, paymentMethod, monto, currency);
-        } else{
-        console.log('donde entra')
-            toast.current.show({ severity: 'error', summary: 'Error', detail: 'Ingrese el monto o los billetes ' });
-        }
-        }
-        if (paymentMethod ===  "zelle") {
-        console.log('donde entra', monto)
-        if(monto){
-        let pago = {
-        correo_electronico: email
-        }
-        const ordenService = new OrdenService();
-        await ordenService.postOrdenPago(idOrden.orden_id, pago,  paymentMethod, monto);
+                        await ordenService.postOrdenPago(idOrden.orden_id, cash, paymentMethod, monto, currency);
+                    } else {
+                        toast.current.show({ severity: 'error', summary: 'Error', detail: 'Ingrese el tipo de moneda' });
+                    }
+                } else if (cash.length != 0) {
+                    const ordenService = new OrdenService();
+                    await ordenService.postOrdenPago(idOrden.orden_id, cash, paymentMethod, monto, currency);
+                } else {
+                    console.log('donde entra');
+                    toast.current.show({ severity: 'error', summary: 'Error', detail: 'Ingrese el monto o los billetes ' });
+                }
+            }
+            if (paymentMethod === 'zelle') {
+                console.log('donde entra', monto);
+                if (monto) {
+                    let pago = {
+                        correo_electronico: email
+                    };
+                    const ordenService = new OrdenService();
+                    await ordenService.postOrdenPago(idOrden.orden_id, pago, paymentMethod, monto);
+                } else {
+                    toast.current.show({ severity: 'error', summary: 'Error', detail: 'Ingrese el monto' });
+                }
+            }
         } else {
-         toast.current.show({ severity: 'error', summary: 'Error', detail: 'Ingrese el monto' });
-        }
-        }
-        } else {
-         toast.current.show({ severity: 'error', summary: 'Error', detail: 'Ingrese el tipo de pago' });
+            toast.current.show({ severity: 'error', summary: 'Error', detail: 'Ingrese el tipo de pago' });
         }
         const ordenService = new OrdenService();
-        const pagos = await ordenService.getAllPagosOrden(idOrden.orden_id)
-        console.log('Get test pago', pagos)
+        const pagos = await ordenService.getAllPagosOrden(idOrden.orden_id);
+        console.log('Get test pago', pagos);
         const cambioDia = await ordenService.getMontoDia();
-        const totalDolares = parseFloat(idOrden.total_orden)*parseFloat(cambioDia[0].monto);
+        const totalDolares = parseFloat(idOrden.total_orden) * parseFloat(cambioDia[0].monto);
 
-        if(pagos){
-        const newPagos = await pagos.map((pago) => {
-        if (pago.tipo_pago === 'electrónico' || (pago.tipo_pago === 'efectivo' && pago.tipo_efectivo === 'Bs.')) {
-            pago.montoDolares = (parseFloat(pago.monto) / parseFloat(pago.monto_bs)).toFixed(2);
+        if (pagos) {
+            const newPagos = await pagos.map((pago) => {
+                if (pago.tipo_pago === 'electrónico' || (pago.tipo_pago === 'efectivo' && pago.tipo_efectivo === 'Bs.')) {
+                    pago.montoDolares = (parseFloat(pago.monto) / parseFloat(pago.monto_bs)).toFixed(2);
+                } else {
+                    pago.montoDolares = parseFloat(pago.monto).toFixed(2);
+                }
+
+                return pago;
+            });
+            const montoCalculoBs = pagos[0].monto_bsf;
+            const totalMonto = newPagos.reduce((acc, pago) => acc + parseFloat(pago.monto_total_dolares), 0).toFixed(2);
+            const totalPagadoBs = (totalMonto * montoCalculoBs).toFixed(2);
+            const cambioDia = await ordenService.getMontoDia();
+            console.log('Estos son los pagos', cambioDia);
+
+            setTotalPagadoBs(totalPagadoBs);
+            setTotalPagado(totalMonto);
+            setTotalBs(totalDolares);
+            setPagos(newPagos);
+            setTotal(idOrden.total_orden);
+            setMonto('');
+            setPaymentMethod('');
+            setReferenceNumber('');
+            setElectronicPaymentMethod('');
+            setSerialNumber('');
+            setDenomination(0);
+            setCurrency('VES');
+            setEmail('');
+            setPagoDialog(true);
+            setCash([]);
         } else {
-            pago.montoDolares = (parseFloat(pago.monto)).toFixed(2);
+            setTotalBs(totalDolares);
+            setTotal(idOrden.total_orden);
+            setPagoDialog(true);
+            setMonto('');
+            setPaymentMethod('');
+            setReferenceNumber('');
+            setElectronicPaymentMethod('');
+            setSerialNumber('');
+            setDenomination(0);
+            setCurrency('VES');
+            setEmail('');
         }
 
-        return pago;
-        });
-        const montoCalculoBs = pagos[0].monto_bsf
-        const totalMonto = newPagos.reduce((acc, pago) => acc + parseFloat(pago.monto_total_dolares), 0).toFixed(2);
-        const totalPagadoBs =  (totalMonto * montoCalculoBs).toFixed(2);
-        const cambioDia = await ordenService.getMontoDia();
-        console.log('Estos son los pagos', cambioDia);
-
-
-        setTotalPagadoBs(totalPagadoBs)
-        setTotalPagado(totalMonto)
-        setTotalBs(totalDolares);
-        setPagos(newPagos);
-        setTotal(idOrden.total_orden);
-        setMonto('')
-        setPaymentMethod('');
-        setReferenceNumber('');
-        setElectronicPaymentMethod('');
-        setSerialNumber('');
-        setDenomination(0);
-        setCurrency('VES');
-        setEmail('');
-        setPagoDialog(true);
-        setCash([]);
-        }else {
-
-        setTotalBs(totalDolares);
-        setTotal(idOrden.total_orden);
-        setPagoDialog(true);
-        setMonto('')
-        setPaymentMethod('');
-        setReferenceNumber('');
-        setElectronicPaymentMethod('');
-        setSerialNumber('');
-        setDenomination(0);
-        setCurrency('VES');
-        setEmail('');
-    }
-       
         const userNameInfo = localStorage.getItem('nombre_user');
         const userRoleInfo = localStorage.getItem('nombre_role');
         await ordenService.postAccionUser('Pago gregado', userNameInfo, userRoleInfo, idOrden.orden_id);
-        
-        setMonto('')
+
+        setMonto('');
         setPaymentMethod('');
         setReferenceNumber('');
         setElectronicPaymentMethod('');
@@ -324,7 +309,6 @@ const ordenes = () => {
         setDenomination(0);
         setCurrency('VES');
         setEmail('');
-
     };
 
     const hideDialog = () => {
@@ -334,7 +318,6 @@ const ordenes = () => {
         setPagoDialog(false);
         setMontoDialog(false);
         setEditClienteDialog(false);
-        
     };
 
     const hideDeleteProductDialog = () => {
@@ -382,65 +365,63 @@ const ordenes = () => {
         }
     };
 
-    const showEstado = async(orden) => {
-        console.log('Test orden', orden)
+    const showEstado = async (orden) => {
+        console.log('Test orden', orden);
         setIdorden(orden);
-         setEstadoDialog(true);
+        setEstadoDialog(true);
     };
 
-    const showAccion = async(orden) => {
+    const showAccion = async (orden) => {
         const ordenService = new OrdenService();
         const testAccionesService = await ordenService.getAccionUser(orden.orden_id);
         setOrdenAccion(testAccionesService);
-        setAccionDialog(true);  
+        setAccionDialog(true);
     };
 
-    const pagoOrden = async(orden) => {
+    const pagoOrden = async (orden) => {
         const ordenService = new OrdenService();
-        console.log('Estos son los pagos orde', orden)
-        const pagos = await ordenService.getAllPagosOrden(orden.orden_id)
-        console.log()
+        console.log('Estos son los pagos orde', orden);
+        const pagos = await ordenService.getAllPagosOrden(orden.orden_id);
+        console.log();
         const cambioDia = await ordenService.getMontoDia();
-        const totalDolares = parseFloat(orden.total_orden)*parseFloat(cambioDia[0].monto);
-        console.log('Estos son los pagos pagos', pagos)
-         
-        if(pagos){
-        const newPagos = await pagos.map((pago) => {
-        
-        if (pago.tipo_pago === 'electrónico' || (pago.tipo_pago === 'efectivo' && pago.tipo_efectivo === 'Bs.')) {
-            pago.montoDolares = (parseFloat(pago.monto_total) / parseFloat(pago.monto_bs)).toFixed(2);
+        const totalDolares = parseFloat(orden.total_orden) * parseFloat(cambioDia[0].monto);
+        console.log('Estos son los pagos pagos', pagos);
+
+        if (pagos) {
+            const newPagos = await pagos.map((pago) => {
+                if (pago.tipo_pago === 'electrónico' || (pago.tipo_pago === 'efectivo' && pago.tipo_efectivo === 'Bs.')) {
+                    pago.montoDolares = (parseFloat(pago.monto_total) / parseFloat(pago.monto_bs)).toFixed(2);
+                } else {
+                    pago.montoDolares = parseFloat(pago.monto_total_dolares).toFixed(2);
+                }
+
+                return pago;
+            });
+            const montoCalculoBs = pagos[0].monto_bsf;
+            const totalMonto = newPagos.reduce((acc, pago) => acc + parseFloat(pago.monto_total_dolares), 0).toFixed(2);
+            const totalPagadoBs = (totalMonto * montoCalculoBs).toFixed(2);
+            const cambioDia = await ordenService.getMontoDia();
+            //ordenService.postAccionUser()
+            setTotalPagadoBs(totalPagadoBs);
+            setTotalPagado(totalMonto);
+            setTotalBs(totalDolares);
+            setPagos(newPagos);
+            setTotal(orden.total_orden);
+            setIdorden(orden);
+            setPagoDialog(true);
         } else {
-            pago.montoDolares = (parseFloat(pago.monto_total_dolares)).toFixed(2);
-        }
-
-        return pago;
-        });
-        const montoCalculoBs = pagos[0].monto_bsf
-        const totalMonto = newPagos.reduce((acc, pago) => acc + parseFloat(pago.monto_total_dolares), 0).toFixed(2);
-        const totalPagadoBs =  (totalMonto * montoCalculoBs).toFixed(2);
-        const cambioDia = await ordenService.getMontoDia();
-        //ordenService.postAccionUser()
-        setTotalPagadoBs(totalPagadoBs)
-        setTotalPagado(totalMonto)
-        setTotalBs(totalDolares);
-        setPagos(newPagos);
-        setTotal(orden.total_orden);
-        setIdorden(orden);
-        setPagoDialog(true);
-        }else {
-
-        setPagos(null);
-        setTotalBs(totalDolares);
-        setTotal(orden.total_orden);
-        setIdorden(orden);
-        setPagoDialog(true);
+            setPagos(null);
+            setTotalBs(totalDolares);
+            setTotal(orden.total_orden);
+            setIdorden(orden);
+            setPagoDialog(true);
         }
     };
 
-    const editCliente = async(orden) => {
+    const editCliente = async (orden) => {
         const clienteService = new ClienteService();
         await clienteService.getClientes().then((data) => setClientes(data));
-        setEditClienteDialog(true)
+        setEditClienteDialog(true);
     };
 
     const onInputNumberChangeMontoDia = (e, name) => {
@@ -450,8 +431,6 @@ const ordenes = () => {
 
         setElement(_element);
     };
-
-
 
     const confirmDeleteProduct = (product) => {
         setProduct(product);
@@ -510,47 +489,42 @@ const ordenes = () => {
         toast.current.show({ severity: 'success', summary: 'Successful', detail: 'Products Deleted', life: 3000 });
     };
 
-    const cambioDia = async() => {
-
+    const cambioDia = async () => {
         const ordenService = new OrdenService();
         await ordenService.postMontoCambio(montoBs);
 
         const cambioDia = await ordenService.getMontoDia();
-        
-        
+
         setMontoDia(cambioDia);
         setmMontoBs('');
     };
 
-        const changeEstado = async() => {
-
+    const changeEstado = async () => {
         const estadoEnProceso = infoEstado.find((estado) => estado.nombre_estado === dropdownValue.name);
         const ordenService = new OrdenService();
         await ordenService.postEstadoOrden(estadoEnProceso.estado_id, idOrden.orden_id);
 
         await ordenService.getAllOrden().then((data) => {
-        const updatedProductos = data.map((producto) => ({
-            ...producto,
-            productos: producto.productos.map((p) => ({ ...p, cantidad: 1 })),
-        }));
-        const registroEncontrado = updatedProductos.find(orden => orden.orden_id === idOrden.orden_id);
-        setIdorden(registroEncontrado);
-        setProducts(updatedProductos);
+            const updatedProductos = data.map((producto) => ({
+                ...producto,
+                productos: producto.productos.map((p) => ({ ...p, cantidad: 1 }))
+            }));
+            const registroEncontrado = updatedProductos.find((orden) => orden.orden_id === idOrden.orden_id);
+            setIdorden(registroEncontrado);
+            setProducts(updatedProductos);
         });
 
         ordenService.getAllEstados().then((data) => {
-         const dropdownData = data.map((item) => ({
-            name: item.nombre_estado
-        }));
-        setInfoEstado(data);
-        setTipoProducto(dropdownData);
+            const dropdownData = data.map((item) => ({
+                name: item.nombre_estado
+            }));
+            setInfoEstado(data);
+            setTipoProducto(dropdownData);
         });
 
         const userNameInfo = localStorage.getItem('nombre_user');
         const userRoleInfo = localStorage.getItem('nombre_role');
         await ordenService.postAccionUser('Cambio de estado', userNameInfo, userRoleInfo, idOrden.orden_id);
-        
-
     };
 
     const onCategoryChange = (e) => {
@@ -737,34 +711,33 @@ const ordenes = () => {
     };
 
     const estadoBodyTemplate = (rowData) => {
+        const ultimaActualizacion = rowData.estado.reduce((ultima, actual) => {
+            const fechaActual = moment(actual.fecha_historial, 'D/M/YYYY H:m:s');
+            if (!ultima || fechaActual.isAfter(ultima.fecha)) {
+                return { fecha: fechaActual, registro: actual };
+            } else {
+                return ultima;
+            }
+        }, null);
 
-    const ultimaActualizacion = rowData.estado.reduce((ultima, actual) => {
-    const fechaActual = moment(actual.fecha_historial, 'D/M/YYYY H:m:s');
-    if (!ultima || fechaActual.isAfter(ultima.fecha)) {
-        return { fecha: fechaActual, registro: actual };
-    } else {
-        return ultima;
-    }
-    }, null);
-
-    const nombreEstado = ultimaActualizacion.registro.estado.nombre_estado;
+        const nombreEstado = ultimaActualizacion.registro.estado.nombre_estado;
         return (
             <>
                 <span className="p-column-title">Unidad</span>
-              <span className={`product-badge status-${nombreEstado.toLowerCase()}`}>{nombreEstado}</span>
+                <span className={`product-badge status-${nombreEstado.toLowerCase()}`}>{nombreEstado}</span>
             </>
         );
     };
 
     const TotalBodyTemplate = (rowData) => {
-    return (
-    <>
-      <span className="p-column-title">
-        <span >Unidad</span>
-      </span>
-      <span style={{ fontWeight: "bold", fontSize: "1.1em" }}>{rowData.total_orden}$</span>
-    </>
-    );
+        return (
+            <>
+                <span className="p-column-title">
+                    <span>Unidad</span>
+                </span>
+                <span style={{ fontWeight: 'bold', fontSize: '1.1em' }}>{rowData.total_orden}$</span>
+            </>
+        );
     };
 
     const numeroMesaBodyTemplate = (rowData) => {
@@ -798,7 +771,6 @@ const ordenes = () => {
         );
     };
 
-
     const cantidadProductoTemplate = (producto) => {
         return (
             <>
@@ -809,7 +781,6 @@ const ordenes = () => {
     };
 
     const ingredienteProductoTemplate = (producto) => {
-        
         return (
             <>
                 <span className="p-column-title">Cantidad</span>
@@ -819,7 +790,6 @@ const ordenes = () => {
     };
 
     const ingredienteCantidadProductoTemplate = (producto) => {
-       
         return (
             <>
                 <span className="p-column-title">Cantidad</span>
@@ -899,7 +869,7 @@ const ordenes = () => {
             </>
         );
     };
-    
+
     const tipoElectronicoBodyTemplate = (cliente) => {
         return (
             <>
@@ -943,7 +913,7 @@ const ordenes = () => {
                 {cliente.pagoEfectivo.cantidad_billetes}
             </>
         );
-    }; 
+    };
 
     const numeroRefPagoClienteTemplate = (cliente) => {
         return (
@@ -1005,20 +975,19 @@ const ordenes = () => {
     };
 
     const showPagosDetails = (event, pago) => {
-        if (pago.tipo_pago === "electrónico"){
-        op6.current.toggle(event);
-        setDetallePago(pago.pagoElectronico);
-        } else if (pago.tipo_pago === "efectivo"){
-        console.log('Vamo a ver efectiv', pago.pagoEfectivo);
-        setDetallePago(pago.pagoEfectivo);
-        op7.current.toggle(event);
-        } else { 
-        op8.current.toggle(event);
-        setDetallePago(pago.zelle);
+        if (pago.tipo_pago === 'electrónico') {
+            op6.current.toggle(event);
+            setDetallePago(pago.pagoElectronico);
+        } else if (pago.tipo_pago === 'efectivo') {
+            console.log('Vamo a ver efectiv', pago.pagoEfectivo);
+            setDetallePago(pago.pagoEfectivo);
+            op7.current.toggle(event);
+        } else {
+            op8.current.toggle(event);
+            setDetallePago(pago.zelle);
         }
-       
-        console.log("Datos",pago)
-        
+
+        console.log('Datos', pago);
     };
 
     const showLugarDetails = (event, lugar) => {
@@ -1066,262 +1035,153 @@ const ordenes = () => {
         });
     };
 
-  const IngredientesBodyTemplate = (rowData) => {
-     
-  return (
-    <>
-      <Button
-        type="button"
-        label=""
-        onClick={(e) => showIngredientesDetails(e, rowData.ingredientes)}
-        icon="pi pi-pencil"
-        className="p-button-rounded p-button-success mr-2"
-      />
-      <OverlayPanel
-        ref={op5}
-        appendTo={typeof window !== "undefined" ? document.body : null}
-        showCloseIcon
-        id="overlay_panel_ingredientes"
-        style={{ width: "350px" }}
-      >
-        <DataTable value={ingredienteClient} responsiveLayout="scroll" scrollable scrollHeight="350px" scrollWidth="100%">
-          <Column header="Ingredientes" body={ingredienteProductoTemplate} sortable headerStyle={{ minWidth: "10rem" }} />
-          <Column header="Ingredientes" body={ingredienteCantidadProductoTemplate} sortable headerStyle={{ minWidth: "10rem" }} />
-        </DataTable>
-      </OverlayPanel>
-    </>
-  );
-};
+    const IngredientesBodyTemplate = (rowData) => {
+        return (
+            <>
+                <Button type="button" label="" onClick={(e) => showIngredientesDetails(e, rowData.ingredientes)} icon="pi pi-pencil" className="p-button-rounded p-button-success mr-2" />
+                <OverlayPanel ref={op5} appendTo={typeof window !== 'undefined' ? document.body : null} showCloseIcon id="overlay_panel_ingredientes" style={{ width: '350px' }}>
+                    <DataTable value={ingredienteClient} responsiveLayout="scroll" scrollable scrollHeight="350px" scrollWidth="100%">
+                        <Column header="Ingredientes" body={ingredienteProductoTemplate} sortable headerStyle={{ minWidth: '10rem' }} />
+                        <Column header="Ingredientes" body={ingredienteCantidadProductoTemplate} sortable headerStyle={{ minWidth: '10rem' }} />
+                    </DataTable>
+                </OverlayPanel>
+            </>
+        );
+    };
 
-  const productosBodyTemplate = (rowData) => {
-     
-  return (
-    <>
-      <Button
-        type="button"
-        label=""
-        onClick={(e) => showproductosDetails(e, rowData.productos)}
-        icon="pi pi-pencil"
-        className="p-button-rounded p-button-success mr-2"
-      />
-        <OverlayPanel
-        ref={op4}
-        appendTo={typeof window !== "undefined" ? document.body : null}
-        showCloseIcon
-        id="overlay_panel_productos"
-        style={{ width: "550px" }}
-        > 
-        <DataTable value={productoClient} responsiveLayout="scroll" scrollable scrollHeight="350px" scrollWidth="100%">
-          <Column header="Cantidad" body={cantidadProductoTemplate} sortable headerStyle={{ minWidth: "10rem" }} />
-          <Column header="Nombre" body={nombreProductoTemplate} headerStyle={{ minWidth: "8rem" }} />
-          <Column header="Tamaño" body={tamanoProductoTemplate} headerStyle={{ minWidth: "8rem" }} />
-          <Column header="Ingredientes" body={IngredientesBodyTemplate} sortable headerStyle={{ minWidth: "8rem" }} />
-        </DataTable>
-      </OverlayPanel>
-    </>
-  );
-};
+    const productosBodyTemplate = (rowData) => {
+        return (
+            <>
+                <Button type="button" label="" onClick={(e) => showproductosDetails(e, rowData.productos)} icon="pi pi-pencil" className="p-button-rounded p-button-success mr-2" />
+                <OverlayPanel ref={op4} appendTo={typeof window !== 'undefined' ? document.body : null} showCloseIcon id="overlay_panel_productos" style={{ width: '550px' }}>
+                    <DataTable value={productoClient} responsiveLayout="scroll" scrollable scrollHeight="350px" scrollWidth="100%">
+                        <Column header="Cantidad" body={cantidadProductoTemplate} sortable headerStyle={{ minWidth: '10rem' }} />
+                        <Column header="Nombre" body={nombreProductoTemplate} headerStyle={{ minWidth: '8rem' }} />
+                        <Column header="Tamaño" body={tamanoProductoTemplate} headerStyle={{ minWidth: '8rem' }} />
+                        <Column header="Ingredientes" body={IngredientesBodyTemplate} sortable headerStyle={{ minWidth: '8rem' }} />
+                    </DataTable>
+                </OverlayPanel>
+            </>
+        );
+    };
 
-const dialogEstadoBodyTemplate = (rowData) => {
-     
-  return (
-    <>
-      <Button
-        type="button"
-        label=""
-        onClick={(e) => showproductosDetails(e, rowData.productos)}
-        icon="pi pi-pencil"
-        className="p-button-rounded p-button-success mr-2"
-      />
-      <OverlayPanel
-        ref={op4}
-        appendTo={typeof window !== "undefined" ? document.body : null}
-        showCloseIcon
-        id="overlay_panel_productos"
-        style={{ width: "550px" }}
-      >
-        <DataTable value={productoClient} responsiveLayout="scroll">
-          <Column header="Cantidad" body={cantidadProductoTemplate} sortable headerStyle={{ minWidth: "10rem" }} />
-          <Column header="Nombre" body={nombreProductoTemplate} headerStyle={{ minWidth: "8rem" }} />
-          <Column header="Ingredientes" body={IngredientesBodyTemplate} sortable headerStyle={{ minWidth: "8rem" }} />
-        </DataTable>
-      </OverlayPanel>
-    </>
-  );
-};
+    const dialogEstadoBodyTemplate = (rowData) => {
+        return (
+            <>
+                <Button type="button" label="" onClick={(e) => showproductosDetails(e, rowData.productos)} icon="pi pi-pencil" className="p-button-rounded p-button-success mr-2" />
+                <OverlayPanel ref={op4} appendTo={typeof window !== 'undefined' ? document.body : null} showCloseIcon id="overlay_panel_productos" style={{ width: '550px' }}>
+                    <DataTable value={productoClient} responsiveLayout="scroll">
+                        <Column header="Cantidad" body={cantidadProductoTemplate} sortable headerStyle={{ minWidth: '10rem' }} />
+                        <Column header="Nombre" body={nombreProductoTemplate} headerStyle={{ minWidth: '8rem' }} />
+                        <Column header="Ingredientes" body={IngredientesBodyTemplate} sortable headerStyle={{ minWidth: '8rem' }} />
+                    </DataTable>
+                </OverlayPanel>
+            </>
+        );
+    };
 
+    const detalleoldPagosBodyTemplate = (rowData) => {
+        return (
+            <>
+                <Button type="button" label="" onClick={(e) => showPagosDetails(e, rowData)} icon="pi pi-pencil" className="p-button-rounded p-button-info mr-2" />
+                <OverlayPanel ref={op6} appendTo={typeof window !== 'undefined' ? document.body : null} showCloseIcon id="overlay_panel" style={{ width: '450px' }}>
+                    <DataTable value={[detallePago]} responsiveLayout="scroll">
+                        <Column header="Numero de referencia" body={numeroReferenciaBodyTemplate} headerStyle={{ minWidth: '10rem' }} />
+                        <Column header="Tipo de pago Electronico" body={tipoElectronicoBodyTemplate} sortable headerStyle={{ minWidth: '8rem' }} />
+                        <Column header="Monto" body={montoPagoClienteTemplate} sortable headerStyle={{ minWidth: '8rem' }} />
+                        <Column header="Monto de cambio" body={montoBsCambioBodyTemplate} headerStyle={{ minWidth: '10rem' }} />
+                        <Column header="Fecha cambio del dia" body={fechamontoBsCambioBodyTemplate} headerStyle={{ minWidth: '10rem' }} />
+                    </DataTable>
+                </OverlayPanel>
+                <OverlayPanel ref={op7} appendTo={typeof window !== 'undefined' ? document.body : null} showCloseIcon id="overlay_panel" style={{ width: '550px' }}>
+                    <DataTable value={detallePago} responsiveLayout="scroll">
+                        <Column header="Tipo modeda" body={tipoEfectivoBodyTemplate} headerStyle={{ minWidth: '10rem' }} />
+                        <Column header="Denominacion" body={denominacionPagoClienteTemplate} sortable headerStyle={{ minWidth: '8rem' }} />
+                        <Column header="Cantidad de billetes" body={cantidadBilletesPagoClienteTemplate} sortable headerStyle={{ minWidth: '8rem' }} />
+                        <Column header="# de referencia" body={numeroRefPagoClienteTemplate} sortable headerStyle={{ minWidth: '8rem' }} />
+                        <Column header="Monto de cambio" body={montoBsCambioBodyTemplate} headerStyle={{ minWidth: '10rem' }} />
+                        <Column header="Fecha cambio del dia" body={fechamontoBsCambioBodyTemplate} headerStyle={{ minWidth: '10rem' }} />
+                    </DataTable>
+                </OverlayPanel>
+                <OverlayPanel ref={op8} appendTo={typeof window !== 'undefined' ? document.body : null} showCloseIcon id="overlay_panel" style={{ width: '250px' }}>
+                    <DataTable value={[detallePago]} responsiveLayout="scroll">
+                        <Column header="Correo" body={correoBodyTemplate} headerStyle={{ minWidth: '10rem' }} />
+                        <Column header="Monto de cambio" body={montoBsCambioBodyTemplate} headerStyle={{ minWidth: '10rem' }} />
+                        <Column header="Fecha cambio del dia" body={fechamontoBsCambioBodyTemplate} headerStyle={{ minWidth: '10rem' }} />
+                    </DataTable>
+                </OverlayPanel>
+            </>
+        );
+    };
 
-const detalleoldPagosBodyTemplate = (rowData) => {
+    const detallePagosBodyTemplate = (rowData) => {
+        return (
+            <>
+                <Button type="button" label="" onClick={(e) => showPagosDetails(e, rowData)} icon="pi pi-pencil" className="p-button-rounded p-button-info mr-2" />
+                {detallePago && (
+                    <OverlayPanel ref={op6} appendTo={typeof window !== 'undefined' ? document.body : null} showCloseIcon id="overlay_panel" style={{ width: '450px' }} visible>
+                        {detallePago.tipo_pago ? (
+                            <DataTable value={[detallePago]} responsiveLayout="scroll">
+                                {detallePago.tipo_pago === 'electronico' && (
+                                    <>
+                                        <Column header="Nombre" body={nombreClienteTemplate} headerStyle={{ minWidth: '10rem' }} />
+                                        <Column header="Cedula" body={cedulaClienteTemplate} sortable headerStyle={{ minWidth: '8rem' }} />
+                                        <Column header="Telefono" body={telefonoClienteTemplate} sortable headerStyle={{ minWidth: '8rem' }} />
+                                    </>
+                                )}
+                                {detallePago.tipo_pago === 'efectivo' && (
+                                    <>
+                                        <Column header="Banco" field="banco" />
+                                        <Column header="Numero de referencia" field="num_referencia" />
+                                    </>
+                                )}
+                                {detallePago.tipo_pago === 'Zelle' && (
+                                    <>
+                                        <Column header="Nombre" body={correoBodyTemplate} headerStyle={{ minWidth: '10rem' }} />
+                                        <Column header="Cedula" body={cedulaClienteTemplate} sortable headerStyle={{ minWidth: '8rem' }} />
+                                        <Column header="Telefono" body={telefonoClienteTemplate} sortable headerStyle={{ minWidth: '8rem' }} />
+                                    </>
+                                )}
+                            </DataTable>
+                        ) : (
+                            <div>Cargando...</div>
+                        )}
+                    </OverlayPanel>
+                )}
+            </>
+        );
+    };
 
-
-  return (
-    <>
-      <Button
-        type="button"
-        label=""
-        onClick={(e) => showPagosDetails(e, rowData)}
-        icon="pi pi-pencil"
-        className="p-button-rounded p-button-info mr-2"
-      />
-      <OverlayPanel
-        ref={op6}
-        appendTo={typeof window !== "undefined" ? document.body : null}
-        showCloseIcon
-        id="overlay_panel"
-        style={{ width: "450px" }}
-      >
-        <DataTable value={[detallePago]} responsiveLayout="scroll">
-          <Column header="Numero de referencia" body={numeroReferenciaBodyTemplate} headerStyle={{ minWidth: "10rem" }} />
-          <Column header="Tipo de pago Electronico" body={tipoElectronicoBodyTemplate} sortable headerStyle={{ minWidth: "8rem" }} />
-          <Column header="Monto" body={montoPagoClienteTemplate} sortable headerStyle={{ minWidth: "8rem" }} />
-          <Column header="Monto de cambio" body={montoBsCambioBodyTemplate} headerStyle={{ minWidth: "10rem" }} />
-          <Column header="Fecha cambio del dia" body={fechamontoBsCambioBodyTemplate} headerStyle={{ minWidth: "10rem" }} />
-        </DataTable>
-      </OverlayPanel>
-            <OverlayPanel
-        ref={op7}
-        appendTo={typeof window !== "undefined" ? document.body : null}
-        showCloseIcon
-        id="overlay_panel"
-        style={{ width: "550px" }}
-      >
-       <DataTable value={detallePago} responsiveLayout="scroll">
-          <Column header="Tipo modeda" body={tipoEfectivoBodyTemplate} headerStyle={{ minWidth: "10rem" }} />
-          <Column header="Denominacion" body={denominacionPagoClienteTemplate} sortable headerStyle={{ minWidth: "8rem" }} />
-          <Column header="Cantidad de billetes" body={cantidadBilletesPagoClienteTemplate} sortable headerStyle={{ minWidth: "8rem" }} />
-          <Column header="# de referencia" body={numeroRefPagoClienteTemplate} sortable headerStyle={{ minWidth: "8rem" }} />
-          <Column header="Monto de cambio" body={montoBsCambioBodyTemplate} headerStyle={{ minWidth: "10rem" }} />
-          <Column header="Fecha cambio del dia" body={fechamontoBsCambioBodyTemplate} headerStyle={{ minWidth: "10rem" }} />
-        </DataTable>
-      </OverlayPanel>
-      <OverlayPanel
-        ref={op8}
-        appendTo={typeof window !== "undefined" ? document.body : null}
-        showCloseIcon
-        id="overlay_panel"
-        style={{ width: "250px" }}
-      >
-       <DataTable value={[detallePago]} responsiveLayout="scroll">
-          <Column header="Correo" body={correoBodyTemplate} headerStyle={{ minWidth: "10rem" }} />
-          <Column header="Monto de cambio" body={montoBsCambioBodyTemplate} headerStyle={{ minWidth: "10rem" }} />
-          <Column header="Fecha cambio del dia" body={fechamontoBsCambioBodyTemplate} headerStyle={{ minWidth: "10rem" }} />
-        </DataTable>
-      </OverlayPanel>
-    </>
-  );
-};
-
-const detallePagosBodyTemplate = (rowData) => {
-  return (
-    <>
-      <Button
-        type="button"
-        label=""
-        onClick={(e) => showPagosDetails(e, rowData)}
-        icon="pi pi-pencil"
-        className="p-button-rounded p-button-info mr-2"
-      />
-      {detallePago && (
-        <OverlayPanel
-          ref={op6}
-          appendTo={typeof window !== "undefined" ? document.body : null}
-          showCloseIcon
-          id="overlay_panel"
-          style={{ width: "450px" }}
-          visible
-        >
-          {detallePago.tipo_pago ? (
-            <DataTable value={[detallePago]} responsiveLayout="scroll">
-              {detallePago.tipo_pago === "electronico" && (
-                <>
-                  <Column
-                    header="Nombre"
-                    body={nombreClienteTemplate}
-                    headerStyle={{ minWidth: "10rem" }}
-                  />
-                  <Column
-                    header="Cedula"
-                    body={cedulaClienteTemplate}
-                    sortable
-                    headerStyle={{ minWidth: "8rem" }}
-                  />
-                  <Column
-                    header="Telefono"
-                    body={telefonoClienteTemplate}
-                    sortable
-                    headerStyle={{ minWidth: "8rem" }}
-                  />
-                </>
-              )}
-              {detallePago.tipo_pago === "efectivo" && (
-                <>
-                  <Column header="Banco" field="banco" />
-                  <Column header="Numero de referencia" field="num_referencia" />
-                </>
-              )}
-              {detallePago.tipo_pago === "Zelle" && (
-                <>
-                  <Column
-                    header="Nombre"
-                    body={correoBodyTemplate}
-                    headerStyle={{ minWidth: "10rem" }}
-                  />
-                  <Column
-                    header="Cedula"
-                    body={cedulaClienteTemplate}
-                    sortable
-                    headerStyle={{ minWidth: "8rem" }}
-                  />
-                  <Column
-                    header="Telefono"
-                    body={telefonoClienteTemplate}
-                    sortable
-                    headerStyle={{ minWidth: "8rem" }}
-                  />
-                </>
-              )}
-            </DataTable>
-          ) : (
-            <div>Cargando...</div>
-          )}
-        </OverlayPanel>
-      )}
-    </>
-  );
-};
-
-  const addCash = () => {
-    const newCash = { currency, serialNumber, denomination, cantidadBilletes, monto };
-    setCash([...cash, newCash]);
-    setCurrency("");
-    setSerialNumber("");
-    setDenomination("");
-    setMonto("");
-    setCantidadBilletes("");
-  }
+    const addCash = () => {
+        const newCash = { currency, serialNumber, denomination, cantidadBilletes, monto };
+        setCash([...cash, newCash]);
+        setCurrency('');
+        setSerialNumber('');
+        setDenomination('');
+        setMonto('');
+        setCantidadBilletes('');
+    };
 
     const deleteCash = (rowData) => {
-    const newCash = cash.filter((cash) => cash !== rowData);
-    setCash(newCash);
-  };
+        const newCash = cash.filter((cash) => cash !== rowData);
+        setCash(newCash);
+    };
 
-  const actionTemplate = (rowData) => {
-    return (
-      <Button icon="pi pi-trash" onClick={() => deleteCash(rowData)} />
-    );
-  };
+    const actionTemplate = (rowData) => {
+        return <Button icon="pi pi-trash" onClick={() => deleteCash(rowData)} />;
+    };
 
-const testButton = () => {
-    console.log('Entra en el boton')
-}
+    const testButton = () => {
+        console.log('Entra en el boton');
+    };
 
     const editClienteBodyTemplate = (rowData) => {
         return (
             <>
-                <Button icon="pi pi-pencil" className="p-button-rounded p-button-secondary mr-2" onClick={() => editCliente(rowData)} />           
-            
+                <Button icon="pi pi-pencil" className="p-button-rounded p-button-secondary mr-2" onClick={() => editCliente(rowData)} />
+
                 <Dialog visible={editClienteDialog} style={{ width: '550px' }} header="Métodos de pago" modal className="p-fluid" onHide={hideDialog}>
-                <h5>AutoComplete</h5>
+                    <h5>AutoComplete</h5>
                     <AutoComplete
                         placeholder="Cedula"
                         id="dd"
@@ -1365,41 +1225,25 @@ const testButton = () => {
                         </div>
                     </div>
                 </Dialog>
-
             </>
         );
     };
 
-
-const clienteBodyTemplate = (rowData) => {
-
-
-  return (
-    <>
-      <Button
-        type="button"
-        label=""
-        onClick={(e) => showClientDetails(e, rowData.cliente)}
-        icon="pi pi-pencil"
-        className="p-button-rounded p-button-info mr-2"
-      />
-      <OverlayPanel
-        ref={op2}
-        appendTo={typeof window !== "undefined" ? document.body : null}
-        showCloseIcon
-        id="overlay_panel"
-        style={{ width: "450px" }}
-      >
-        <DataTable value={[selectedClient]} responsiveLayout="scroll">
-          <Column header="Nombre" body={nombreClienteTemplate} headerStyle={{ minWidth: "10rem" }} />
-          <Column header="Cedula" body={cedulaClienteTemplate} sortable headerStyle={{ minWidth: "8rem" }} />
-          <Column header="Telefono" body={telefonoClienteTemplate} sortable headerStyle={{ minWidth: "8rem" }} />
-          <Column header="Editar Cliente" body={editClienteBodyTemplate} sortable headerStyle={{ minWidth: "8rem" }} />
-        </DataTable>
-      </OverlayPanel>
-    </>
-  );
-};
+    const clienteBodyTemplate = (rowData) => {
+        return (
+            <>
+                <Button type="button" label="" onClick={(e) => showClientDetails(e, rowData.cliente)} icon="pi pi-pencil" className="p-button-rounded p-button-info mr-2" />
+                <OverlayPanel ref={op2} appendTo={typeof window !== 'undefined' ? document.body : null} showCloseIcon id="overlay_panel" style={{ width: '450px' }}>
+                    <DataTable value={[selectedClient]} responsiveLayout="scroll">
+                        <Column header="Nombre" body={nombreClienteTemplate} headerStyle={{ minWidth: '10rem' }} />
+                        <Column header="Cedula" body={cedulaClienteTemplate} sortable headerStyle={{ minWidth: '8rem' }} />
+                        <Column header="Telefono" body={telefonoClienteTemplate} sortable headerStyle={{ minWidth: '8rem' }} />
+                        <Column header="Editar Cliente" body={editClienteBodyTemplate} sortable headerStyle={{ minWidth: '8rem' }} />
+                    </DataTable>
+                </OverlayPanel>
+            </>
+        );
+    };
 
     const lugarBodyTemplate = (rowData) => {
         const disabled = rowData.lugar.length === 0;
@@ -1421,89 +1265,88 @@ const clienteBodyTemplate = (rowData) => {
     const pagarBodyTemplate = (rowData) => {
         return (
             <>
-                <Button icon="pi pi-pencil" className="p-button-rounded p-button-secondary mr-2" onClick={() => pagoOrden(rowData)} />           
-            
+                <Button icon="pi pi-pencil" className="p-button-rounded p-button-secondary mr-2" onClick={() => pagoOrden(rowData)} />
+
                 <Dialog visible={pagoDialog} style={{ width: '550px' }} header="Métodos de pago" modal className="p-fluid" onHide={hideDialog}>
                     <div className="">
-                                <div>
-                                    <div className="field">
-                                    <Dropdown value={paymentMethod} options={paymentOptions} onChange={(e) => setPaymentMethod(e.value)} placeholder="Seleccione" />
-                                    </div>
-                                    {paymentMethod === "electronico" && (
-                                        <label>
-                                        <div className="formgrid grid"></div>
-                                            <div className="field col">
-                                                <label htmlFor="tipo_de_pago_electrónico"> Tipo de pago electrónico</label>
-                                                <Dropdown value={electronicPaymentMethod} options={electronicPaymentOptions} onChange={(e) => setElectronicPaymentMethod(e.value)} placeholder="Seleccione" />
-                                            </div>
-                                            <div className="field col">
-                                                <label htmlFor="numero_de_referencia">Número de referencia</label>
-                                                <InputText type="text" value={referenceNumber} onChange={(e) => setReferenceNumber(e.target.value)} />
-                                            </div>
-                                            <div className="field col">
-                                                <label htmlFor="monto">Monto</label>
-                                                <InputText type="text" value={monto} onChange={(e) => setMonto(e.target.value)} />
-                                            </div>
-                                        </label>
-                                    )}
-                                    {paymentMethod === "efectivo" && (
-                                        <>
-                                        <div className="field">
-                                            <label htmlFor="currency">Moneda</label>
-                                            <Dropdown value={currency} options={currencyOptions} onChange={(e) => setCurrency(e.value)} placeholder="Seleccione" />
-                                        </div>
-
-                                        <div className="field">
-                                            <label htmlFor="serialNumber">Número de serie (opcional)</label>
-                                            <InputText type="text" value={serialNumber} onChange={(e) => setSerialNumber(e.target.value)} />
-                                        </div>
-
-                                        <div className="field">
-                                            <label htmlFor="denomination">Denominación</label>
-                                            <InputText type="text" value={denomination} onChange={(e) => setDenomination(e.target.value)} />
-                                        </div>
-
-                                        <div className="field">
-                                            <label htmlFor="cantidadBilletes">Cantidad de billetes</label>
-                                            <InputText type="text" value={cantidadBilletes} onChange={(e) => setCantidadBilletes(e.target.value)} />
-                                        </div>
-
-                                        <div className="field">
-                                            <label htmlFor="monto">Monto</label>
-                                            <InputText type="text" value={monto} onChange={(e) => setMonto(e.target.value)} />
-                                        </div>
-
-                                        <Button label="Agregar Billete" onClick={addCash} />
-
-                                        <DataTable value={cash}>
-                                            <Column field="currency" header="Moneda" />
-                                            <Column field="serialNumber" header="Número de serie" />
-                                            <Column field="denomination" header="Denominación" />
-                                            <Column field="cantidadBilletes" header="Cantidad de billetes" />
-                                            <Column field="monto" header="Monto" />
-                                            <Column body={actionTemplate} />
-                                        </DataTable>
-                                        </>
-                                    )}
-                                    {paymentMethod === "zelle" && (
-                                        <div className="field col">
-                                        <label htmlFor="correo_electrónico">Correo electrónico</label>
-                                        <InputText type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
-                                        <div className="field col">
-                                        <label htmlFor="monto">Monto</label>
-                                         <InputText type="text" value={monto} onChange={(e) => setMonto(e.target.value)} />
-                                         </div>
-                                        </div>  
-                                        
-                                    )}
-                                </div>
-                        <div className="field col flex align-items-center justify-content-between">
-                                <Button label="Agregar Pago" icon="pi pi-plus" className="p-button-success mr-2" onClick={() => addPago()} />
+                        <div>
+                            <div className="field">
+                                <Dropdown value={paymentMethod} options={paymentOptions} onChange={(e) => setPaymentMethod(e.value)} placeholder="Seleccione" />
                             </div>
+                            {paymentMethod === 'electronico' && (
+                                <label>
+                                    <div className="formgrid grid"></div>
+                                    <div className="field col">
+                                        <label htmlFor="tipo_de_pago_electrónico"> Tipo de pago electrónico</label>
+                                        <Dropdown value={electronicPaymentMethod} options={electronicPaymentOptions} onChange={(e) => setElectronicPaymentMethod(e.value)} placeholder="Seleccione" />
+                                    </div>
+                                    <div className="field col">
+                                        <label htmlFor="numero_de_referencia">Número de referencia</label>
+                                        <InputText type="text" value={referenceNumber} onChange={(e) => setReferenceNumber(e.target.value)} />
+                                    </div>
+                                    <div className="field col">
+                                        <label htmlFor="monto">Monto</label>
+                                        <InputText type="text" value={monto} onChange={(e) => setMonto(e.target.value)} />
+                                    </div>
+                                </label>
+                            )}
+                            {paymentMethod === 'efectivo' && (
+                                <>
+                                    <div className="field">
+                                        <label htmlFor="currency">Moneda</label>
+                                        <Dropdown value={currency} options={currencyOptions} onChange={(e) => setCurrency(e.value)} placeholder="Seleccione" />
+                                    </div>
+
+                                    <div className="field">
+                                        <label htmlFor="serialNumber">Número de serie (opcional)</label>
+                                        <InputText type="text" value={serialNumber} onChange={(e) => setSerialNumber(e.target.value)} />
+                                    </div>
+
+                                    <div className="field">
+                                        <label htmlFor="denomination">Denominación</label>
+                                        <InputText type="text" value={denomination} onChange={(e) => setDenomination(e.target.value)} />
+                                    </div>
+
+                                    <div className="field">
+                                        <label htmlFor="cantidadBilletes">Cantidad de billetes</label>
+                                        <InputText type="text" value={cantidadBilletes} onChange={(e) => setCantidadBilletes(e.target.value)} />
+                                    </div>
+
+                                    <div className="field">
+                                        <label htmlFor="monto">Monto</label>
+                                        <InputText type="text" value={monto} onChange={(e) => setMonto(e.target.value)} />
+                                    </div>
+
+                                    <Button label="Agregar Billete" onClick={addCash} />
+
+                                    <DataTable value={cash}>
+                                        <Column field="currency" header="Moneda" />
+                                        <Column field="serialNumber" header="Número de serie" />
+                                        <Column field="denomination" header="Denominación" />
+                                        <Column field="cantidadBilletes" header="Cantidad de billetes" />
+                                        <Column field="monto" header="Monto" />
+                                        <Column body={actionTemplate} />
+                                    </DataTable>
+                                </>
+                            )}
+                            {paymentMethod === 'zelle' && (
+                                <div className="field col">
+                                    <label htmlFor="correo_electrónico">Correo electrónico</label>
+                                    <InputText type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+                                    <div className="field col">
+                                        <label htmlFor="monto">Monto</label>
+                                        <InputText type="text" value={monto} onChange={(e) => setMonto(e.target.value)} />
+                                    </div>
+                                </div>
+                            )}
                         </div>
-                        <div className="carrito-total text-right total-text-pago my-1">Total: {total}$</div>
-                        <div className="carrito-total text-right total-text-pago ">Bs. {totalBs}</div>
-                        <DataTable
+                        <div className="field col flex align-items-center justify-content-between">
+                            <Button label="Agregar Pago" icon="pi pi-plus" className="p-button-success mr-2" onClick={() => addPago()} />
+                        </div>
+                    </div>
+                    <div className="carrito-total text-right total-text-pago my-1">Total: {total}$</div>
+                    <div className="carrito-total text-right total-text-pago ">Bs. {totalBs}</div>
+                    <DataTable
                         ref={dt}
                         value={pagos ? pagos : []}
                         selection={selectedProducts}
@@ -1511,28 +1354,33 @@ const clienteBodyTemplate = (rowData) => {
                         dataKey="id"
                         className="datatable-responsive"
                         globalFilter={globalFilter}
-                        emptyMessage={pagos ? "No products found." : "No payments found."}
+                        emptyMessage={pagos ? 'No products found.' : 'No payments found.'}
                         header={headerPago}
                         responsiveLayout="scroll"
                     >
                         <Column field="nombre" header="Nombre de Pago" sortable body={nombrePagoTemplate} headerStyle={{ minWidth: '10rem' }}></Column>
-                        <Column field="unidad" header="Momento de pago" body={fechaPagoTemplate} sortable  headerStyle={{ minWidth: '10rem' }}></Column>
-                        <Column field="unidad" header="Monto" body={montoPagoTemplate} sortable  headerStyle={{ minWidth: '10rem' }}></Column>
+                        <Column field="unidad" header="Momento de pago" body={fechaPagoTemplate} sortable headerStyle={{ minWidth: '10rem' }}></Column>
+                        <Column field="unidad" header="Monto" body={montoPagoTemplate} sortable headerStyle={{ minWidth: '10rem' }}></Column>
                         <Column header="Detalle" body={detalleoldPagosBodyTemplate} headerStyle={{ minWidth: '4rem' }}></Column>
                     </DataTable>
                     <div className="carrito-total text-right total-text-pago my-1">Total Pagado: {totalPagado}$</div>
                     <div className="carrito-total text-right total-text-pago my-1"> Bs. {totalPagadoBs}</div>
-                    </Dialog>
-
+                    {totalPagado > total && (
+                        <div>
+                            <div className="carrito-total text-right total-text-pago my-1">Vuelto: {totalPagado - total}$</div>
+                            <div className="carrito-total text-right total-text-pago my-1">Bs. {(totalPagadoBs - totalBs).toFixed(2)}</div>
+                        </div>
+                    )}
+                </Dialog>
             </>
         );
     };
-    
+
     const nombreUserAccionBodyTemplate = (rowData) => {
         return (
             <>
                 <span className="p-column-title">Unidad</span>
-                    {rowData.nombre_user}
+                {rowData.nombre_user}
             </>
         );
     };
@@ -1541,7 +1389,7 @@ const clienteBodyTemplate = (rowData) => {
         return (
             <>
                 <span className="p-column-title">Unidad</span>
-                    {rowData.role_user}
+                {rowData.role_user}
             </>
         );
     };
@@ -1549,7 +1397,7 @@ const clienteBodyTemplate = (rowData) => {
         return (
             <>
                 <span className="p-column-title">Unidad</span>
-                    {rowData.nombre_accion}
+                {rowData.nombre_accion}
             </>
         );
     };
@@ -1558,16 +1406,16 @@ const clienteBodyTemplate = (rowData) => {
         return (
             <>
                 <span className="p-column-title">Unidad</span>
-                    {rowData.fecha_accion_user_orden}
+                {rowData.fecha_accion_user_orden}
             </>
         );
     };
-    
-        const estadoMultBodyTemplate = (rowData) => {
+
+    const estadoMultBodyTemplate = (rowData) => {
         return (
             <>
                 <span className="p-column-title">Unidad</span>
-                    {rowData.estado.nombre_estado}
+                {rowData.estado.nombre_estado}
             </>
         );
     };
@@ -1576,7 +1424,7 @@ const clienteBodyTemplate = (rowData) => {
         return (
             <>
                 <span className="p-column-title">Unidad</span>
-                    Bs. {rowData.monto}
+                Bs. {rowData.monto}
             </>
         );
     };
@@ -1585,7 +1433,7 @@ const clienteBodyTemplate = (rowData) => {
         return (
             <>
                 <span className="p-column-title">Unidad</span>
-                    {rowData.fecha_historial}
+                {rowData.fecha_historial}
             </>
         );
     };
@@ -1594,29 +1442,28 @@ const clienteBodyTemplate = (rowData) => {
         return (
             <>
                 <span className="p-column-title">Unidad</span>
-                    {rowData.fecha_historial}
+                {rowData.fecha_historial}
             </>
         );
     };
 
     const estadochangeBodyTemplate = (rowData) => {
-
         return (
             <>
-            <Button icon="pi pi-pencil" className="p-button-rounded p-button-danger mr-2" onClick={() => showEstado(rowData)} />
+                <Button icon="pi pi-pencil" className="p-button-rounded p-button-danger mr-2" onClick={() => showEstado(rowData)} />
 
-            <Dialog visible={EstadoDialog} style={{ width: '550px' }} header="Cambio de estado" modal className="p-fluid" onHide={hideDialog}>
-                        <div className="formgrid grid">
-                            <div className="field col">
-                                <h6>Estado</h6>
-                                <Dropdown value={dropdownValue} onChange={(e) => setDropdownValue(e.value)} options={tipoProducto} optionLabel="name" placeholder="Select" />
-                            </div>
-                            <div className="field col flex align-items-center justify-content-between" style={{flexDirection: 'column'}}>
-                                <h6 htmlFor="costo"></h6>
-                                <Button label="Nuevo" icon="pi pi-plus" className="p-button-success mr-2" onClick={() => changeEstado()} />
-                            </div>
+                <Dialog visible={EstadoDialog} style={{ width: '550px' }} header="Cambio de estado" modal className="p-fluid" onHide={hideDialog}>
+                    <div className="formgrid grid">
+                        <div className="field col">
+                            <h6>Estado</h6>
+                            <Dropdown value={dropdownValue} onChange={(e) => setDropdownValue(e.value)} options={tipoProducto} optionLabel="name" placeholder="Select" />
                         </div>
-                        <DataTable
+                        <div className="field col flex align-items-center justify-content-between" style={{ flexDirection: 'column' }}>
+                            <h6 htmlFor="costo"></h6>
+                            <Button label="Nuevo" icon="pi pi-plus" className="p-button-success mr-2" onClick={() => changeEstado()} />
+                        </div>
+                    </div>
+                    <DataTable
                         ref={dtEstado}
                         value={idOrden && idOrden.estado ? idOrden.estado : []}
                         selection={selectedProducts}
@@ -1628,24 +1475,22 @@ const clienteBodyTemplate = (rowData) => {
                         header={headerEstado}
                         responsiveLayout="scroll"
                     >
-                        <Column field="nombre" header="Nombre de estado" body= {estadoMultBodyTemplate} sortable headerStyle={{ minWidth: '10rem' }}></Column>
-                        <Column field="unidad" header="Momento de cambio" body= {estadoMomentoBodyTemplate} sortable headerStyle={{ minWidth: '10rem' }}></Column>
+                        <Column field="nombre" header="Nombre de estado" body={estadoMultBodyTemplate} sortable headerStyle={{ minWidth: '10rem' }}></Column>
+                        <Column field="unidad" header="Momento de cambio" body={estadoMomentoBodyTemplate} sortable headerStyle={{ minWidth: '10rem' }}></Column>
                     </DataTable>
-                    </Dialog>
-
+                </Dialog>
             </>
         );
     };
 
     const accionUsuarioBodyTemplate = (rowData) => {
-
         return (
             <>
-            <Button icon="pi pi-pencil" className="p-button-rounded p-button-danger mr-2" onClick={() => showAccion(rowData)} />
-            <Dialog visible={accionDialog} style={{ width: '550px' }} header="Acciones de usuario" modal className="p-fluid" onHide={hideDialog}>
-                        <DataTable
+                <Button icon="pi pi-pencil" className="p-button-rounded p-button-danger mr-2" onClick={() => showAccion(rowData)} />
+                <Dialog visible={accionDialog} style={{ width: '550px' }} header="Acciones de usuario" modal className="p-fluid" onHide={hideDialog}>
+                    <DataTable
                         ref={dtAccion}
-                        value={ordenAccion? ordenAccion : []}
+                        value={ordenAccion ? ordenAccion : []}
                         selection={selectedProducts}
                         dataKey="id"
                         className="datatable-responsive"
@@ -1654,13 +1499,12 @@ const clienteBodyTemplate = (rowData) => {
                         header={headerAccion}
                         responsiveLayout="scroll"
                     >
-                        <Column field="nombre" header="Usuario" body= {nombreUserAccionBodyTemplate} sortable headerStyle={{ minWidth: '10rem' }}></Column>
-                        <Column field="unidad" header="Rol" body= {rolUserAccionBodyTemplate} sortable headerStyle={{ minWidth: '10rem' }}></Column>
-                        <Column field="nombre" header="Accion" body= {userAccionBodyTemplate} sortable headerStyle={{ minWidth: '10rem' }}></Column>
-                        <Column field="unidad" header="Fecha acción" body= {fechauserAccionBodyTemplate} sortable headerStyle={{ minWidth: '10rem' }}></Column>
+                        <Column field="nombre" header="Usuario" body={nombreUserAccionBodyTemplate} sortable headerStyle={{ minWidth: '10rem' }}></Column>
+                        <Column field="unidad" header="Rol" body={rolUserAccionBodyTemplate} sortable headerStyle={{ minWidth: '10rem' }}></Column>
+                        <Column field="nombre" header="Accion" body={userAccionBodyTemplate} sortable headerStyle={{ minWidth: '10rem' }}></Column>
+                        <Column field="unidad" header="Fecha acción" body={fechauserAccionBodyTemplate} sortable headerStyle={{ minWidth: '10rem' }}></Column>
                     </DataTable>
-                    </Dialog>
-
+                </Dialog>
             </>
         );
     };
@@ -1750,30 +1594,30 @@ const clienteBodyTemplate = (rowData) => {
                     </DataTable>
                     <Dialog visible={montoDialog} style={{ width: '550px' }} header="Cambio del dia" modal className="p-fluid" onHide={hideDialog}>
                         <div className="formgrid grid">
-                            <div className="field col">              
+                            <div className="field col">
                                 <label htmlFor="monto">Monto</label>
-                                <InputText type="text" value={montoBs} onChange={(e) => setmMontoBs(e.target.value)}/>
+                                <InputText type="text" value={montoBs} onChange={(e) => setmMontoBs(e.target.value)} />
                             </div>
-                            <div className="field col flex align-items-center justify-content-between" style={{flexDirection: 'column'}}>
+                            <div className="field col flex align-items-center justify-content-between" style={{ flexDirection: 'column' }}>
                                 <h6 htmlFor="costo"></h6>
                                 <Button label="Cambiar" icon="pi pi-plus" className="p-button-success mr-2" onClick={() => cambioDia()} />
                             </div>
                         </div>
                         <DataTable
-                        ref={dtEstado}
-                        value={montoDia? montoDia : []}
-                        selection={selectedProducts}
-                        onSelectionChange={(e) => setSelectedProducts(e.value)}
-                        dataKey="id"
-                        className="datatable-responsive"
-                        globalFilter={globalFilter}
-                        emptyMessage="No products found."
-                        header={headerEstado}
-                        responsiveLayout="scroll"
-                    >
-                        <Column field="Monto del dia" header="Nombre de estado" body= {MontoBsDiaBodyTemplate} sortable headerStyle={{ minWidth: '10rem' }}></Column>
-                        <Column field="Momento de cambio" header="Momento de cambio" body= {fechaMondoDiaBodyTemplate} sortable headerStyle={{ minWidth: '10rem' }}></Column>
-                    </DataTable>
+                            ref={dtEstado}
+                            value={montoDia ? montoDia : []}
+                            selection={selectedProducts}
+                            onSelectionChange={(e) => setSelectedProducts(e.value)}
+                            dataKey="id"
+                            className="datatable-responsive"
+                            globalFilter={globalFilter}
+                            emptyMessage="No products found."
+                            header={headerEstado}
+                            responsiveLayout="scroll"
+                        >
+                            <Column field="Monto del dia" header="Nombre de estado" body={MontoBsDiaBodyTemplate} sortable headerStyle={{ minWidth: '10rem' }}></Column>
+                            <Column field="Momento de cambio" header="Momento de cambio" body={fechaMondoDiaBodyTemplate} sortable headerStyle={{ minWidth: '10rem' }}></Column>
+                        </DataTable>
                     </Dialog>
                     <Dialog visible={deleteProductDialog} style={{ width: '450px' }} header="Confirm" modal footer={deleteProductDialogFooter} onHide={hideDeleteProductDialog}>
                         <div className="flex align-items-center justify-content-center">
