@@ -44,6 +44,9 @@ const ListDemo = (props) => {
     const [proteinasIngredientes, setProteinasIngredientes] = useState(null);
     const [picklistProteinaSourceValue, setPicklistProteinaSourceValue] = useState(null);
     const [picklistProteinaTargetValue, setPicklistProteinaTargetValue] = useState([]);
+    const [extrasIngredientes, setExtrasIngredientes] = useState(null);
+    const [picklistExtraSourceValue, setPicklistExtraSourceValue] = useState(null);
+    const [picklistExtraTargetValue, setPicklistExtraTargetValue] = useState([]);
     const [picklistSourceValue, setPicklistSourceValue] = useState(null);
     const [picklistTargetValue, setPicklistTargetValue] = useState([]);
     const [submitted, setSubmitted] = useState(false);
@@ -135,6 +138,7 @@ const ListDemo = (props) => {
         console.log('Derecha', picklistTargetValue);
         console.log('producto auxiliar', productAux);
         console.log('Proteina', picklistProteinaTargetValue);
+        console.log('Extra', picklistExtraTargetValue);
 
         setDropdownValueAux(dropdownValue);
 
@@ -144,14 +148,19 @@ const ListDemo = (props) => {
             if (product.id) {
                 const productoServicenew = new NewProductoService();
                 product.tipo_producto = dropdownValue.name;
+                // TODO: Incluir EXTRA en el update
                 const response = await productoServicenew.updateProducto(product.id, product, picklistTargetValue, picklistProteinaTargetValue);
                 const index = findIndexById(product.id);
 
                 let arrIngredientes = [];
                 let arrProteinas = [];
+                let arrExtras = [];
                 for (let j = 0; j < picklistTargetValue.length; j++) {
                     if (picklistTargetValue[j].proteina == 'Si') {
                         arrProteinas.push(picklistTargetValue[j]);
+                    } else if (picklistTargetValue[j].extra == 'Si') {
+                        arrExtras.push(picklistTargetValue[j]);
+                        arrIngredientes.push(picklistTargetValue[j]);
                     } else {
                         arrIngredientes.push(picklistTargetValue[j]);
                     }
@@ -159,6 +168,7 @@ const ListDemo = (props) => {
 
                 product.ingrediente = arrIngredientes;
                 product.proteina = arrProteinas;
+                product.extra = arrExtras;
                 _products[index] = product;
             } else {
                 console.log('Entre en Save');
@@ -167,12 +177,14 @@ const ListDemo = (props) => {
                 console.log('Tipo de producto', dropdownValue);
                 product.tipo_producto = dropdownValue.name;
                 const productoServicenew = new NewProductoService();
+                // TODO: Incluir EXTRA en el update
                 const response = await productoServicenew.postProducto(product, picklistTargetValue, picklistProteinaTargetValue);
 
                 console.log('response', response);
 
                 let arrIngredientes = [];
                 let arrProteinas = [];
+                let arrExtras = [];
 
                 for (let j = 0; j < picklistTargetValue.length; j++) {
                     let ingrediente = picklistTargetValue[j];
@@ -182,7 +194,8 @@ const ListDemo = (props) => {
                         nombre: '',
                         cantidad: '',
                         imagen: '',
-                        proteina: ''
+                        proteina: '',
+                        extra: ''
                     };
 
                     newIngrediente.id = ingrediente.id;
@@ -190,9 +203,13 @@ const ListDemo = (props) => {
                     newIngrediente.cantidad = ingrediente.cantidad;
                     newIngrediente.imagen = ingrediente.nombreImage;
                     newIngrediente.proteina = ingrediente.proteina;
+                    newIngrediente.extra = ingrediente.extra;
 
                     if (ingrediente.proteina == 'Si') {
                         arrProteinas.push(newIngrediente);
+                    } else if (ingrediente.extra == 'Si') {
+                        arrExtras.push(newIngrediente);
+                        arrIngredientes.push(newIngrediente);
                     } else {
                         arrIngredientes.push(newIngrediente);
                     }
@@ -204,10 +221,10 @@ const ListDemo = (props) => {
                     tipo: '',
                     costo: '',
                     imagen: '',
-                    proteina: null,
                     tamano_producto: '',
                     proteina: arrProteinas,
-                    ingrediente: arrIngredientes
+                    ingrediente: arrIngredientes,
+                    extra: arrExtras
                 };
 
                 NewProduct.id = response.id;
@@ -218,6 +235,7 @@ const ListDemo = (props) => {
                 NewProduct.tamano_producto = response.tamano_producto;
                 NewProduct.proteina = arrProteinas;
                 NewProduct.ingrediente = arrIngredientes;
+                NewProduct.extra = arrExtras;
 
                 console.log('test new product', NewProduct);
                 _products.push(NewProduct);
@@ -247,6 +265,7 @@ const ListDemo = (props) => {
         console.log('Derecha', picklistTargetValue);
         console.log('producto auxiliar', productAux);
         console.log('Proteinas', picklistProteinaTargetValue);
+        console.log('Extras', picklistExtraTargetValue);
         setDropdownValueAux(dropdownValue);
         addToCart(product, carrito, setCarrito);
 
@@ -259,7 +278,7 @@ const ListDemo = (props) => {
             let _products = [...dataViewValue];
             console.log('idOrden Save', orderId);
             const carritoService = new CarritoService();
-
+            // TODO: INCLUIR EXTRA
             const response = await carritoService.postCarrito(product.id, idnumber, picklistTargetValue, picklistProteinaTargetValue);
 
             setDataViewValue(_products);
@@ -425,6 +444,24 @@ const ListDemo = (props) => {
                     <div className="col-12 mb-0 lg:col-11 lg:mb-0">
                         <InputText id="cantidad" value={item.cantidad} onChange={(e) => onInputChangePickList(e, 'cantidad', item.id)} required autoFocus className={classNames({ 'p-invalid': submitted && !item.cantidad })} />
                     </div>
+                </div>
+            </div>
+        );
+    };
+
+    const itemTemplateExtraPickList = (item) => {
+        return (
+            <div className="flex flex-wrap p-1 align-items-center gap-2">
+                <img className="w-4rem shadow-2 flex-shrink-0 border-round" src={`${contextPath}/demo/images/combo/Verduras_y_frutas.jpg`} alt={item.nombre} />
+                <div className="flex-1 flex flex-column gap-2">
+                    <span className="font-bold">{item.nombre}</span>
+                </div>
+                {/*<span className="font-bold text-900">${item.price}</span>*/}
+                <div className="flex-1 flex flex-column gap-2">
+                    <span className="font-bold">Cantidad</span>
+                    <div className="col-12 mb-0 lg:col-11 lg:mb-0">
+                        <InputText id="cantidad" value={item.cantidad} onChange={(e) => onInputChangePickList(e, 'cantidad', item.id)} required autoFocus className={classNames({ 'p-invalid': submitted && !item.cantidad })} />
+                    </div>
                     <span className="font-bold">Precio</span>
                     <div className="col-12 mb-0 lg:col-11 lg:mb-0">
                         <InputText id="precio" value={item.precio} onChange={(e) => onInputChangePickList(e, 'precio', item.id)} required tabIndex="2" className={classNames({ 'p-invalid': submitted && !item.precio })} />
@@ -436,7 +473,7 @@ const ListDemo = (props) => {
 
     const onInputChangePickList = (e, propertyName, itemId) => {
         const value = e.target.value;
-
+        // TODO: ACÁ ME QUEDÉ EN LA REVISION DE PROTEINA PARA AGREGAR EXTRAS
         if (picklistSourceValue.some((item) => item.id === itemId)) {
             setPicklistSourceValue((prevState) => {
                 const newState = [...prevState];
@@ -966,6 +1003,29 @@ const ListDemo = (props) => {
                                 onChange={(e) => {
                                     setPicklistProteinaTargetValue(e.target);
                                     setPicklistProteinaSourceValue(e.source);
+                                }}
+                                sourceStyle={{ height: '200px' }}
+                                targetStyle={{ height: '200px' }}
+                                filter
+                                filterBy="name"
+                            ></PickList>
+                        </div>
+                    </div>
+                )}
+                {((dropdownValue && dropdownValue.name === 'Hamburguesa') || (dropdownValue && dropdownValue.name === 'Perro') || (dropdownValue && dropdownValue.name === 'Pepito')) && (
+                    <div className="col-12 xl:col-13">
+                        <div className="card">
+                            {/* VENTANA DE EDITAR PRODUCTO */}
+                            <h6>Seleccione los Extras</h6>
+                            <PickList
+                                source={picklistExtraSourceValue}
+                                target={picklistExtraTargetValue}
+                                sourceHeader="Extras"
+                                targetHeader="Extras Seleccionados"
+                                itemTemplate={itemTemplateExtraPickList}
+                                onChange={(e) => {
+                                    setPicklistExtraTargetValue(e.target);
+                                    setPicklistExtraSourceValue(e.source);
                                 }}
                                 sourceStyle={{ height: '200px' }}
                                 targetStyle={{ height: '200px' }}
