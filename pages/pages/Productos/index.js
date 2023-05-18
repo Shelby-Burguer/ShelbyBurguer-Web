@@ -41,9 +41,9 @@ const ListDemo = (props) => {
     const [productAux, setProductAux] = useState(emptyProduct);
     const [cantidad, setCantidad] = useState(emptyCantidad);
     const [tipoProducto, setTipoProducto] = useState(null);
-    const [extrasIngredientes, setExtrasIngredientes] = useState(null);
-    const [picklistExtraSourceValue, setPicklistExtraSourceValue] = useState(null);
-    const [picklistExtraTargetValue, setPicklistExtraTargetValue] = useState([]);
+    const [proteinasIngredientes, setProteinasIngredientes] = useState(null);
+    const [picklistProteinaSourceValue, setPicklistProteinaSourceValue] = useState(null);
+    const [picklistProteinaTargetValue, setPicklistProteinaTargetValue] = useState([]);
     const [picklistSourceValue, setPicklistSourceValue] = useState(null);
     const [picklistTargetValue, setPicklistTargetValue] = useState([]);
     const [submitted, setSubmitted] = useState(false);
@@ -59,7 +59,6 @@ const ListDemo = (props) => {
     const contextPath = getConfig().publicRuntimeConfig.contextPath;
     const fileUploadRef = useRef(null);
     const [dropdownValue, setDropdownValue] = useState(null);
-    const [dropdownExtraValue, setDropdownExtraValue] = useState(null);
     const [dropdownValueAux, setDropdownValueAux] = useState(null);
     const [deleteProductDialog, setDeleteProductDialog] = useState(false);
     const [totalSize, setTotalSize] = useState(0);
@@ -135,7 +134,7 @@ const ListDemo = (props) => {
         console.log('Izquierda', picklistSourceValue);
         console.log('Derecha', picklistTargetValue);
         console.log('producto auxiliar', productAux);
-        console.log('Ingrediente extra', picklistExtraTargetValue);
+        console.log('Proteina', picklistProteinaTargetValue);
 
         setDropdownValueAux(dropdownValue);
 
@@ -145,7 +144,7 @@ const ListDemo = (props) => {
             if (product.id) {
                 const productoServicenew = new NewProductoService();
                 product.tipo_producto = dropdownValue.name;
-                const response = await productoServicenew.updateProducto(product.id, product, picklistTargetValue, picklistExtraTargetValue);
+                const response = await productoServicenew.updateProducto(product.id, product, picklistTargetValue, picklistProteinaTargetValue);
                 const index = findIndexById(product.id);
 
                 let arrIngredientes = [];
@@ -168,7 +167,7 @@ const ListDemo = (props) => {
                 console.log('Tipo de producto', dropdownValue);
                 product.tipo_producto = dropdownValue.name;
                 const productoServicenew = new NewProductoService();
-                const response = await productoServicenew.postProducto(product, picklistTargetValue, picklistExtraTargetValue);
+                const response = await productoServicenew.postProducto(product, picklistTargetValue, picklistProteinaTargetValue);
 
                 console.log('response', response);
 
@@ -247,7 +246,7 @@ const ListDemo = (props) => {
         console.log('Izquierda', picklistSourceValue);
         console.log('Derecha', picklistTargetValue);
         console.log('producto auxiliar', productAux);
-        console.log('Ingredientes extras', picklistExtraTargetValue);
+        console.log('Proteinas', picklistProteinaTargetValue);
         setDropdownValueAux(dropdownValue);
         addToCart(product, carrito, setCarrito);
 
@@ -261,7 +260,7 @@ const ListDemo = (props) => {
             console.log('idOrden Save', orderId);
             const carritoService = new CarritoService();
 
-            const response = await carritoService.postCarrito(product.id, idnumber, picklistTargetValue, picklistExtraTargetValue);
+            const response = await carritoService.postCarrito(product.id, idnumber, picklistTargetValue, picklistProteinaTargetValue);
 
             setDataViewValue(_products);
             setcarritoDialog(false);
@@ -413,7 +412,7 @@ const ListDemo = (props) => {
         );
     };
 
-    const itemTemplateExtraPickList = (item) => {
+    const itemTemplateProteinaPickList = (item) => {
         return (
             <div className="flex flex-wrap p-1 align-items-center gap-2">
                 <img className="w-4rem shadow-2 flex-shrink-0 border-round" src={`${contextPath}/demo/images/combo/Verduras_y_frutas.jpg`} alt={item.nombre} />
@@ -445,15 +444,15 @@ const ListDemo = (props) => {
                 newState[itemIndex] = { ...newState[itemIndex], [propertyName]: value };
                 return newState;
             });
-        } else if (picklistExtraSourceValue.some((item) => item.id === itemId)) {
-            setPicklistExtraSourceValue((prevState) => {
+        } else if (picklistProteinaSourceValue.some((item) => item.id === itemId)) {
+            setPicklistProteinaSourceValue((prevState) => {
                 const newState = [...prevState];
                 const itemIndex = newState.findIndex((item) => item.id === itemId);
                 newState[itemIndex] = { ...newState[itemIndex], [propertyName]: value };
                 return newState;
             });
-        } else if (picklistExtraTargetValue.some((item) => item.id === itemId)) {
-            setPicklistExtraTargetValue((prevState) => {
+        } else if (picklistProteinaTargetValue.some((item) => item.id === itemId)) {
+            setPicklistProteinaTargetValue((prevState) => {
                 const newState = [...prevState];
                 const itemIndex = newState.findIndex((item) => item.id === itemId);
                 newState[itemIndex] = { ...newState[itemIndex], [propertyName]: value };
@@ -483,15 +482,15 @@ const ListDemo = (props) => {
         let ingredientes;
         await ingredienteService.getIngredientes().then((data) => (ingredientes = data));
         console.log('Que paso?', ingredientes);
-        const opcionesDropdown = ingredientes.filter((ingrediente) => ingrediente.extra === 'Si').map((ingrediente) => ({ id: ingrediente.id, name: ingrediente.nombre }));
+        const opcionesDropdown = ingredientes.filter((ingrediente) => ingrediente.proteina === 'Si').map((ingrediente) => ({ id: ingrediente.id, name: ingrediente.nombre }));
 
         for (let i = ingredientes.length - 1; i >= 0; i--) {
-            if (ingredientes[i].extra === 'Si') {
+            if (ingredientes[i].proteina === 'Si') {
                 ingredientes.splice(i, 1);
             }
         }
-        setPicklistExtraSourceValue(opcionesDropdown);
-        setExtrasIngredientes(opcionesDropdown);
+        setPicklistProteinaSourceValue(opcionesDropdown);
+        setProteinasIngredientes(opcionesDropdown);
         setPicklistSourceValue(ingredientes);
         setPicklistTargetValue([]);
         setSubmitted(false);
@@ -505,16 +504,16 @@ const ListDemo = (props) => {
         let ingredientes;
         await ingredienteService.getIngredientes().then((data) => (ingredientes = data));
         console.log('Que paso?', ingredientes);
-        const opcionesDropdown = ingredientes.filter((ingrediente) => ingrediente.extra === 'Si');
+        const opcionesDropdown = ingredientes.filter((ingrediente) => ingrediente.proteina === 'Si');
 
         for (let i = ingredientes.length - 1; i >= 0; i--) {
-            if (ingredientes[i].extra === 'Si') {
+            if (ingredientes[i].proteina === 'Si') {
                 ingredientes.splice(i, 1);
             }
         }
 
-        setPicklistExtraSourceValue(opcionesDropdown);
-        setExtrasIngredientes(opcionesDropdown);
+        setPicklistProteinaSourceValue(opcionesDropdown);
+        setProteinasIngredientes(opcionesDropdown);
         setPicklistSourceValue(ingredientes);
         setProduct(emptyProduct);
         setSubmitted(false);
@@ -546,33 +545,33 @@ const ListDemo = (props) => {
             const data = await ingredienteServie.getIngredientes();
             console.log('Ingredientes view', product.ingrediente);
 
-            console.log('Ingredientes extras view', product.proteina);
+            console.log('Proteinas view', product.proteina);
 
             const nuevoTipoProducto = tipoProducto.find((producto) => producto.name === product.tipo);
 
             const picklistTargetValuenew = [...product.ingrediente, ...product.proteina];
 
-            const picklistExtraTargetValuenew = picklistTargetValuenew.filter((item) => item.extra === 'Si');
+            const picklistProteinaTargetValuenew = picklistTargetValuenew.filter((item) => item.proteina === 'Si');
 
-            const indexToRemove = picklistTargetValuenew.findIndex((item) => item.extra === 'Si');
+            const indexToRemove = picklistTargetValuenew.findIndex((item) => item.proteina === 'Si');
             if (indexToRemove !== -1) {
                 picklistTargetValuenew.splice(indexToRemove, 1);
             }
 
             const idsSeleccionados = picklistTargetValuenew.map((ingrediente) => ingrediente.id);
 
-            const idsSeleccionadosExtra = picklistExtraTargetValuenew.map((ingrediente) => ingrediente.id);
+            const idsSeleccionadosProteina = picklistProteinaTargetValuenew.map((ingrediente) => ingrediente.id);
 
             const picklistSourceValuenew = data.filter((ingrediente) => {
-                return !idsSeleccionados.includes(ingrediente.id) && ingrediente.extra === 'No';
+                return !idsSeleccionados.includes(ingrediente.id) && ingrediente.proteina === 'No';
             });
 
-            const picklistExtraSourceValuenew = data.filter((ingrediente) => {
-                return !idsSeleccionadosExtra.includes(ingrediente.id) && ingrediente.extra === 'Si';
+            const picklistProteinaSourceValuenew = data.filter((ingrediente) => {
+                return !idsSeleccionadosProteina.includes(ingrediente.id) && ingrediente.proteina === 'Si';
             });
 
-            setPicklistExtraSourceValue(picklistExtraSourceValuenew);
-            setPicklistExtraTargetValue(picklistExtraTargetValuenew);
+            setPicklistProteinaSourceValue(picklistProteinaSourceValuenew);
+            setPicklistProteinaTargetValue(picklistProteinaTargetValuenew);
             setPicklistSourceValue(picklistSourceValuenew);
             setPicklistTargetValue(picklistTargetValuenew);
             setDropdownValue(nuevoTipoProducto);
@@ -589,35 +588,35 @@ const ListDemo = (props) => {
         try {
             const ingredienteServie = new IngredienteService();
             const data = await ingredienteServie.getIngredientes();
+            console.log('Producto view', product);
             console.log('Ingredientes view', product.ingrediente);
-
-            console.log('Ingredientes extras view', product.proteina);
+            console.log('Proteinas view', product.proteina);
 
             const nuevoTipoProducto = tipoProducto.find((producto) => producto.name === product.tipo);
 
             const picklistTargetValuenew = [...product.ingrediente, ...product.proteina];
 
-            const picklistExtraTargetValuenew = picklistTargetValuenew.filter((item) => item.extra === 'Si');
+            const picklistProteinaTargetValuenew = picklistTargetValuenew.filter((item) => item.proteina === 'Si');
 
-            const indexToRemove = picklistTargetValuenew.findIndex((item) => item.extra === 'Si');
+            const indexToRemove = picklistTargetValuenew.findIndex((item) => item.proteina === 'Si');
             if (indexToRemove !== -1) {
                 picklistTargetValuenew.splice(indexToRemove, 1);
             }
 
             const idsSeleccionados = picklistTargetValuenew.map((ingrediente) => ingrediente.id);
 
-            const idsSeleccionadosExtra = picklistExtraTargetValuenew.map((ingrediente) => ingrediente.id);
+            const idsSeleccionadosProteina = picklistProteinaTargetValuenew.map((ingrediente) => ingrediente.id);
 
             const picklistSourceValuenew = data.filter((ingrediente) => {
-                return !idsSeleccionados.includes(ingrediente.id) && ingrediente.extra === 'No';
+                return !idsSeleccionados.includes(ingrediente.id) && ingrediente.proteina === 'No';
             });
 
-            const picklistExtraSourceValuenew = data.filter((ingrediente) => {
-                return !idsSeleccionadosExtra.includes(ingrediente.id) && ingrediente.extra === 'Si';
+            const picklistProteinaSourceValuenew = data.filter((ingrediente) => {
+                return !idsSeleccionadosProteina.includes(ingrediente.id) && ingrediente.proteina === 'Si';
             });
 
-            setPicklistExtraSourceValue(picklistExtraSourceValuenew);
-            setPicklistExtraTargetValue(picklistExtraTargetValuenew);
+            setPicklistProteinaSourceValue(picklistProteinaSourceValuenew);
+            setPicklistProteinaTargetValue(picklistProteinaTargetValuenew);
             setPicklistSourceValue(picklistSourceValuenew);
             setPicklistTargetValue(picklistTargetValuenew);
             setDropdownValue(nuevoTipoProducto);
@@ -820,16 +819,17 @@ const ListDemo = (props) => {
                         {((dropdownValue && dropdownValue.name === 'Hamburguesa') || (dropdownValue && dropdownValue.name === 'Perro') || (dropdownValue && dropdownValue.name === 'Pepito') || (dropdownValue && dropdownValue.name === 'Papas')) && (
                             <div className="col-12 xl:col-13">
                                 <div className="card">
-                                    <h6>Seleccione el ingrediente Extra</h6>
+                                    {/* VENTANA DE AGREGAR A CARRITO */}
+                                    <h6>Seleccione la Proteína</h6>
                                     <PickList
-                                        source={picklistExtraSourceValue}
-                                        target={picklistExtraTargetValue}
-                                        sourceHeader="Ingredientes Extra"
-                                        targetHeader="Ingrediente Extra Seleccionado"
-                                        itemTemplate={itemTemplateExtraPickList}
+                                        source={picklistProteinaSourceValue}
+                                        target={picklistProteinaTargetValue}
+                                        sourceHeader="Proteina"
+                                        targetHeader="Proteina Seleccionada"
+                                        itemTemplate={itemTemplateProteinaPickList}
                                         onChange={(e) => {
-                                            setPicklistExtraTargetValue(e.target);
-                                            setPicklistExtraSourceValue(e.source);
+                                            setPicklistProteinaTargetValue(e.target);
+                                            setPicklistProteinaSourceValue(e.source);
                                         }}
                                         sourceStyle={{ height: '200px' }}
                                         targetStyle={{ height: '200px' }}
@@ -952,19 +952,20 @@ const ListDemo = (props) => {
                         </div>
                     </div>
                 )}
-                {((dropdownValue && dropdownValue.name === 'Hamburguesa') || (dropdownValue && dropdownValue.name === 'Perro') || (dropdownValue && dropdownValue.name === 'Pepito') || (dropdownValue && dropdownValue.name === 'Papas')) && (
+                {((dropdownValue && dropdownValue.name === 'Hamburguesa') || (dropdownValue && dropdownValue.name === 'Perro') || (dropdownValue && dropdownValue.name === 'Pepito')) && (
                     <div className="col-12 xl:col-13">
                         <div className="card">
-                            <h6>Seleccione el ingrediente Extra</h6>
+                            {/* VENTANA DE EDITAR PRODUCTO */}
+                            <h6>Seleccione la Proteína</h6>
                             <PickList
-                                source={picklistExtraSourceValue}
-                                target={picklistExtraTargetValue}
-                                sourceHeader="Ingredientes Extra"
-                                targetHeader="Ingrediente Extra Seleccionado"
-                                itemTemplate={itemTemplateExtraPickList}
+                                source={picklistProteinaSourceValue}
+                                target={picklistProteinaTargetValue}
+                                sourceHeader="Proteína"
+                                targetHeader="Proteína Seleccionada"
+                                itemTemplate={itemTemplateProteinaPickList}
                                 onChange={(e) => {
-                                    setPicklistExtraTargetValue(e.target);
-                                    setPicklistExtraSourceValue(e.source);
+                                    setPicklistProteinaTargetValue(e.target);
+                                    setPicklistProteinaSourceValue(e.source);
                                 }}
                                 sourceStyle={{ height: '200px' }}
                                 targetStyle={{ height: '200px' }}
